@@ -25,7 +25,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ''
+                type: array
+                items:
+                  $ref: '#/components/schemas/Band'
+        '400':
+          $ref: '#/components/responses/BadRequest'
 
 components:
   securitySchemes:
@@ -35,7 +39,42 @@ components:
       name: cadencesession
       description: Session cookie for authentication
 
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequestResponseBody'
+
   schemas:
+    BadRequestResponseBody:
+      type: object
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          type: string
+          example: Invalid data
+        data:
+          $ref: '#/components/schemas/ErrorData'
+      required:
+        - code
+        - message
+
+    ErrorCode:
+      type: string
+      enum:
+        - invalid_input
+        - not_found
+        - permission_denied
+        - operation_rejected
+
+    ErrorData:
+      type: object
+      additionalProperties: true
+      description: additional information about the error
+
     Band:
       type: object
       properties:
