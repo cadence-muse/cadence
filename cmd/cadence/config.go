@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"cadence/pkg/common/postgresql"
-
 	"github.com/caarlos0/env/v11"
+
+	"cadence/pkg/common/postgresql"
 )
 
 func parseEnv() (*config, error) {

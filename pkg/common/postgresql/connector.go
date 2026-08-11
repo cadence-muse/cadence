@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib" // registers the "postgres" database/sql driver
 	"github.com/jmoiron/sqlx"
 
 	"cadence/pkg/common/log"
@@ -41,7 +41,7 @@ func (c *connector) Open(dsn DSN, cfg Config) (err error) {
 	}
 	c.db.SetMaxOpenConns(cfg.MaxConnections)
 	c.db.SetConnMaxLifetime(cfg.ConnectionLifetime)
-	return fmt.Errorf("failed to setup database: %w", err)
+	return nil
 }
 
 func (c *connector) TransactionalClient() TransactionalClient {
@@ -49,8 +49,10 @@ func (c *connector) TransactionalClient() TransactionalClient {
 }
 
 func (c *connector) Migrator(logger log.Logger) (Migrator, error) {
-	// TODO implement me
-	panic("implement me")
+	if c.db == nil {
+		return nil, errors.New("DB not initialized")
+	}
+	return &migrator{db: c.db, logger: logger}, nil
 }
 
 func (c *connector) Close() error {

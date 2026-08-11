@@ -5,11 +5,24 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-
-	"cadence/pkg/common/log"
+	"io/fs"
+	"regexp"
+	"sort"
+	"time"
 
 	"github.com/jmoiron/sqlx"
+
+	"cadence/data/migrations"
+	"cadence/pkg/common/log"
 )
+
+const createSchemaMigrationTableSQL = `
+CREATE TABLE IF NOT EXISTS schema_migration (
+    version TEXT PRIMARY KEY,
+    executed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+)`
+
+var migrationFileRegexp = regexp.MustCompile(`^(\d+)_(.+)\.up\.sql$`)
 
 type Migrator interface {
 	MigrateUp() error
@@ -18,6 +31,12 @@ type Migrator interface {
 type migrator struct {
 	db     *sqlx.DB
 	logger log.Logger
+}
+
+type migrationFile struct {
+	version string
+	name    string
+	path    string
 }
 
 func (m migrator) MigrateUp() (err error) {
@@ -37,5 +56,105 @@ func (m migrator) MigrateUp() (err error) {
 		}
 	}()
 
-	// TODO implement
+	if _, err = conn.ExecContext(ctx, createSchemaMigrationTableSQL); err != nil {
+		return fmt.Errorf("failed to create schema_migration table: %w", err)
+	}
+
+	files, err := readMigrationFiles()
+	if err != nil {
+		return fmt.Errorf("failed to read migration files: %w", err)
+	}
+
+	var appliedVersions []string
+	if err = conn.SelectContext(ctx, &appliedVersions, "SELECT version FROM schema_migration"); err != nil {
+		return fmt.Errorf("failed to read applied migrations: %w", err)
+	}
+
+	fileVersions := make(map[string]struct{}, len(files))
+	for _, f := range files {
+		fileVersions[f.version] = struct{}{}
+	}
+	for _, version := range appliedVersions {
+		if _, ok := fileVersions[version]; !ok {
+			return fmt.Errorf("migration %s is applied but its file is missing from data/migrations", version)
+		}
+	}
+
+	applied := make(map[string]struct{}, len(appliedVersions))
+	for _, version := range appliedVersions {
+		applied[version] = struct{}{}
+	}
+
+	for _, f := range files {
+		if _, ok := applied[f.version]; ok {
+			continue
+		}
+		if err = m.applyMigration(ctx, conn, f); err != nil {
+			return fmt.Errorf("failed to apply migration %s: %w", f.version, err)
+		}
+	}
+
+	return nil
+}
+
+func (m migrator) applyMigration(ctx context.Context, conn *sqlx.Conn, f migrationFile) error {
+	content, err := fs.ReadFile(migrations.FS, f.path)
+	if err != nil {
+		return fmt.Errorf("failed to read migration file: %w", err)
+	}
+
+	tx, err := conn.BeginTxx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	start := time.Now()
+
+	if _, err = tx.ExecContext(ctx, string(content)); err != nil {
+		_ = tx.Rollback()
+		return fmt.Errorf("failed to execute migration: %w", err)
+	}
+
+	if _, err = tx.ExecContext(ctx, "INSERT INTO schema_migration (version) VALUES ($1)", f.version); err != nil {
+		_ = tx.Rollback()
+		return fmt.Errorf("failed to record migration version: %w", err)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit migration: %w", err)
+	}
+
+	duration := time.Since(start)
+	m.logger.WithFields(log.Fields{"version": f.version, "duration": duration}).Info("migration complete")
+
+	return nil
+}
+
+func readMigrationFiles() ([]migrationFile, error) {
+	entries, err := fs.ReadDir(migrations.FS, ".")
+	if err != nil {
+		return nil, err
+	}
+
+	files := make([]migrationFile, 0, len(entries))
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		match := migrationFileRegexp.FindStringSubmatch(entry.Name())
+		if match == nil {
+			continue
+		}
+		files = append(files, migrationFile{
+			version: match[1],
+			name:    match[2],
+			path:    entry.Name(),
+		})
+	}
+
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].version < files[j].version
+	})
+
+	return files, nil
 }
