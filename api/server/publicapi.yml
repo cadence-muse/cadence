@@ -1,0 +1,49 @@
+openapi: 3.0.0
+
+info:
+  title: Cadence public API
+  version: 1.0.0
+
+tags:
+  - name: Bands
+  - name: Songs
+  - name: Setlists
+
+security:
+  - cookieAuth: [ ]
+
+paths:
+  /api/band/list:
+    get:
+      operationId: ListBands
+      tags: [ Bands ]
+      security:
+        - cookieAuth: [ ]
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: ''
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: cadencesession
+      description: Session cookie for authentication
+
+  schemas:
+    Band:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+        - id
+        - name

@@ -1,14 +1,18 @@
 [tools]
 go = "1.26"
 golangci-lint = "2.12.2"
-goreleaser = "2.16.0"
+"go:github.com/ogen-go/ogen/cmd/ogen" = "1.24.0"
 
 [tasks.default]
 run = [
+    { task = "generate" },
     { task = "modules" },
     { task = "build" },
     { task = "check" },
 ]
+
+[tasks.generate]
+run = "ogen --target ./api/server/publicapi --package publicapi --config ./api/server/.ogen.yml --clean ./api/server/publicapi.yml"
 
 [tasks.modules]
 run = "go mod tidy"
