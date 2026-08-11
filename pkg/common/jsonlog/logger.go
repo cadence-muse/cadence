@@ -24,6 +24,14 @@ func NewLogger(config *Config) log.MainLogger {
 	}
 }
 
+func (l *logger) WithFields(fields log.Fields) log.Logger {
+	implFields := make([]zap.Field, 0, len(fields))
+	for key, value := range fields {
+		implFields = append(implFields, zap.Any(key, value))
+	}
+	return &logger{l.Logger.With(implFields...)}
+}
+
 func (l *logger) Debug(args ...any) {
 	l.Logger.Debug(fmt.Sprint(args...))
 }
