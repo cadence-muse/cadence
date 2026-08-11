@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-const keyRegexString = "^[A-G][b\\#]?(m|min)?$"
+const keyRegexString = "^[A-G][b#]?(m|min)?$"
 
 var (
 	keyRegex      = regexp.MustCompile(keyRegexString)

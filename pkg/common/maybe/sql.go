@@ -12,6 +12,7 @@ type valuer interface {
 	driver.Valuer
 }
 
+//nolint:nestif
 func (m *Maybe[T]) Scan(src any) error {
 	if src == nil {
 		// Nothing to scan, just return

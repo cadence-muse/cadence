@@ -32,12 +32,12 @@ func (repo *trackRepository) NextID() domain.TrackID {
 	panic("implement me")
 }
 
-func (repo *trackRepository) Store(track *domain.Track) error {
+func (repo *trackRepository) Store(_ *domain.Track) error {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (repo *trackRepository) Get(id domain.TrackID) (*domain.Track, error) {
+func (repo *trackRepository) Get(_ domain.TrackID) (*domain.Track, error) {
 	// TODO implement me
 	panic("implement me")
 }

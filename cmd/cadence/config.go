@@ -24,6 +24,9 @@ type config struct {
 	DBName     string `env:"db_name"`
 	DBUser     string `env:"db_user"`
 	DBPassword string `env:"db_password"`
+
+	DBMaxConn      int `env:"db_max_conn" envDefault:"10"`
+	DBConnLifetime int `env:"db_conn_lifetime" envDefault:"60"`
 }
 
 func (c *config) dsn() postgresql.DSN {

@@ -32,12 +32,12 @@ func (repo *bandRepository) NextID() domain.BandID {
 	panic("implement me")
 }
 
-func (repo *bandRepository) Store(band *domain.Band) error {
+func (repo *bandRepository) Store(_ *domain.Band) error {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (repo *bandRepository) Get(id domain.BandID) (*domain.Band, error) {
+func (repo *bandRepository) Get(_ domain.BandID) (*domain.Band, error) {
 	// TODO implement me
 	panic("implement me")
 }
