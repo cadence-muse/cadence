@@ -24,6 +24,8 @@ PostgreSQL 16 for persistence.
 
 ## Build & Development Commands
 
+Do not use plain `go build` or `golangci-lint run`, always use mise.
+
 ```shell
 # Generate OpenAPI, build service binary and lint project
 mise run
