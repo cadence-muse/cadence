@@ -1,0 +1,62 @@
+package postgresql
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/go-faster/errors"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jmoiron/sqlx"
+
+	"cadence/pkg/common/log"
+)
+
+const dbDriverName = "postgres"
+
+type Config struct {
+	MaxConnections     int
+	ConnectionLifetime time.Duration
+	ConnectTimeout     time.Duration
+}
+
+func NewConnector() Connector {
+	return &connector{}
+}
+
+type Connector interface {
+	Open(dsn DSN, cfg Config) error
+	TransactionalClient() TransactionalClient
+	Migrator(logger log.Logger) (Migrator, error)
+	Close() error
+}
+
+type connector struct {
+	db *sqlx.DB
+}
+
+func (c *connector) Open(dsn DSN, cfg Config) (err error) {
+	c.db, err = sqlx.Open(dbDriverName, dsn.String())
+	if err != nil {
+		return fmt.Errorf("failed to open database: %w", err)
+	}
+	c.db.SetMaxOpenConns(cfg.MaxConnections)
+	c.db.SetConnMaxLifetime(cfg.ConnectionLifetime)
+	return fmt.Errorf("failed to setup database: %w", err)
+}
+
+func (c *connector) TransactionalClient() TransactionalClient {
+	return &transactionalClient{c.db}
+}
+
+func (c *connector) Migrator(logger log.Logger) (Migrator, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (c *connector) Close() error {
+	if c.db != nil {
+		err := c.db.Close()
+		return errors.Wrap(err, "failed to disconnect")
+	}
+	return errors.New("DB not initialized")
+}

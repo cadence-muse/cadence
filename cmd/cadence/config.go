@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"cadence/pkg/common/postgresql"
+
 	"github.com/caarlos0/env/v11"
 )
 
@@ -18,8 +20,18 @@ type config struct {
 	ServeRESTAddress string `env:"serve_rest_address" envDefault:":8080"`
 
 	DBHost     string `env:"db_host"`
-	DBPorts    string `env:"db_post"`
+	DBPort     int    `env:"db_port"`
 	DBName     string `env:"db_name"`
 	DBUser     string `env:"db_user"`
 	DBPassword string `env:"db_password"`
+}
+
+func (c *config) dsn() postgresql.DSN {
+	return postgresql.DSN{
+		Host:     c.DBHost,
+		Port:     c.DBPort,
+		Database: c.DBName,
+		User:     c.DBUser,
+		Password: c.DBPassword,
+	}
 }
