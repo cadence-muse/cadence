@@ -1,0 +1,26 @@
+[tools]
+go = "1.26"
+golangci-lint = "2.12.2"
+goreleaser = "2.16.0"
+
+[tasks.default]
+run = [
+    { task = "modules" },
+    { task = "build" },
+    { task = "check" },
+]
+
+[tasks.modules]
+run = "go mod tidy"
+
+[tasks.build]
+run = "go build -trimpath -v -o ./bin/cadence ./cmd/cadence"
+
+[tasks.check]
+depends = [ "check:*" ]
+
+[tasks."check:test"]
+run = "go test ./..."
+
+[tasks."check:lint"]
+run = "golangci-lint run"
