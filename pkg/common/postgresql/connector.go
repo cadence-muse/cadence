@@ -11,7 +11,7 @@ import (
 	"cadence/pkg/common/log"
 )
 
-const dbDriverName = "postgres"
+const dbDriverName = "pgx"
 
 type Config struct {
 	MaxConnections     int
