@@ -1,4 +1,4 @@
-CREATE TABLE user
+CREATE TABLE "user"
 (
     id            UUID PRIMARY KEY,
     email         TEXT        NOT NULL UNIQUE,
