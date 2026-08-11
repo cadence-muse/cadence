@@ -13,12 +13,12 @@ type DSN struct {
 	Password string
 }
 
-func (D DSN) String() string {
+func (d DSN) String() string {
 	u := url.URL{
 		Scheme: "postgres",
-		User:   url.UserPassword(D.User, D.Password),
-		Host:   fmt.Sprintf("%s:%d", D.Host, D.Port),
-		Path:   "/" + D.Database,
+		User:   url.UserPassword(d.User, d.Password),
+		Host:   fmt.Sprintf("%s:%d", d.Host, d.Port),
+		Path:   "/" + d.Database,
 	}
 	return u.String()
 }
