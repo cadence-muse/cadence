@@ -9,6 +9,6 @@ import (
 
 var errMigrationFinished = errors.New("migration finished without errors")
 
-func migrate(ctx context.Context, config *config, logger log.Logger) error {
-
+func migrate(_ context.Context, _ *config, _ log.Logger) error {
+	return nil
 }

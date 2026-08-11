@@ -60,9 +60,14 @@ linters:
 formatters:
   enable:
     - gofmt
+    - goimports
     - gci
 
   settings:
+    goimports:
+      local-prefixes:
+        - cadence
+
     gci:
       custom-order: true
       sections:

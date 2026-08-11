@@ -4,10 +4,10 @@ import (
 	"context"
 	"net/http"
 
-	"cadence/api/server/publicapi"
-
 	"github.com/ogen-go/ogen/middleware"
 	"github.com/ogen-go/ogen/ogenerrors"
+
+	"cadence/api/server/publicapi"
 )
 
 func NewAPIServer(

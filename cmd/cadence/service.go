@@ -7,14 +7,14 @@ import (
 	"net/http"
 	"time"
 
-	"cadence/pkg/common/log"
-
 	"github.com/gorilla/mux"
+
+	"cadence/pkg/common/log"
 )
 
 var errServiceStopped = errors.New("service stopped without errors")
 
-func service(ctx context.Context, config *config, logger log.Logger) error {
+func service(_ context.Context, config *config, logger log.Logger) error {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/resilience/ready", func(w http.ResponseWriter, _ *http.Request) {

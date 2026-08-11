@@ -8,7 +8,7 @@ import (
 
 func (u UUID) Value() (driver.Value, error) {
 	impl := uuid.UUID(u)
-	return impl.Value(), nil
+	return impl.Value()
 }
 
 func (u *UUID) Scan(src interface{}) error {

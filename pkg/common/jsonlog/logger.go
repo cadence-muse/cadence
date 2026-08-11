@@ -3,10 +3,10 @@ package jsonlog
 import (
 	"fmt"
 
-	"cadence/pkg/common/log"
-
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"cadence/pkg/common/log"
 )
 
 const appNameKey = "app_name"
@@ -29,7 +29,7 @@ func (l *logger) WithFields(fields log.Fields) log.Logger {
 	for key, value := range fields {
 		implFields = append(implFields, zap.Any(key, value))
 	}
-	return &logger{l.Logger.With(implFields...)}
+	return &logger{l.With(implFields...)}
 }
 
 func (l *logger) Debug(args ...any) {
@@ -41,9 +41,9 @@ func (l *logger) Info(args ...any) {
 }
 
 func (l *logger) Error(err error, args ...any) {
-	l.Logger.With(zap.Error(err)).Error(fmt.Sprint(args...))
+	l.With(zap.Error(err)).Error(fmt.Sprint(args...))
 }
 
 func (l *logger) FatalError(err error, args ...any) {
-	l.Logger.With(zap.Error(err)).Fatal(fmt.Sprint(args...))
+	l.With(zap.Error(err)).Fatal(fmt.Sprint(args...))
 }
