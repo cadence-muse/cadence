@@ -1,0 +1,4 @@
+services:
+  cadence:
+    volumes:
+      - "$HOME/projects/cadence/cadence/bin/cadence:/app/bin/cadence:ro"
