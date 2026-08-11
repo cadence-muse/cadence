@@ -66,14 +66,13 @@ Use `bin/create-db-migration <name>` to scaffold a new pair.
   already-applied migration corrupts DB state in deployed environments.
 - No hardcoded credentials or secrets - all configuration must flow through `CADENCE_`-prefixed environment variables.
   Nothing sensitive in source code.
-- API changes must be backward-compatible - do not remove or rename existing fields; add new fields instead. Always bump
-  version in goblin.yaml on any schema change; breaking changes must respect the min-version constraint.
+- API changes must be backward-compatible - do not remove or rename existing fields; add new fields instead.
 
 ## Definition of Done
 
 A task is considered done only when all the following pass without errors:
 
-1. Full build and lint - run:
+1. Full build, unit tests and lint - run:
 
 ```shell
 mise run
