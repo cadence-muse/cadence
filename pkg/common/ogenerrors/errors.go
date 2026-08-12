@@ -11,6 +11,7 @@ const (
 	ErrCodeNotFound          ErrorCode = "not_found"          // Requested entity was not found
 	ErrCodePermissionDenied  ErrorCode = "permission_denied"  // The caller does not have permission to execute the specified operation
 	ErrCodeOperationRejected ErrorCode = "operation_rejected" // The operation was rejected because the system is not in a state required for the operation's execution
+	ErrCodeAlreadyExists     ErrorCode = "already_exists"     // The operation was rejected because the system is not in a state required for the operation's execution
 )
 
 type ErrorDetails map[string]interface{}
@@ -53,5 +54,12 @@ func NewOperationRejectedError(message, code string) *Error {
 		Details: ErrorDetails{
 			"code": code,
 		},
+	}
+}
+
+func NewAlreadyExistsError(message string) *Error {
+	return &Error{
+		Code:    ErrCodeAlreadyExists,
+		Message: message,
 	}
 }

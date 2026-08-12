@@ -1,48 +1,53 @@
 package service
 
 import (
+	"context"
 	"errors"
 
 	"golang.org/x/crypto/bcrypt"
 
+	"cadence/pkg/cadence/app"
 	"cadence/pkg/cadence/domain"
+	"cadence/pkg/common/transactional"
+	"cadence/pkg/common/uuid"
 )
 
-func NewUserService(repo domain.UserRepository) *UserService {
-	return &UserService{repo: repo}
+func NewUserService(executor transactional.Executor[app.RepoProvider]) *UserService {
+	return &UserService{executor: executor}
 }
 
 type UserService struct {
-	repo domain.UserRepository
+	executor transactional.Executor[app.RepoProvider]
 }
 
-type RegisterInput struct {
-	Username string
-	Password string
-}
+func (s *UserService) Register(ctx context.Context, username, password string) (userID uuid.UUID, err error) {
+	err = s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
+		repo := repoProvider.UserRepository()
 
-func (s *UserService) Register(input RegisterInput) (*domain.User, error) {
-	_, err := s.repo.FindByUsername(input.Username)
-	if err == nil {
-		return nil, domain.ErrUsernameTaken
-	}
-	if !errors.Is(err, domain.ErrUserNotFound) {
-		return nil, err
-	}
+		_, findErr := repo.FindByUsername(username)
+		if findErr == nil {
+			return domain.ErrUsernameTaken
+		}
+		if !errors.Is(findErr, domain.ErrUserNotFound) {
+			return findErr
+		}
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
-	}
+		passwordHash, hashErr := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if hashErr != nil {
+			return hashErr
+		}
 
-	user, err := domain.NewUser(s.repo.NextID(), input.Username, string(passwordHash))
-	if err != nil {
-		return nil, err
-	}
+		user, userErr := domain.NewUser(repo.NextID(), username, string(passwordHash))
+		if userErr != nil {
+			return userErr
+		}
 
-	err = s.repo.Store(user)
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
+		if storeErr := repo.Store(user); storeErr != nil {
+			return storeErr
+		}
+
+		userID = user.ID()
+		return nil
+	})
+	return userID, err
 }

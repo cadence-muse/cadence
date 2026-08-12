@@ -12,6 +12,26 @@ security:
   - cookieAuth: [ ]
 
 paths:
+  /api/register:
+    post:
+      operationId: Register
+      summary: Registers a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequestBody'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponseBody'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
   /api/login:
     post:
       operationId: Login
@@ -240,11 +260,33 @@ components:
         - not_found
         - permission_denied
         - operation_rejected
+        - already_exists
 
     ErrorData:
       type: object
       additionalProperties: true
       description: additional information about the error
+
+    RegisterRequestBody:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+      required:
+        - username
+        - password
+
+    RegisterResponseBody:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+      required:
+        - id
 
     LoginRequestBody:
       type: object
