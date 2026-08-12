@@ -3,20 +3,20 @@ package publicapi
 import (
 	"context"
 
-	"cadence/pkg/cadence/app/service"
+	"cadence/pkg/cadence/app"
 	"cadence/pkg/common/auth"
 )
 
-func NewAuthHandler(sessionService *service.SessionService) SecurityHandler {
-	return &authHandler{sessionService: sessionService}
+func NewAuthHandler(sessionStore app.SessionStore) SecurityHandler {
+	return &authHandler{sessionStore: sessionStore}
 }
 
 type authHandler struct {
-	sessionService *service.SessionService
+	sessionStore app.SessionStore
 }
 
 func (h *authHandler) HandleCookieAuth(ctx context.Context, _ OperationName, t CookieAuth) (context.Context, error) {
-	userID, err := h.sessionService.ValidateSession(ctx, t.APIKey)
+	userID, err := h.sessionStore.ValidateSession(ctx, t.APIKey)
 	if err != nil {
 		return nil, err
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/ogen-go/ogen/ogenerrors"
 
 	"cadence/api/server/publicapi"
+	"cadence/pkg/cadence/app"
 	"cadence/pkg/cadence/app/service"
 	"cadence/pkg/cadence/domain"
 	commonogenerrors "cadence/pkg/common/ogenerrors"
@@ -19,12 +20,12 @@ func NewAPIServer(
 	errorHandler ogenerrors.ErrorHandler,
 	middlewares []middleware.Middleware,
 	userService *service.UserService,
-	sessionService *service.SessionService,
+	sessionStore app.SessionStore,
 ) (http.Handler, error) {
-	apiHandler := newRESTHandler(userService, sessionService)
+	apiHandler := newRESTHandler(userService, sessionStore)
 	return publicapi.NewServer(
 		apiHandler,
-		publicapi.NewAuthHandler(sessionService),
+		publicapi.NewAuthHandler(sessionStore),
 		publicapi.WithErrorHandler(errorHandler),
 		publicapi.WithMiddleware(middlewares...),
 	)
@@ -32,17 +33,17 @@ func NewAPIServer(
 
 func newRESTHandler(
 	userService *service.UserService,
-	sessionService *service.SessionService,
+	sessionStore app.SessionStore,
 ) publicapi.Handler {
 	return &restHandler{
-		userService:    userService,
-		sessionService: sessionService,
+		userService:  userService,
+		sessionStore: sessionStore,
 	}
 }
 
 type restHandler struct {
-	userService    *service.UserService
-	sessionService *service.SessionService
+	userService  *service.UserService
+	sessionStore app.SessionStore
 }
 
 func (h *restHandler) Register(ctx context.Context, req *publicapi.RegisterRequestBody) (publicapi.RegisterRes, error) {
@@ -71,7 +72,7 @@ func (h *restHandler) Login(ctx context.Context, req *publicapi.LoginRequestBody
 		return nil, err
 	}
 
-	token, err := h.sessionService.CreateSession(ctx, userID)
+	token, err := h.sessionStore.CreateSession(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

@@ -19,8 +19,8 @@ import (
 )
 
 type dependencyContainer struct {
-	userService    *appservice.UserService
-	sessionService *appservice.SessionService
+	userService  *appservice.UserService
+	sessionStore app.SessionStore
 }
 
 func newDependencyContainer(
@@ -41,17 +41,16 @@ func newDependencyContainer(
 
 	redisClient := redis.NewClient(config.redisConfig())
 	sessionStore := redisrepo.NewSessionStore(redisClient, config.sessionStoreConfig())
-	sessionService := appservice.NewSessionService(sessionStore)
 
 	middlewares := []middleware.Middleware{
 		ogenmiddleware.NewLoggingMiddleware(logger),
 	}
 
-	apiServer, err := transport.NewAPIServer(errorHandler, middlewares, userService, sessionService)
+	apiServer, err := transport.NewAPIServer(errorHandler, middlewares, userService, sessionStore)
 	if err != nil {
 		return nil, err
 	}
 	router.PathPrefix("/api").Handler(apiServer)
 
-	return &dependencyContainer{userService: userService, sessionService: sessionService}, nil
+	return &dependencyContainer{userService: userService, sessionStore: sessionStore}, nil
 }
