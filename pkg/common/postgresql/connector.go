@@ -1,10 +1,10 @@
 package postgresql
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
-	"github.com/go-faster/errors"
 	_ "github.com/jackc/pgx/v5/stdlib" // registers the "postgres" database/sql driver
 	"github.com/jmoiron/sqlx"
 
@@ -58,7 +58,7 @@ func (c *connector) Migrator(logger log.Logger) (Migrator, error) {
 func (c *connector) Close() error {
 	if c.db != nil {
 		err := c.db.Close()
-		return errors.Wrap(err, "failed to disconnect")
+		return fmt.Errorf("failed to disconnect: %w", err)
 	}
 	return errors.New("DB not initialized")
 }
