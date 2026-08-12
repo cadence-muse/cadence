@@ -10,8 +10,9 @@ const (
 )
 
 var (
-	errEmptyBandName   = errors.New("band name can not be empty")
-	errBandNameTooLong = fmt.Errorf("band name length should be less than or equal to %d", maxTrackTitleLength)
+	ErrEmptyBandName   = errors.New("band name can not be empty")
+	ErrBandNameTooLong = fmt.Errorf("band name length should be less than or equal to %d", maxTrackTitleLength)
+	ErrBandNotFound    = errors.New("band not found")
 )
 
 type Band struct {
@@ -39,6 +40,16 @@ func NewBand(
 	}, nil
 }
 
+func LoadBand(
+	id BandID,
+	name string,
+) *Band {
+	return &Band{
+		id:   id,
+		name: name,
+	}
+}
+
 func (b *Band) ID() BandID {
 	return b.id
 }
@@ -48,5 +59,5 @@ func (b *Band) Name() string {
 }
 
 func validateBandNameLength(name string) error {
-	return checkStringLimits(name, maxBandNameLength, errEmptyBandName, errBandNameTooLong)
+	return checkStringLimits(name, maxBandNameLength, ErrEmptyBandName, ErrBandNameTooLong)
 }

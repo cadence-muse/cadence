@@ -15,11 +15,13 @@ const (
 )
 
 var (
-	errEmptyTrackTitle   = errors.New("track title can not be empty")
-	errTrackTitleTooLong = fmt.Errorf("track title length should be less than or equal to %d", maxTrackTitleLength)
+	ErrEmptyTrackTitle   = errors.New("track title can not be empty")
+	ErrTrackTitleTooLong = fmt.Errorf("track title length should be less than or equal to %d", maxTrackTitleLength)
 
-	errEmptyTrackArtist   = errors.New("track artist can not be empty")
-	errTrackArtistTooLong = fmt.Errorf("track artist length should be less than or equal to %d", maxTrackArtistLength)
+	ErrEmptyTrackArtist   = errors.New("track artist can not be empty")
+	ErrTrackArtistTooLong = fmt.Errorf("track artist length should be less than or equal to %d", maxTrackArtistLength)
+
+	ErrTrackNotFound = errors.New("track not found")
 )
 
 type Track struct {
@@ -75,6 +77,32 @@ func NewTrack(
 	}, nil
 }
 
+func LoadTrack(
+	id TrackID,
+	bandID BandID,
+	title string,
+	artist string,
+	duration time.Duration,
+	originalTempo int,
+	originalKey valuetypes.MusicalKey,
+	customTempo maybe.Maybe[int],
+	customKey maybe.Maybe[valuetypes.MusicalKey],
+	notes maybe.Maybe[string],
+) *Track {
+	return &Track{
+		id:            id,
+		bandID:        bandID,
+		title:         title,
+		artist:        artist,
+		duration:      duration,
+		originalTempo: originalTempo,
+		originalKey:   originalKey,
+		customTempo:   customTempo,
+		customKey:     customKey,
+		notes:         notes,
+	}
+}
+
 func (t *Track) ID() TrackID {
 	return t.id
 }
@@ -116,9 +144,9 @@ func (t *Track) Notes() maybe.Maybe[string] {
 }
 
 func validateTrackTitleLength(title string) error {
-	return checkStringLimits(title, maxTrackTitleLength, errEmptyTrackTitle, errTrackTitleTooLong)
+	return checkStringLimits(title, maxTrackTitleLength, ErrEmptyTrackTitle, ErrTrackTitleTooLong)
 }
 
 func validateTrackArtistLength(artist string) error {
-	return checkStringLimits(artist, maxTrackArtistLength, errEmptyTrackArtist, errTrackArtistTooLong)
+	return checkStringLimits(artist, maxTrackArtistLength, ErrEmptyTrackArtist, ErrTrackArtistTooLong)
 }
