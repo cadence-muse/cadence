@@ -20,6 +20,8 @@ services:
 
       CADENCE_SESSION_MAX_PER_USER: 5
       CADENCE_SESSION_TTL: 24h
+
+      CADENCE_CORS_ALLOWED_ORIGINS: http://localhost:33721
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:

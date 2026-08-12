@@ -38,6 +38,8 @@ type config struct {
 
 	SessionMaxPerUser int           `env:"SESSION_MAX_PER_USER"`
 	SessionTTL        time.Duration `env:"SESSION_TTL"`
+
+	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS"`
 }
 
 func (c *config) dsn() postgresql.DSN {

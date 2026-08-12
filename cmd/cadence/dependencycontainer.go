@@ -53,7 +53,7 @@ func newDependencyContainer(
 	if err != nil {
 		return nil, err
 	}
-	router.PathPrefix("/api").Handler(apiServer)
+	router.PathPrefix("/api").Handler(corsMiddleware(config.CORSAllowedOrigins)(apiServer))
 
 	return &dependencyContainer{userService: userService, sessionStore: sessionStore}, nil
 }
