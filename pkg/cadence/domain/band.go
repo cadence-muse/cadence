@@ -11,7 +11,7 @@ const (
 
 var (
 	ErrEmptyBandName   = errors.New("band name can not be empty")
-	ErrBandNameTooLong = fmt.Errorf("band name length should be less than or equal to %d", maxTrackTitleLength)
+	ErrBandNameTooLong = fmt.Errorf("band name length should be less than or equal to %d", maxBandNameLength)
 	ErrBandNotFound    = errors.New("band not found")
 )
 
