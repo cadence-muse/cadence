@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"cadence/pkg/cadence/app"
+	"cadence/pkg/common/auth"
 	"cadence/pkg/common/postgresql"
 	"cadence/pkg/common/transactional"
-	"cadence/pkg/common/uuid"
 )
 
 const advisoryLockSQL = `SELECT pg_advisory_xact_lock(hashtext($1))`
@@ -39,5 +39,6 @@ func (f *transactionFactory) NewLockableTransaction(ctx context.Context, lockNam
 		}
 	}
 
-	return NewRepoProvider(ctx, conn, tx, uuid.UUID{}), nil
+	subjectID, _ := auth.UserIDFromContext(ctx)
+	return NewRepoProvider(ctx, conn, tx, subjectID), nil
 }
