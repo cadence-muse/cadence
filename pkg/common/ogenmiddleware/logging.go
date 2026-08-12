@@ -39,12 +39,28 @@ func getParamsForLog(request middleware.Request) any {
 			params[param.Name] = value
 		}
 	}
+	options := getTrimForLogOptions()
 	result := make(map[string]any)
 	if len(params) > 0 {
-		result["params"] = params
+		result["params"] = log.TrimForLogs(params, options)
 	}
 	if request.Body != nil {
-		result["body"] = request.Body
+		result["body"] = log.TrimForLogs(request.Body, options)
 	}
 	return result
+}
+
+func getTrimForLogOptions() log.TrimForLogOptions {
+	trimForLogsOptions := log.DefaultTrimForLogsOpts
+	trimForLogsOptions.SensitiveFields = []string{
+		"Password",
+		"password",
+		"newPassword",
+		"NewPassword",
+		"secret",
+		"authorization",
+		"auth",
+	}
+	trimForLogsOptions.SensitivePlaceholder = "HIDDEN"
+	return trimForLogsOptions
 }
