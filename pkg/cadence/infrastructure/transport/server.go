@@ -19,22 +19,30 @@ func NewAPIServer(
 	errorHandler ogenerrors.ErrorHandler,
 	middlewares []middleware.Middleware,
 	userService *service.UserService,
+	sessionService *service.SessionService,
 ) (http.Handler, error) {
-	apiHandler := newRESTHandler(userService)
+	apiHandler := newRESTHandler(userService, sessionService)
 	return publicapi.NewServer(
 		apiHandler,
-		publicapi.NewAuthHandler(),
+		publicapi.NewAuthHandler(sessionService),
 		publicapi.WithErrorHandler(errorHandler),
 		publicapi.WithMiddleware(middlewares...),
 	)
 }
 
-func newRESTHandler(userService *service.UserService) publicapi.Handler {
-	return &restHandler{userService: userService}
+func newRESTHandler(
+	userService *service.UserService,
+	sessionService *service.SessionService,
+) publicapi.Handler {
+	return &restHandler{
+		userService:    userService,
+		sessionService: sessionService,
+	}
 }
 
 type restHandler struct {
-	userService *service.UserService
+	userService    *service.UserService
+	sessionService *service.SessionService
 }
 
 func (h *restHandler) Register(ctx context.Context, req *publicapi.RegisterRequestBody) (publicapi.RegisterRes, error) {
@@ -54,9 +62,21 @@ func (h *restHandler) Register(ctx context.Context, req *publicapi.RegisterReque
 	return &publicapi.RegisterResponseBody{ID: googleuuid.UUID(userID)}, nil
 }
 
-func (h *restHandler) Login(_ context.Context, _ *publicapi.LoginRequestBody) (publicapi.LoginRes, error) {
-	// TODO implement me
-	panic("implement me")
+func (h *restHandler) Login(ctx context.Context, req *publicapi.LoginRequestBody) (publicapi.LoginRes, error) {
+	userID, err := h.userService.Authenticate(ctx, req.GetUsername(), req.GetPassword())
+	if err != nil {
+		if errors.Is(err, domain.ErrInvalidCredentials) {
+			return &publicapi.LoginUnauthorized{}, nil
+		}
+		return nil, err
+	}
+
+	token, err := h.sessionService.CreateSession(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &publicapi.LoginResponseBody{Token: token}, nil
 }
 
 func (h *restHandler) CreateBand(_ context.Context, _ *publicapi.CreateBandRequestBody) (publicapi.CreateBandRes, error) {

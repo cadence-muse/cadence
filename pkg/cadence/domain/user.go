@@ -10,11 +10,12 @@ const (
 )
 
 var (
-	ErrEmptyUsername     = errors.New("username can not be empty")
-	ErrUsernameTooLong   = fmt.Errorf("username length should be less than or equal to %d", maxUsernameLength)
-	ErrEmptyPasswordHash = errors.New("password hash can not be empty")
-	ErrUserNotFound      = errors.New("user not found")
-	ErrUsernameTaken     = errors.New("username is already taken")
+	ErrEmptyUsername      = errors.New("username can not be empty")
+	ErrUsernameTooLong    = fmt.Errorf("username length should be less than or equal to %d", maxUsernameLength)
+	ErrEmptyPasswordHash  = errors.New("password hash can not be empty")
+	ErrUserNotFound       = errors.New("user not found")
+	ErrUsernameTaken      = errors.New("username is already taken")
+	ErrInvalidCredentials = errors.New("invalid username or password")
 )
 
 type User struct {

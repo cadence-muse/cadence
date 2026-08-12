@@ -9,15 +9,18 @@ import (
 	"cadence/pkg/cadence/app"
 	appservice "cadence/pkg/cadence/app/service"
 	"cadence/pkg/cadence/infrastructure/persistence/postgresql/repo"
+	redisrepo "cadence/pkg/cadence/infrastructure/persistence/redis"
 	"cadence/pkg/cadence/infrastructure/transport"
 	"cadence/pkg/common/log"
 	"cadence/pkg/common/ogenmiddleware"
 	"cadence/pkg/common/postgresql"
+	"cadence/pkg/common/redis"
 	"cadence/pkg/common/transactional"
 )
 
 type dependencyContainer struct {
-	userService *appservice.UserService
+	userService    *appservice.UserService
+	sessionService *appservice.SessionService
 }
 
 func newDependencyContainer(
@@ -36,15 +39,19 @@ func newDependencyContainer(
 	executor := transactional.NewExecutor[app.RepoProvider](transactionFactory)
 	userService := appservice.NewUserService(executor)
 
+	redisClient := redis.NewClient(config.redisConfig())
+	sessionStore := redisrepo.NewSessionStore(redisClient, config.sessionStoreConfig())
+	sessionService := appservice.NewSessionService(sessionStore)
+
 	middlewares := []middleware.Middleware{
 		ogenmiddleware.NewLoggingMiddleware(logger),
 	}
 
-	apiServer, err := transport.NewAPIServer(errorHandler, middlewares, userService)
+	apiServer, err := transport.NewAPIServer(errorHandler, middlewares, userService, sessionService)
 	if err != nil {
 		return nil, err
 	}
 	router.PathPrefix("/api").Handler(apiServer)
 
-	return &dependencyContainer{userService: userService}, nil
+	return &dependencyContainer{userService: userService, sessionService: sessionService}, nil
 }

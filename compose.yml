@@ -10,10 +10,14 @@ services:
       CADENCE_DB_NAME: cadence
       CADENCE_DB_USER: cadence
       CADENCE_DB_PASSWORD: RTYL9d
+      CADENCE_REDIS_HOST: cadence-redis
+      CADENCE_REDIS_PORT: 6379
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
       cadence-db:
+        condition: service_healthy
+      cadence-redis:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/resilience/ready" ]
@@ -38,5 +42,19 @@ services:
       timeout: 5s
       retries: 5
 
+  cadence-redis:
+    image: redis:7-alpine
+    container_name: cadence-redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - "cadence-redis-data:/data"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   cadence-db-data:
+  cadence-redis-data:
