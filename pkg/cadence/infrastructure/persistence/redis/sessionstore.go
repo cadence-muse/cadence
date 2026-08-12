@@ -78,6 +78,27 @@ func (s *sessionStore) ValidateSession(ctx context.Context, token string) (uuid.
 	return uuid.UUID(userID), nil
 }
 
+func (s *sessionStore) DeleteSession(ctx context.Context, token string) error {
+	value, err := s.client.Get(ctx, sessionKey(token))
+	if err != nil {
+		if errors.Is(err, redis.ErrKeyNotFound) {
+			return nil
+		}
+		return err
+	}
+
+	if delErr := s.client.Delete(ctx, sessionKey(token)); delErr != nil {
+		return delErr
+	}
+
+	userID, err := googleuuid.Parse(value)
+	if err != nil {
+		return err
+	}
+
+	return s.client.ZRem(ctx, userSessionsKey(uuid.UUID(userID)), token)
+}
+
 // enforceSessionLimit drops stale entries left behind by expired sessions, then evicts the
 // oldest live sessions until the user is back within the configured limit.
 func (s *sessionStore) enforceSessionLimit(ctx context.Context, sessionsKey string) error {

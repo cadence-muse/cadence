@@ -13,6 +13,7 @@ import (
 	"cadence/pkg/cadence/app"
 	"cadence/pkg/cadence/app/service"
 	"cadence/pkg/cadence/domain"
+	"cadence/pkg/common/auth"
 	commonogenerrors "cadence/pkg/common/ogenerrors"
 )
 
@@ -78,6 +79,17 @@ func (h *restHandler) Login(ctx context.Context, req *publicapi.LoginRequestBody
 	}
 
 	return &publicapi.LoginResponseBody{Token: token}, nil
+}
+
+func (h *restHandler) Logout(ctx context.Context) (publicapi.LogoutRes, error) {
+	token, ok := auth.SessionTokenFromContext(ctx)
+	if !ok {
+		return nil, errors.New("session token missing from context")
+	}
+	if err := h.sessionStore.DeleteSession(ctx, token); err != nil {
+		return nil, err
+	}
+	return &publicapi.LogoutOK{}, nil
 }
 
 func (h *restHandler) CreateBand(_ context.Context, _ *publicapi.CreateBandRequestBody) (publicapi.CreateBandRes, error) {

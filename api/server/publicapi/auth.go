@@ -20,7 +20,9 @@ func (h *authHandler) HandleCookieAuth(ctx context.Context, _ OperationName, t C
 	if err != nil {
 		return nil, err
 	}
-	return auth.InjectUserID(ctx, userID), nil
+	ctx = auth.InjectUserID(ctx, userID)
+	ctx = auth.InjectSessionToken(ctx, t.APIKey)
+	return ctx, nil
 }
 
 func (s *CookieAuth) CookieAuth(_ context.Context, _ OperationName) (CookieAuth, error) {
