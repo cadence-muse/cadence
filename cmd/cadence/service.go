@@ -15,13 +15,20 @@ import (
 
 var errServiceStopped = errors.New("service stopped without errors")
 
-func service(_ context.Context, config *config, logger log.Logger) error {
+const shutdownTimeout = 10 * time.Second
+
+func service(ctx context.Context, config *config, logger log.Logger) error {
 	router := mux.NewRouter()
 
-	_, err := newDependencyContainer(config, logger, router, errorHandler)
+	container, err := newDependencyContainer(config, logger, router, errorHandler)
 	if err != nil {
 		return fmt.Errorf("failed to initialize the dependency container: %w", err)
 	}
+	defer func() {
+		if closeErr := container.Close(); closeErr != nil {
+			logger.Error(closeErr, "failed to close dependency container")
+		}
+	}()
 
 	router.HandleFunc("/resilience/ready", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -35,6 +42,16 @@ func service(_ context.Context, config *config, logger log.Logger) error {
 		ReadTimeout:       time.Hour,
 		WriteTimeout:      time.Hour,
 	}
+
+	go func() { //nolint:gosec // shutdown must use a fresh context; ctx is cancelled by this point
+		<-ctx.Done()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+		if shutdownErr := httpServer.Shutdown(shutdownCtx); shutdownErr != nil {
+			logger.Error(shutdownErr, "failed to gracefully shut down HTTP server")
+		}
+	}()
+
 	logger.Info("Listening and serving...")
 	err = httpServer.ListenAndServe()
 	return translateStopErr(err, errServiceStopped)

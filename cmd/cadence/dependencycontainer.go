@@ -21,6 +21,9 @@ import (
 type dependencyContainer struct {
 	userService  *appservice.UserService
 	sessionStore app.SessionStore
+
+	dbConnector postgresql.Connector
+	redisClient redis.Client
 }
 
 func newDependencyContainer(
@@ -55,5 +58,17 @@ func newDependencyContainer(
 	}
 	router.PathPrefix("/api").Handler(corsMiddleware(config.CORSAllowedOrigins)(apiServer))
 
-	return &dependencyContainer{userService: userService, sessionStore: sessionStore}, nil
+	return &dependencyContainer{
+		userService:  userService,
+		sessionStore: sessionStore,
+
+		dbConnector: migrator.connector,
+		redisClient: redisClient,
+	}, nil
+}
+
+func (c *dependencyContainer) Close() error {
+	dbErr := c.dbConnector.Close()
+	redisErr := c.redisClient.Close()
+	return errors.Join(dbErr, redisErr)
 }
