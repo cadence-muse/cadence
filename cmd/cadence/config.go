@@ -7,7 +7,6 @@ import (
 
 	"github.com/caarlos0/env/v11"
 
-	redisinfra "cadence/pkg/cadence/infrastructure/persistence/redis"
 	"cadence/pkg/common/postgresql"
 	"cadence/pkg/common/redis"
 )
@@ -29,16 +28,16 @@ type config struct {
 	DBUser     string `env:"DB_USER"`
 	DBPassword string `env:"DB_PASSWORD"`
 
-	DBMaxConn      int `env:"DB_MAX_CONN" envDefault:"10"`
-	DBConnLifetime int `env:"DB_CONN_LIFETIME" envDefault:"60"`
+	DBMaxConn      int `env:"DB_MAX_CONN"`
+	DBConnLifetime int `env:"DB_CONN_LIFETIME"`
 
 	RedisHost     string `env:"REDIS_HOST"`
-	RedisPort     int    `env:"REDIS_PORT" envDefault:"6379"`
+	RedisPort     int    `env:"REDIS_PORT"`
 	RedisPassword string `env:"REDIS_PASSWORD"`
-	RedisDB       int    `env:"REDIS_DB" envDefault:"0"`
+	RedisDB       int    `env:"REDIS_DB"`
 
-	SessionMaxPerUser int           `env:"SESSION_MAX_PER_USER" envDefault:"5"`
-	SessionTTL        time.Duration `env:"SESSION_TTL" envDefault:"24h"`
+	SessionMaxPerUser int           `env:"SESSION_MAX_PER_USER"`
+	SessionTTL        time.Duration `env:"SESSION_TTL"`
 }
 
 func (c *config) dsn() postgresql.DSN {
@@ -57,12 +56,5 @@ func (c *config) redisConfig() redis.Config {
 		Port:     c.RedisPort,
 		Password: c.RedisPassword,
 		DB:       c.RedisDB,
-	}
-}
-
-func (c *config) sessionStoreConfig() redisinfra.Config {
-	return redisinfra.Config{
-		TTL:                c.SessionTTL,
-		MaxSessionsPerUser: c.SessionMaxPerUser,
 	}
 }

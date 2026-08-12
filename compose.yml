@@ -10,8 +10,16 @@ services:
       CADENCE_DB_NAME: cadence
       CADENCE_DB_USER: cadence
       CADENCE_DB_PASSWORD: RTYL9d
+      CADENCE_DB_MAX_CONN: 10
+      CADENCE_DB_CONN_LIFETIME: 60
+
       CADENCE_REDIS_HOST: cadence-redis
       CADENCE_REDIS_PORT: 6379
+      CADENCE_REDIS_PASSWORD: 3GN5gU
+      CADENCE_REDIS_DB: 0
+
+      CADENCE_SESSION_MAX_PER_USER: 5
+      CADENCE_SESSION_TTL: 24h
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
@@ -45,12 +53,13 @@ services:
   cadence-redis:
     image: redis:7-alpine
     container_name: cadence-redis
+    command: [ "redis-server", "--requirepass", "3GN5gU" ]
     ports:
       - "127.0.0.1:6379:6379"
     volumes:
       - "cadence-redis-data:/data"
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: [ "CMD", "redis-cli", "-a", "3GN5gU", "--no-auth-warning", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 5

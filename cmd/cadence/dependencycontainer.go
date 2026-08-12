@@ -9,7 +9,7 @@ import (
 	"cadence/pkg/cadence/app"
 	appservice "cadence/pkg/cadence/app/service"
 	"cadence/pkg/cadence/infrastructure/persistence/postgresql/repo"
-	redisrepo "cadence/pkg/cadence/infrastructure/persistence/redis"
+	redisinfra "cadence/pkg/cadence/infrastructure/persistence/redis"
 	"cadence/pkg/cadence/infrastructure/transport"
 	"cadence/pkg/common/log"
 	"cadence/pkg/common/ogenmiddleware"
@@ -40,7 +40,10 @@ func newDependencyContainer(
 	userService := appservice.NewUserService(executor)
 
 	redisClient := redis.NewClient(config.redisConfig())
-	sessionStore := redisrepo.NewSessionStore(redisClient, config.sessionStoreConfig())
+	sessionStore := redisinfra.NewSessionStore(redisClient, redisinfra.Config{
+		TTL:                config.SessionTTL,
+		MaxSessionsPerUser: config.SessionMaxPerUser,
+	})
 
 	middlewares := []middleware.Middleware{
 		ogenmiddleware.NewLoggingMiddleware(logger),
