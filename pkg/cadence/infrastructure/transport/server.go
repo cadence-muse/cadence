@@ -28,6 +28,8 @@ func NewAPIServer(
 	userQueryService query.UserQueryService,
 	bandService *service.BandService,
 	bandQueryService query.BandQueryService,
+	trackService *service.TrackService,
+	trackQueryService query.TrackQueryService,
 	sessionStore app.SessionStore,
 ) (http.Handler, error) {
 	apiHandler := newRESTHandler(
@@ -35,6 +37,8 @@ func NewAPIServer(
 		userQueryService,
 		bandService,
 		bandQueryService,
+		trackService,
+		trackQueryService,
 		sessionStore,
 	)
 	return publicapi.NewServer(
@@ -50,23 +54,29 @@ func newRESTHandler(
 	userQueryService query.UserQueryService,
 	bandService *service.BandService,
 	bandQueryService query.BandQueryService,
+	trackService *service.TrackService,
+	trackQueryService query.TrackQueryService,
 	sessionStore app.SessionStore,
 ) publicapi.Handler {
 	return &restHandler{
-		userService:      userService,
-		userQueryService: userQueryService,
-		bandService:      bandService,
-		bandQueryService: bandQueryService,
-		sessionStore:     sessionStore,
+		userService:       userService,
+		userQueryService:  userQueryService,
+		bandService:       bandService,
+		bandQueryService:  bandQueryService,
+		trackService:      trackService,
+		trackQueryService: trackQueryService,
+		sessionStore:      sessionStore,
 	}
 }
 
 type restHandler struct {
-	userService      *service.UserService
-	userQueryService query.UserQueryService
-	bandService      *service.BandService
-	bandQueryService query.BandQueryService
-	sessionStore     app.SessionStore
+	userService       *service.UserService
+	userQueryService  query.UserQueryService
+	bandService       *service.BandService
+	bandQueryService  query.BandQueryService
+	trackService      *service.TrackService
+	trackQueryService query.TrackQueryService
+	sessionStore      app.SessionStore
 }
 
 func (h *restHandler) Register(ctx context.Context, req *publicapi.RegisterRequestBody) (publicapi.RegisterRes, error) {

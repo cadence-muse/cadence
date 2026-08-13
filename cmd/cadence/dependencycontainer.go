@@ -50,6 +50,9 @@ func newDependencyContainer(
 	bandService := appservice.NewBandService(executor)
 	bandQueryService := query.NewBandQueryService(transactionalClient)
 
+	trackService := appservice.NewTrackService(executor)
+	trackQueryService := query.NewTrackQueryService(transactionalClient)
+
 	redisClient := redis.NewClient(config.redisConfig())
 	sessionStore := redisinfra.NewSessionStore(redisClient, redisinfra.Config{
 		TTL:                config.SessionTTL,
@@ -63,6 +66,8 @@ func newDependencyContainer(
 		userQueryService,
 		bandService,
 		bandQueryService,
+		trackService,
+		trackQueryService,
 		sessionStore,
 	)
 	if err != nil {
