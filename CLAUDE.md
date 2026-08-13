@@ -43,6 +43,26 @@ mise run check:lint
 bin/create-db-migration <name>
 ```
 
+## Architecture
+
+### Module structure
+
+Main module under `pkg/cadance/` follows:
+
+```
+pkg/cadance/
+  app/           - application services
+  domain/        - domain logic
+  infrastructure/
+    adapter/     - anti-corruption layer
+    transport/   - ogen server with API handlers
+    persistence/ - DB adapters
+```
+
+### Key packages
+
+- `pkg/common/` - shared utilities: auth, logging, postgresql helpers, UUID
+
 ## Databases
 
 ### Migrations
@@ -58,8 +78,8 @@ Use `bin/create-db-migration <name>` to scaffold a new pair.
 
 ## Routing
 
-- `gorilla/mux` router, modules register via `router.PathPrefix("/api")`
-- Public API: `/api/*`
+- `gorilla/mux` router
+- Public API: `/api/*` registered via `PathPrefix`
 - Health: `/resilience/ready`
 
 ## Constraints
