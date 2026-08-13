@@ -25,16 +25,14 @@ var (
 )
 
 type Track struct {
-	id            TrackID
-	bandID        BandID
-	title         string
-	artist        string
-	duration      time.Duration
-	originalTempo int
-	originalKey   valuetypes.MusicalKey
-	customTempo   maybe.Maybe[int]
-	customKey     maybe.Maybe[valuetypes.MusicalKey]
-	notes         maybe.Maybe[string]
+	id       TrackID
+	bandID   BandID
+	title    string
+	artist   string
+	duration maybe.Maybe[time.Duration]
+	tempo    maybe.Maybe[int]
+	key      maybe.Maybe[valuetypes.MusicalKey]
+	notes    maybe.Maybe[string]
 }
 
 type TrackRepository interface {
@@ -48,11 +46,9 @@ func NewTrack(
 	bandID BandID,
 	title string,
 	artist string,
-	duration time.Duration,
-	originalTempo int,
-	originalKey valuetypes.MusicalKey,
-	customTempo maybe.Maybe[int],
-	customKey maybe.Maybe[valuetypes.MusicalKey],
+	duration maybe.Maybe[time.Duration],
+	tempo maybe.Maybe[int],
+	key maybe.Maybe[valuetypes.MusicalKey],
 	notes maybe.Maybe[string],
 ) (*Track, error) {
 	err := validateTrackTitleLength(title)
@@ -64,16 +60,14 @@ func NewTrack(
 		return nil, err
 	}
 	return &Track{
-		id:            id,
-		bandID:        bandID,
-		title:         title,
-		artist:        artist,
-		duration:      duration,
-		originalTempo: originalTempo,
-		originalKey:   originalKey,
-		customTempo:   customTempo,
-		customKey:     customKey,
-		notes:         notes,
+		id:       id,
+		bandID:   bandID,
+		title:    title,
+		artist:   artist,
+		duration: duration,
+		tempo:    tempo,
+		key:      key,
+		notes:    notes,
 	}, nil
 }
 
@@ -82,24 +76,20 @@ func LoadTrack(
 	bandID BandID,
 	title string,
 	artist string,
-	duration time.Duration,
-	originalTempo int,
-	originalKey valuetypes.MusicalKey,
-	customTempo maybe.Maybe[int],
-	customKey maybe.Maybe[valuetypes.MusicalKey],
+	duration maybe.Maybe[time.Duration],
+	tempo maybe.Maybe[int],
+	key maybe.Maybe[valuetypes.MusicalKey],
 	notes maybe.Maybe[string],
 ) *Track {
 	return &Track{
-		id:            id,
-		bandID:        bandID,
-		title:         title,
-		artist:        artist,
-		duration:      duration,
-		originalTempo: originalTempo,
-		originalKey:   originalKey,
-		customTempo:   customTempo,
-		customKey:     customKey,
-		notes:         notes,
+		id:       id,
+		bandID:   bandID,
+		title:    title,
+		artist:   artist,
+		duration: duration,
+		tempo:    tempo,
+		key:      key,
+		notes:    notes,
 	}
 }
 
@@ -119,24 +109,16 @@ func (t *Track) Artist() string {
 	return t.artist
 }
 
-func (t *Track) Duration() time.Duration {
+func (t *Track) Duration() maybe.Maybe[time.Duration] {
 	return t.duration
 }
 
-func (t *Track) OriginalTempo() int {
-	return t.originalTempo
+func (t *Track) Tempo() maybe.Maybe[int] {
+	return t.tempo
 }
 
-func (t *Track) OriginalKey() valuetypes.MusicalKey {
-	return t.originalKey
-}
-
-func (t *Track) CustomTempo() maybe.Maybe[int] {
-	return t.customTempo
-}
-
-func (t *Track) CustomKey() maybe.Maybe[valuetypes.MusicalKey] {
-	return t.customKey
+func (t *Track) Key() maybe.Maybe[valuetypes.MusicalKey] {
+	return t.key
 }
 
 func (t *Track) Notes() maybe.Maybe[string] {

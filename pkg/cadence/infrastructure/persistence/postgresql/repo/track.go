@@ -39,32 +39,36 @@ func (repo *trackRepository) NextID() domain.TrackID {
 func (repo *trackRepository) Store(track *domain.Track) error {
 	const sqlQuery = `
 		INSERT INTO track (
-			id, band_id, title, artist, duration_seconds, original_tempo, original_key,
-			custom_tempo, custom_key, notes, created_by
+			id, band_id, title, artist,
+			duration_seconds, tempo, key, notes,
+		    created_by
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		ON CONFLICT (id) DO UPDATE
 		SET band_id          = EXCLUDED.band_id,
 		    title            = EXCLUDED.title,
 		    artist           = EXCLUDED.artist,
 		    duration_seconds = EXCLUDED.duration_seconds,
-		    original_tempo   = EXCLUDED.original_tempo,
-		    original_key     = EXCLUDED.original_key,
-		    custom_tempo     = EXCLUDED.custom_tempo,
-		    custom_key       = EXCLUDED.custom_key,
+		    tempo            = EXCLUDED.tempo,
+		    key              = EXCLUDED.key,
 		    notes            = EXCLUDED.notes,
 		    updated_at       = now(),
 		    updated_by       = EXCLUDED.created_by
 	`
 
-	customTempo := maybe.NewNone[int]()
-	if tempo, ok := maybe.JustValid(track.CustomTempo()); ok {
-		customTempo = maybe.NewJust(tempo)
+	tempo := maybe.NewNone[int]()
+	if tempoValue, ok := maybe.JustValid(track.Tempo()); ok {
+		tempo = maybe.NewJust(tempoValue)
 	}
 
-	customKey := maybe.NewNone[string]()
-	if key, ok := maybe.JustValid(track.CustomKey()); ok {
-		customKey = maybe.NewJust(key.String())
+	key := maybe.NewNone[string]()
+	if keyValue, ok := maybe.JustValid(track.Key()); ok {
+		key = maybe.NewJust(keyValue.String())
+	}
+
+	duration := maybe.NewNone[int]()
+	if durationValue, ok := maybe.JustValid(track.Duration()); ok {
+		duration = maybe.NewJust(int(durationValue / time.Second))
 	}
 
 	_, err := repo.client.ExecContext(
@@ -74,11 +78,9 @@ func (repo *trackRepository) Store(track *domain.Track) error {
 		track.BandID(),
 		track.Title(),
 		track.Artist(),
-		int(track.Duration()/time.Second),
-		track.OriginalTempo(),
-		track.OriginalKey().String(),
-		customTempo,
-		customKey,
+		duration,
+		tempo,
+		key,
 		track.Notes(),
 		repo.subjectID,
 	)
@@ -88,8 +90,7 @@ func (repo *trackRepository) Store(track *domain.Track) error {
 func (repo *trackRepository) Get(id domain.TrackID) (*domain.Track, error) {
 	const sqlQuery = `
 		SELECT id, band_id, title, artist,
-		       duration_seconds, original_tempo, original_key,
-		       custom_tempo, custom_key, notes
+		       duration_seconds, tempo, key, notes
 		FROM track
 		WHERE id = $1
 		`
@@ -103,18 +104,18 @@ func (repo *trackRepository) Get(id domain.TrackID) (*domain.Track, error) {
 		return nil, err
 	}
 
-	originalKey, err := valuetypes.MakeKey(row.OriginalKey)
-	if err != nil {
-		return nil, err
-	}
-
-	var customKey maybe.Maybe[valuetypes.MusicalKey]
-	if value, ok := maybe.JustValid(row.CustomKey); ok {
-		key, keyErr := valuetypes.MakeKey(value)
+	var key maybe.Maybe[valuetypes.MusicalKey]
+	if value, ok := maybe.JustValid(row.Key); ok {
+		keyValue, keyErr := valuetypes.MakeKey(value)
 		if keyErr != nil {
 			return nil, err
 		}
-		customKey = maybe.NewJust(key)
+		key = maybe.NewJust(keyValue)
+	}
+
+	var duration maybe.Maybe[time.Duration]
+	if value, ok := maybe.JustValid(row.DurationSeconds); ok {
+		duration = maybe.NewJust(time.Duration(value) * time.Second)
 	}
 
 	return domain.LoadTrack(
@@ -122,11 +123,9 @@ func (repo *trackRepository) Get(id domain.TrackID) (*domain.Track, error) {
 		row.BandID,
 		row.Title,
 		row.Artist,
-		time.Duration(row.DurationSeconds)*time.Second,
-		row.OriginalTempo,
-		originalKey,
-		row.CustomTempo,
-		customKey,
+		duration,
+		row.Tempo,
+		key,
 		row.Notes,
 	), nil
 }
@@ -136,10 +135,8 @@ type sqlxTrack struct {
 	BandID          uuid.UUID           `db:"band_id"`
 	Title           string              `db:"title"`
 	Artist          string              `db:"artist"`
-	DurationSeconds int                 `db:"duration_seconds"`
-	OriginalTempo   int                 `db:"original_tempo"`
-	OriginalKey     string              `db:"original_key"`
-	CustomTempo     maybe.Maybe[int]    `db:"custom_tempo"`
-	CustomKey       maybe.Maybe[string] `db:"custom_key"`
+	DurationSeconds maybe.Maybe[int]    `db:"duration_seconds"`
+	Tempo           maybe.Maybe[int]    `db:"tempo"`
+	Key             maybe.Maybe[string] `db:"key"`
 	Notes           maybe.Maybe[string] `db:"notes"`
 }

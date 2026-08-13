@@ -38,6 +38,10 @@ func (p *repoProvider) BandRepository() domain.BandRepository {
 	return NewBandRepository(p.ctx, p.tx, p.subjectID)
 }
 
+func (p *repoProvider) TrackRepository() domain.TrackRepository {
+	return NewTrackRepository(p.ctx, p.tx, p.subjectID)
+}
+
 func (p *repoProvider) Complete(err error) error {
 	if err != nil {
 		if rollbackErr := p.tx.Rollback(); rollbackErr != nil {
