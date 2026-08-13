@@ -8,6 +8,7 @@ import (
 
 	"cadence/pkg/cadence/app"
 	appservice "cadence/pkg/cadence/app/service"
+	"cadence/pkg/cadence/infrastructure/persistence/postgresql/query"
 	"cadence/pkg/cadence/infrastructure/persistence/postgresql/repo"
 	redisinfra "cadence/pkg/cadence/infrastructure/persistence/redis"
 	"cadence/pkg/cadence/infrastructure/transport"
@@ -19,9 +20,6 @@ import (
 )
 
 type dependencyContainer struct {
-	userService  *appservice.UserService
-	sessionStore app.SessionStore
-
 	dbConnector postgresql.Connector
 	redisClient redis.Client
 }
@@ -40,7 +38,15 @@ func newDependencyContainer(
 	connectionProvider := postgresql.NewConnectionProvider(migrator.connector.TransactionalClient())
 	transactionFactory := repo.NewTransactionFactory(connectionProvider)
 	executor := transactional.NewExecutor[app.RepoProvider](transactionFactory)
+
+	middlewares := []middleware.Middleware{
+		ogenmiddleware.NewLoggingMiddleware(logger),
+	}
+
 	userService := appservice.NewUserService(executor)
+
+	bandService := appservice.NewBandService(executor)
+	bandQueryService := query.NewBandQueryService(migrator.connector.TransactionalClient())
 
 	redisClient := redis.NewClient(config.redisConfig())
 	sessionStore := redisinfra.NewSessionStore(redisClient, redisinfra.Config{
@@ -48,20 +54,20 @@ func newDependencyContainer(
 		MaxSessionsPerUser: config.SessionMaxPerUser,
 	})
 
-	middlewares := []middleware.Middleware{
-		ogenmiddleware.NewLoggingMiddleware(logger),
-	}
-
-	apiServer, err := transport.NewAPIServer(errorHandler, middlewares, userService, sessionStore)
+	apiServer, err := transport.NewAPIServer(
+		errorHandler,
+		middlewares,
+		userService,
+		bandService,
+		bandQueryService,
+		sessionStore,
+	)
 	if err != nil {
 		return nil, err
 	}
 	router.PathPrefix("/api").Handler(corsMiddleware(config.CORSAllowedOrigins)(apiServer))
 
 	return &dependencyContainer{
-		userService:  userService,
-		sessionStore: sessionStore,
-
 		dbConnector: migrator.connector,
 		redisClient: redisClient,
 	}, nil

@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BandList'
+                $ref: '#/components/schemas/ListBandsResponseBody'
         '400':
           $ref: '#/components/responses/BadRequest'
 
@@ -99,6 +99,10 @@ paths:
       responses:
         '200':
           description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateBandResponseBody'
         '400':
           $ref: '#/components/responses/BadRequest'
 
@@ -322,10 +326,15 @@ components:
       required:
         - token
 
-    BandList:
-      type: array
-      items:
-        $ref: '#/components/schemas/BandListItem'
+    ListBandsResponseBody:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BandListItem'
+      required:
+        - items
 
     BandListItem:
       type: object
@@ -346,6 +355,15 @@ components:
           type: string
       required:
         - name
+
+    CreateBandResponseBody:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+      required:
+        - id
 
     Band:
       type: object
