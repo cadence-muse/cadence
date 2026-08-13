@@ -434,9 +434,12 @@ components:
           format: uuid
         name:
           type: string
+        inviteCode:
+          type: string
       required:
         - id
         - name
+        - inviteCode
 
     UpdateBandRequestBody:
       type: object

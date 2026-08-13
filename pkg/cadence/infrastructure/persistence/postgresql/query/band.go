@@ -39,7 +39,7 @@ func (s *bandQueryService) ListUserBands(ctx context.Context, userID uuid.UUID) 
 }
 
 func (s *bandQueryService) FindBand(ctx context.Context, id uuid.UUID) (maybe.Maybe[query.BandData], error) {
-	const sqlQuery = `SELECT id, name FROM band WHERE id = $1`
+	const sqlQuery = `SELECT id, name, invite_code FROM band WHERE id = $1`
 	var row sqlxBandData
 	err := s.client.GetContext(ctx, &row, sqlQuery, id)
 	if err != nil {
@@ -49,7 +49,11 @@ func (s *bandQueryService) FindBand(ctx context.Context, id uuid.UUID) (maybe.Ma
 		return maybe.NewNone[query.BandData](), err
 	}
 
-	return maybe.NewJust(query.BandData{ID: row.ID, Name: row.Name}), nil
+	return maybe.NewJust(query.BandData{
+		ID:         row.ID,
+		Name:       row.Name,
+		InviteCode: row.InviteCode,
+	}), nil
 }
 
 type sqlxBandListItem struct {
@@ -58,6 +62,7 @@ type sqlxBandListItem struct {
 }
 
 type sqlxBandData struct {
-	ID   uuid.UUID `db:"id"`
-	Name string    `db:"name"`
+	ID         uuid.UUID `db:"id"`
+	Name       string    `db:"name"`
+	InviteCode string    `db:"invite_code"`
 }
