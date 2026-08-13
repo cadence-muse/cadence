@@ -5,8 +5,6 @@ import (
 	"errors"
 	"net/http"
 
-	"cadence/pkg/common/auth"
-
 	googleuuid "github.com/google/uuid"
 	"github.com/ogen-go/ogen/middleware"
 	"github.com/ogen-go/ogen/ogenerrors"
@@ -16,6 +14,7 @@ import (
 	"cadence/pkg/cadence/app/query"
 	"cadence/pkg/cadence/app/service"
 	"cadence/pkg/cadence/domain"
+	"cadence/pkg/common/auth"
 	"cadence/pkg/common/maybe"
 	commonogenerrors "cadence/pkg/common/ogenerrors"
 	"cadence/pkg/common/slices"
