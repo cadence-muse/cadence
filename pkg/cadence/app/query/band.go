@@ -8,7 +8,7 @@ import (
 )
 
 type BandQueryService interface {
-	ListBands(ctx context.Context) ([]BandListItem, error)
+	ListUserBands(ctx context.Context, userID uuid.UUID) ([]BandListItem, error)
 	FindBand(ctx context.Context, id uuid.UUID) (maybe.Maybe[BandData], error)
 }
 

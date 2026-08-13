@@ -54,18 +54,6 @@ paths:
         '401':
           description: Invalid username or password
 
-  /api/logout:
-    post:
-      operationId: Logout
-      summary: Logs out the current user and removes the session
-      security:
-        - cookieAuth: [ ]
-      responses:
-        '200':
-          description: Success
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
   /api/band/list:
     get:
       operationId: ListBands

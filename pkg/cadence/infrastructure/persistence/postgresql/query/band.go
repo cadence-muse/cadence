@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	"cadence/pkg/cadence/app/query"
-	"cadence/pkg/common/auth"
 	"cadence/pkg/common/maybe"
 	"cadence/pkg/common/postgresql"
 	"cadence/pkg/common/slices"
@@ -21,9 +20,7 @@ type bandQueryService struct {
 	client postgresql.ClientContext
 }
 
-func (s *bandQueryService) ListBands(ctx context.Context) ([]query.BandListItem, error) {
-	userID, _ := auth.UserIDFromContext(ctx)
-
+func (s *bandQueryService) ListUserBands(ctx context.Context, userID uuid.UUID) ([]query.BandListItem, error) {
 	const sqlQuery = `
 		SELECT b.id, b.name
 		FROM band b

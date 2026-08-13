@@ -5,6 +5,8 @@ import (
 	"errors"
 	"net/http"
 
+	"cadence/pkg/common/auth"
+
 	googleuuid "github.com/google/uuid"
 	"github.com/ogen-go/ogen/middleware"
 	"github.com/ogen-go/ogen/ogenerrors"
@@ -14,7 +16,6 @@ import (
 	"cadence/pkg/cadence/app/query"
 	"cadence/pkg/cadence/app/service"
 	"cadence/pkg/cadence/domain"
-	"cadence/pkg/common/auth"
 	"cadence/pkg/common/maybe"
 	commonogenerrors "cadence/pkg/common/ogenerrors"
 	"cadence/pkg/common/slices"
@@ -98,19 +99,12 @@ func (h *restHandler) Login(ctx context.Context, req *publicapi.LoginRequestBody
 	return &publicapi.LoginResponseBody{Token: token}, nil
 }
 
-func (h *restHandler) Logout(ctx context.Context) (publicapi.LogoutRes, error) {
-	token, ok := auth.SessionTokenFromContext(ctx)
-	if !ok {
-		return nil, errors.New("session token missing from context")
-	}
-	if err := h.sessionStore.DeleteSession(ctx, token); err != nil {
-		return nil, err
-	}
-	return &publicapi.LogoutOK{}, nil
-}
-
 func (h *restHandler) ListBands(ctx context.Context) (publicapi.ListBandsRes, error) {
-	bands, err := h.bandQueryService.ListBands(ctx)
+	userID, ok := auth.UserIDFromContext(ctx)
+	if !ok {
+		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
+	}
+	bands, err := h.bandQueryService.ListUserBands(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
