@@ -475,17 +475,33 @@ components:
           format: uuid
         title:
           type: string
+        artist:
+          type: string
+        durationSeconds:
+          type: integer
       required:
         - id
         - title
+        - artist
 
     CreateBandTrackRequestBody:
       type: object
       properties:
         title:
           type: string
+        artist:
+          type: string
+        durationSeconds:
+          type: integer
+        tempo:
+          type: integer
+        key:
+          type: string
+        notes:
+          type: string
       required:
         - title
+        - artist
 
     BandTrack:
       type: object
@@ -495,9 +511,20 @@ components:
           format: uuid
         title:
           type: string
+        artist:
+          type: string
+        durationSeconds:
+          type: integer
+        tempo:
+          type: integer
+        key:
+          type: string
+        notes:
+          type: string
       required:
         - id
         - title
+        - artist
 
     UpdateBandTrackRequestBody:
       type: object
