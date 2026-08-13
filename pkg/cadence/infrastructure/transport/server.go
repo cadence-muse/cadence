@@ -90,7 +90,7 @@ func (h *restHandler) Login(ctx context.Context, req *publicapi.LoginRequestBody
 	userID, err := h.userService.Authenticate(ctx, req.GetUsername(), req.GetPassword())
 	if err != nil {
 		if errors.Is(err, domain.ErrInvalidCredentials) {
-			return &publicapi.LoginUnauthorized{}, nil
+			return nil, commonogenerrors.NewPermissionDeniedError("invalid credentials")
 		}
 		return nil, err
 	}
