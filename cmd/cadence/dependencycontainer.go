@@ -35,7 +35,8 @@ func newDependencyContainer(
 		return nil, errors.Wrap(err, "failed to migrate")
 	}
 
-	connectionProvider := postgresql.NewConnectionProvider(migrator.connector.TransactionalClient())
+	transactionalClient := migrator.connector.TransactionalClient()
+	connectionProvider := postgresql.NewConnectionProvider(transactionalClient)
 	transactionFactory := repo.NewTransactionFactory(connectionProvider)
 	executor := transactional.NewExecutor[app.RepoProvider](transactionFactory)
 
@@ -44,9 +45,10 @@ func newDependencyContainer(
 	}
 
 	userService := appservice.NewUserService(executor)
+	userQueryService := query.NewUserQueryService(transactionalClient)
 
 	bandService := appservice.NewBandService(executor)
-	bandQueryService := query.NewBandQueryService(migrator.connector.TransactionalClient())
+	bandQueryService := query.NewBandQueryService(transactionalClient)
 
 	redisClient := redis.NewClient(config.redisConfig())
 	sessionStore := redisinfra.NewSessionStore(redisClient, redisinfra.Config{
@@ -58,6 +60,7 @@ func newDependencyContainer(
 		errorHandler,
 		middlewares,
 		userService,
+		userQueryService,
 		bandService,
 		bandQueryService,
 		sessionStore,

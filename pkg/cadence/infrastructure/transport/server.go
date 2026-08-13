@@ -25,12 +25,14 @@ func NewAPIServer(
 	errorHandler ogenerrors.ErrorHandler,
 	middlewares []middleware.Middleware,
 	userService *service.UserService,
+	userQueryService query.UserQueryService,
 	bandService *service.BandService,
 	bandQueryService query.BandQueryService,
 	sessionStore app.SessionStore,
 ) (http.Handler, error) {
 	apiHandler := newRESTHandler(
 		userService,
+		userQueryService,
 		bandService,
 		bandQueryService,
 		sessionStore,
@@ -45,12 +47,14 @@ func NewAPIServer(
 
 func newRESTHandler(
 	userService *service.UserService,
+	userQueryService query.UserQueryService,
 	bandService *service.BandService,
 	bandQueryService query.BandQueryService,
 	sessionStore app.SessionStore,
 ) publicapi.Handler {
 	return &restHandler{
 		userService:      userService,
+		userQueryService: userQueryService,
 		bandService:      bandService,
 		bandQueryService: bandQueryService,
 		sessionStore:     sessionStore,
@@ -59,6 +63,7 @@ func newRESTHandler(
 
 type restHandler struct {
 	userService      *service.UserService
+	userQueryService query.UserQueryService
 	bandService      *service.BandService
 	bandQueryService query.BandQueryService
 	sessionStore     app.SessionStore
@@ -98,6 +103,41 @@ func (h *restHandler) Login(ctx context.Context, req *publicapi.LoginRequestBody
 	return &publicapi.LoginResponseBody{Token: token}, nil
 }
 
+func (h *restHandler) GetUserProfile(ctx context.Context) (publicapi.GetUserProfileRes, error) {
+	userID, ok := auth.UserIDFromContext(ctx)
+	if !ok {
+		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
+	}
+	user, err := h.userQueryService.FindUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	foundUser, ok := maybe.JustValid(user)
+	if !ok {
+		return nil, commonogenerrors.NewNotFoundError("user not found")
+	}
+	return &publicapi.UserProfile{Username: foundUser.Username}, nil
+}
+
+func (h *restHandler) GetHomepageData(ctx context.Context) (publicapi.GetHomepageDataRes, error) {
+	userID, ok := auth.UserIDFromContext(ctx)
+	if !ok {
+		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
+	}
+	user, err := h.userQueryService.FindUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	foundUser, ok := maybe.JustValid(user)
+	if !ok {
+		return nil, commonogenerrors.NewNotFoundError("user not found")
+	}
+	return &publicapi.HomepageData{
+		Username:   foundUser.Username,
+		BandsCount: 67,
+	}, nil
+}
+
 func (h *restHandler) ListBands(ctx context.Context) (publicapi.ListBandsRes, error) {
 	userID, ok := auth.UserIDFromContext(ctx)
 	if !ok {
@@ -111,7 +151,11 @@ func (h *restHandler) ListBands(ctx context.Context) (publicapi.ListBandsRes, er
 }
 
 func (h *restHandler) CreateBand(ctx context.Context, req *publicapi.CreateBandRequestBody) (publicapi.CreateBandRes, error) {
-	id, err := h.bandService.Create(ctx, req.GetName())
+	userID, ok := auth.UserIDFromContext(ctx)
+	if !ok {
+		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
+	}
+	id, err := h.bandService.Create(ctx, userID, req.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -134,6 +178,20 @@ func (h *restHandler) UpdateBand(_ context.Context, _ *publicapi.UpdateBandReque
 	panic("implement me")
 }
 
+func (h *restHandler) JoinBand(ctx context.Context, req *publicapi.JoinBandRequestBody) (publicapi.JoinBandRes, error) {
+	userID, ok := auth.UserIDFromContext(ctx)
+	if !ok {
+		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
+	}
+	if err := h.bandService.JoinByInviteCode(ctx, userID, req.GetInviteCode()); err != nil {
+		if errors.Is(err, domain.ErrBandNotFound) {
+			return nil, commonogenerrors.NewNotFoundError(err.Error())
+		}
+		return nil, err
+	}
+	return &publicapi.JoinBandOK{}, nil
+}
+
 func (h *restHandler) CreateBandTrack(_ context.Context, _ *publicapi.CreateBandTrackRequestBody, _ publicapi.CreateBandTrackParams) (publicapi.CreateBandTrackRes, error) {
 	panic("implement me")
 }
@@ -143,7 +201,7 @@ func (h *restHandler) GetBandTrack(_ context.Context, _ *publicapi.BandTrack, _ 
 }
 
 func (h *restHandler) ListBandTracks(_ context.Context, _ publicapi.ListBandTracksParams) (publicapi.ListBandTracksRes, error) {
-	return &publicapi.TrackList{}, nil
+	panic("implement me")
 }
 
 func (h *restHandler) UpdateBandTrack(_ context.Context, _ *publicapi.UpdateBandTrackRequestBody, _ publicapi.UpdateBandTrackParams) (publicapi.UpdateBandTrackRes, error) {

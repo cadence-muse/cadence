@@ -16,7 +16,8 @@ paths:
     post:
       operationId: Register
       summary: Registers a new user
-      security: []
+      tags: [ Users ]
+      security: [ ]
       requestBody:
         required: true
         content:
@@ -37,7 +38,8 @@ paths:
     post:
       operationId: Login
       summary: Logs in the user and returns token
-      security: []
+      tags: [ Users ]
+      security: [ ]
       requestBody:
         required: true
         content:
@@ -53,6 +55,40 @@ paths:
                 $ref: '#/components/schemas/LoginResponseBody'
         '401':
           description: Invalid username or password
+
+  /api/me:
+    get:
+      operationId: GetUserProfile
+      summary: Get logged in user profile info
+      tags: [ Users ]
+      security:
+        - cookieAuth: [ ]
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/homepage:
+    get:
+      operationId: GetHomepageData
+      summary: Get homepage data for current user
+      tags: [ Users ]
+      security:
+        - cookieAuth: [ ]
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomepageData'
+        '400':
+          $ref: '#/components/responses/BadRequest'
 
   /api/band/list:
     get:
@@ -85,7 +121,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateBandRequestBody'
       responses:
-        '200':
+        '201':
           description: Success
           content:
             application/json:
@@ -132,6 +168,24 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+  /api/band/join:
+    post:
+      operationId: JoinBand
+      summary: Join a band by invite code
+      security:
+        - cookieAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinBandRequestBody'
+      responses:
+        '200':
+          description: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
   /api/band/{bandId}/track/list:
     get:
       operationId: ListBandTracks
@@ -146,7 +200,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TrackList'
+                $ref: '#/components/schemas/ListBandTracksResponseBody'
         '400':
           $ref: '#/components/responses/BadRequest'
 
@@ -165,7 +219,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateBandTrackRequestBody'
       responses:
-        '200':
+        '201':
           description: Success
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -314,6 +368,25 @@ components:
       required:
         - token
 
+    UserProfile:
+      type: object
+      properties:
+        username:
+          type: string
+      required:
+        - username
+
+    HomepageData:
+      type: object
+      properties:
+        username:
+          type: string
+        bandsCount:
+          type: integer
+      required:
+        - username
+        - bandsCount
+
     ListBandsResponseBody:
       type: object
       properties:
@@ -373,10 +446,23 @@ components:
       required:
         - name
 
-    TrackList:
-      type: array
-      items:
-        $ref: '#/components/schemas/TrackListItem'
+    JoinBandRequestBody:
+      type: object
+      properties:
+        inviteCode:
+          type: string
+      required:
+        - inviteCode
+
+    ListBandTracksResponseBody:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrackListItem'
+      required:
+        - items
 
     TrackListItem:
       type: object
