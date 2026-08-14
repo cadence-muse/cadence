@@ -18,7 +18,7 @@ Cadence is a simple repertoire manager for actively gigging bands. Key features 
 This repo contains only the core backend. Other repositories for this project:
 
 - [cadence-client](https://github.com/nightnoryu/cadence-client) - cross-platform (web & mobile) client for API.
-- [cadence-platform](https://github.com/nightnoryu/cadence-platform) - k8s settings for deployment.
+- [cadence-platform](https://github.com/nightnoryu/cadence-platform) - kubernetes deployment settings for the whole application.
 
 ## 🛠️ Local development
 
