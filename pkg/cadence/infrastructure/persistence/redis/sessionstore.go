@@ -46,7 +46,11 @@ func (s *sessionStore) CreateSession(ctx context.Context, userID uuid.UUID) (str
 	}
 
 	sessionsKey := userSessionsKey(userID)
-	if err := s.client.ZAdd(ctx, sessionsKey, float64(time.Now().UnixNano()), token); err != nil {
+	if err := s.client.ZAdd(ctx, sessionsKey, float64(time.Now().UnixMilli()), token); err != nil {
+		return "", err
+	}
+
+	if err := s.client.Expire(ctx, sessionsKey, s.cfg.TTL); err != nil {
 		return "", err
 	}
 
@@ -81,10 +85,6 @@ func (s *sessionStore) ValidateSession(ctx context.Context, token string) (uuid.
 // enforceSessionLimit drops stale entries left behind by expired sessions, then evicts the
 // oldest live sessions until the user is back within the configured limit.
 func (s *sessionStore) enforceSessionLimit(ctx context.Context, sessionsKey string) error {
-	if s.cfg.MaxSessionsPerUser <= 0 {
-		return nil
-	}
-
 	members, err := s.client.ZRangeWithScores(ctx, sessionsKey)
 	if err != nil {
 		return err
@@ -108,6 +108,10 @@ func (s *sessionStore) enforceSessionLimit(ctx context.Context, sessionsKey stri
 		if err := s.client.ZRem(ctx, sessionsKey, stale...); err != nil {
 			return err
 		}
+	}
+
+	if s.cfg.MaxSessionsPerUser <= 0 {
+		return nil
 	}
 
 	if excess := len(live) - s.cfg.MaxSessionsPerUser; excess > 0 {
