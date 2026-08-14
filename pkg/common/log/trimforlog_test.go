@@ -20,7 +20,7 @@ func TestTrimForLogs(t *testing.T) {
 
 	t.Run("non-string non-slice non-map values pass through unchanged", func(t *testing.T) {
 		result := TrimForLogs(42, TrimForLogOptions{})
-		assert.Equal(t, float64(42), result)
+		assert.Equal(t, float64(42), result) //nolint:testifylint // exact deterministic value, not a computed float
 	})
 
 	t.Run("string within limit is unchanged", func(t *testing.T) {

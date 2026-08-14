@@ -47,7 +47,7 @@ func service(ctx context.Context, config *config, logger log.Logger) error {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
-		if shutdownErr := httpServer.Shutdown(shutdownCtx); shutdownErr != nil {
+		if shutdownErr := httpServer.Shutdown(shutdownCtx); shutdownErr != nil { //nolint:contextcheck // shutdown must use a fresh context; ctx is cancelled by this point
 			logger.Error(shutdownErr, "failed to gracefully shut down HTTP server")
 		}
 	}()

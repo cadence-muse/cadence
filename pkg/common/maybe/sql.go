@@ -114,7 +114,7 @@ func convertToValuer(i any) (v driver.Valuer, ok bool) {
 // Some types like int uses sql.NullInt64 to be driver compatible
 func sqlNullObject[T any](t any, valid bool) valuer {
 	if driver.IsValue(t) {
-		v := t.(T)
+		v := t.(T) //nolint:forcetypeassert // callers always pass a T value boxed in any
 		return &sql.Null[T]{
 			V:     v,
 			Valid: valid,
@@ -127,7 +127,7 @@ func sqlNullObject[T any](t any, valid bool) valuer {
 	case byte,
 		int16,
 		int32:
-		v := t.(T)
+		v := t.(T) //nolint:forcetypeassert // callers always pass a T value boxed in any
 		return &sql.Null[T]{
 			V:     v,
 			Valid: valid,

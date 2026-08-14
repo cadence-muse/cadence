@@ -37,7 +37,7 @@ func TestMakeKey(t *testing.T) {
 
 			if tt.wantErr != nil {
 				require.Error(t, err)
-				assert.ErrorIs(t, err, tt.wantErr)
+				require.ErrorIs(t, err, tt.wantErr)
 				assert.Equal(t, MusicalKey{}, key)
 				return
 			}
