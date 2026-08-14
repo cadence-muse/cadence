@@ -138,7 +138,12 @@ func (repo *trackRepository) Remove(id domain.TrackID) error {
 		    deleted_by = $3
 		WHERE id = $1 AND deleted_at IS NULL
 	`
-	_, err := repo.client.ExecContext(repo.ctx, sqlQuery, id, time.Now(), repo.subjectID)
+	if _, err := repo.client.ExecContext(repo.ctx, sqlQuery, id, time.Now(), repo.subjectID); err != nil {
+		return err
+	}
+
+	const cascadeSetlistTrackSQLQuery = `DELETE FROM setlist_track WHERE track_id = $1`
+	_, err := repo.client.ExecContext(repo.ctx, cascadeSetlistTrackSQLQuery, id)
 	return err
 }
 

@@ -126,13 +126,23 @@ func (repo *bandRepository) Remove(id domain.BandID) error {
 		return err
 	}
 
-	const cascadeSQLQuery = `
+	const cascadeTracksSQLQuery = `
 		UPDATE track
 		SET deleted_at = $2,
 		    deleted_by = $3
 		WHERE band_id = $1 AND deleted_at IS NULL
 	`
-	_, err := repo.client.ExecContext(repo.ctx, cascadeSQLQuery, id, deletedAt, repo.subjectID)
+	if _, err := repo.client.ExecContext(repo.ctx, cascadeTracksSQLQuery, id, deletedAt, repo.subjectID); err != nil {
+		return err
+	}
+
+	const cascadeSetlistsSQLQuery = `
+		UPDATE setlist
+		SET deleted_at = $2,
+		    deleted_by = $3
+		WHERE band_id = $1 AND deleted_at IS NULL
+	`
+	_, err := repo.client.ExecContext(repo.ctx, cascadeSetlistsSQLQuery, id, deletedAt, repo.subjectID)
 	return err
 }
 
