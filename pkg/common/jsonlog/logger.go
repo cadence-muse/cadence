@@ -18,6 +18,7 @@ type logger struct {
 func NewLogger(config *Config) log.MainLogger {
 	implConfig := zap.NewProductionConfig()
 	implConfig.Level = zap.NewAtomicLevelAt(zapcore.Level(config.Level))
+	implConfig.DisableCaller = true
 	impl := zap.Must(implConfig.Build())
 	return &logger{
 		Logger: impl.With(zap.String(appNameKey, config.AppName)),
