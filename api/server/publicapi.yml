@@ -404,6 +404,64 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+  /api/band/{bandId}/setlist/{setlistId}/track:
+    post:
+      operationId: AddSetlistTrack
+      summary: Add a track to a setlist
+      security:
+        - sessionAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/BandId'
+        - $ref: '#/components/parameters/SetlistId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddSetlistTrackRequestBody'
+      responses:
+        '204':
+          description: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/band/{bandId}/setlist/{setlistId}/track/{trackId}:
+    delete:
+      operationId: RemoveSetlistTrack
+      summary: Remove a track from a setlist
+      security:
+        - sessionAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/BandId'
+        - $ref: '#/components/parameters/SetlistId'
+        - $ref: '#/components/parameters/TrackId'
+      responses:
+        '204':
+          description: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/band/{bandId}/setlist/{setlistId}/tracks/reorder:
+    put:
+      operationId: ReorderSetlistTracks
+      summary: Reorder the tracks of a setlist
+      security:
+        - sessionAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/BandId'
+        - $ref: '#/components/parameters/SetlistId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderSetlistTracksRequestBody'
+      responses:
+        '204':
+          description: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
 components:
   securitySchemes:
     sessionAuth:
@@ -737,14 +795,21 @@ components:
     SetlistListItem:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
         name:
           type: string
+        eventDate:
+          type: string
+          format: date
       required:
+        - id
         - name
 
     CreateBandSetlistsRequestBody:
       type: object
-      properties: 
+      properties:
         name:
           type: string
         eventLocation:
@@ -754,6 +819,7 @@ components:
           format: date
         trackIds:
           type: array
+          maxItems: 100
           items:
             type: string
             format: uuid
@@ -772,10 +838,44 @@ components:
     BandSetlist:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
         name:
           type: string
+        eventLocation:
+          type: string
+        eventDate:
+          type: string
+          format: date
+        tracks:
+          type: array
+          items:
+            $ref: '#/components/schemas/SetlistTrackItem'
       required:
+        - id
         - name
+        - tracks
+
+    SetlistTrackItem:
+      type: object
+      properties:
+        trackId:
+          type: string
+          format: uuid
+        position:
+          type: integer
+        title:
+          type: string
+        artist:
+          type: string
+        durationSeconds:
+          type: integer
+      required:
+        - trackId
+        - position
+        - title
+        - artist
 
     UpdateBandSetlistRequestBody:
       type: object
@@ -789,3 +889,24 @@ components:
           type: string
           format: date
           nullable: true
+
+    AddSetlistTrackRequestBody:
+      type: object
+      properties:
+        trackId:
+          type: string
+          format: uuid
+      required:
+        - trackId
+
+    ReorderSetlistTracksRequestBody:
+      type: object
+      properties:
+        trackIds:
+          type: array
+          maxItems: 100
+          items:
+            type: string
+            format: uuid
+      required:
+        - trackIds

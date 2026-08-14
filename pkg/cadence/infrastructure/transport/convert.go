@@ -8,6 +8,7 @@ import (
 	"cadence/api/server/publicapi"
 	"cadence/pkg/cadence/app/query"
 	"cadence/pkg/common/maybe"
+	"cadence/pkg/common/slices"
 	"cadence/pkg/common/valuetypes"
 )
 
@@ -45,6 +46,42 @@ func convertQueryTrackDataToAPI(track query.TrackData) publicapi.BandTrack {
 		Key:             optStringFromMaybe(track.Key),
 		Notes:           optStringFromMaybe(track.Notes),
 	}
+}
+
+func convertQuerySetlistListItemToAPI(setlist query.SetlistListItem) publicapi.SetlistListItem {
+	return publicapi.SetlistListItem{
+		ID:        googleuuid.UUID(setlist.ID),
+		Name:      setlist.Name,
+		EventDate: optDateFromMaybe(setlist.EventDate),
+	}
+}
+
+func convertQuerySetlistDataToAPI(setlist query.SetlistData) publicapi.BandSetlist {
+	return publicapi.BandSetlist{
+		ID:            googleuuid.UUID(setlist.ID),
+		Name:          setlist.Name,
+		EventLocation: optStringFromMaybe(setlist.EventLocation),
+		EventDate:     optDateFromMaybe(setlist.EventDate),
+		Tracks:        slices.Map(setlist.Tracks, convertQuerySetlistTrackItemToAPI),
+	}
+}
+
+func convertQuerySetlistTrackItemToAPI(track query.SetlistTrackItem) publicapi.SetlistTrackItem {
+	return publicapi.SetlistTrackItem{
+		TrackId:         googleuuid.UUID(track.TrackID),
+		Position:        track.Position,
+		Title:           track.Title,
+		Artist:          track.Artist,
+		DurationSeconds: optIntFromDuration(track.Duration),
+	}
+}
+
+func optDateFromMaybe(v maybe.Maybe[time.Time]) publicapi.OptDate {
+	value, ok := maybe.JustValid(v)
+	if !ok {
+		return publicapi.OptDate{}
+	}
+	return publicapi.NewOptDate(value)
 }
 
 func optIntFromDuration(duration maybe.Maybe[time.Duration]) publicapi.OptInt {
