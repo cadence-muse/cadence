@@ -54,7 +54,12 @@ func (s *bandQueryService) CountUserBands(ctx context.Context, userID uuid.UUID)
 }
 
 func (s *bandQueryService) FindBand(ctx context.Context, id uuid.UUID) (maybe.Maybe[query.BandData], error) {
-	const sqlQuery = `SELECT id, name, invite_code FROM band WHERE id = $1 AND deleted_at IS NULL`
+	const sqlQuery = `
+		SELECT b.id, b.name, bm.user_id AS owner_id, b.invite_code
+		FROM band b
+		JOIN band_member bm ON bm.band_id = b.id AND bm.role = 'owner'
+		WHERE b.id = $1 AND b.deleted_at IS NULL
+	`
 	var row sqlxBandData
 	err := s.client.GetContext(ctx, &row, sqlQuery, id)
 	if err != nil {
@@ -67,6 +72,7 @@ func (s *bandQueryService) FindBand(ctx context.Context, id uuid.UUID) (maybe.Ma
 	return maybe.NewJust(query.BandData{
 		ID:         row.ID,
 		Name:       row.Name,
+		OwnerID:    row.OwnerID,
 		InviteCode: row.InviteCode,
 	}), nil
 }
@@ -79,5 +85,6 @@ type sqlxBandListItem struct {
 type sqlxBandData struct {
 	ID         uuid.UUID `db:"id"`
 	Name       string    `db:"name"`
+	OwnerID    uuid.UUID `db:"owner_id"`
 	InviteCode string    `db:"invite_code"`
 }

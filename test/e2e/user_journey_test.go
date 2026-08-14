@@ -25,6 +25,7 @@ func TestUserJourney(t *testing.T) {
 	)
 
 	var (
+		ownerID                uuid.UUID
 		memberID               uuid.UUID
 		ownerToken             string
 		memberToken            string
@@ -41,6 +42,7 @@ func TestUserJourney(t *testing.T) {
 		})
 		body := requireResponse[publicapi.RegisterResponseBody](t, res, err)
 		require.NotEqual(t, uuid.Nil, body.ID)
+		ownerID = body.ID
 	})
 
 	t.Run("login owner", func(t *testing.T) {
@@ -57,6 +59,7 @@ func TestUserJourney(t *testing.T) {
 	t.Run("get owner profile", func(t *testing.T) {
 		res, err := env.client.GetUserProfile(ctx)
 		body := requireResponse[publicapi.UserProfile](t, res, err)
+		require.Equal(t, ownerID, body.ID)
 		require.Equal(t, ownerUsername, body.Username)
 	})
 
@@ -81,6 +84,7 @@ func TestUserJourney(t *testing.T) {
 		body := requireResponse[publicapi.Band](t, res, err)
 		require.Equal(t, bandID, body.ID)
 		require.Equal(t, "The Wanderers", body.Name)
+		require.Equal(t, ownerID, body.OwnerId)
 		require.NotEmpty(t, body.InviteCode)
 		inviteCode = body.InviteCode
 	})
@@ -108,6 +112,7 @@ func TestUserJourney(t *testing.T) {
 		getRes, getErr := env.client.GetBand(ctx, publicapi.GetBandParams{BandId: bandID})
 		body := requireResponse[publicapi.Band](t, getRes, getErr)
 		require.Equal(t, "The Wanderers Reborn", body.Name)
+		require.Equal(t, ownerID, body.OwnerId)
 	})
 
 	t.Run("register and login member", func(t *testing.T) {

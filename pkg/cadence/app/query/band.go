@@ -22,5 +22,6 @@ type BandListItem struct {
 type BandData struct {
 	ID         uuid.UUID
 	Name       string
+	OwnerID    uuid.UUID
 	InviteCode string
 }

@@ -584,9 +584,13 @@ components:
     UserProfile:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
         username:
           type: string
       required:
+        - id
         - username
 
     HomepageData:
@@ -647,6 +651,9 @@ components:
           format: uuid
         name:
           type: string
+        ownerId:
+          type: string
+          format: uuid
         members:
           type: array
           items:
@@ -656,6 +663,7 @@ components:
       required:
         - id
         - name
+        - ownerId
         - members
         - inviteCode
 
@@ -834,7 +842,7 @@ components:
 
     CreateBandSetlistsResponseBody:
       type: object
-      properties: 
+      properties:
         id:
           type: string
           format: uuid

@@ -23,6 +23,7 @@ func convertQueryBandDataToAPI(band query.BandData) publicapi.Band {
 	return publicapi.Band{
 		ID:         googleuuid.UUID(band.ID),
 		Name:       band.Name,
+		OwnerId:    googleuuid.UUID(band.OwnerID),
 		InviteCode: band.InviteCode,
 	}
 }

@@ -137,7 +137,7 @@ func (h *restHandler) GetUserProfile(ctx context.Context) (publicapi.GetUserProf
 	if !ok {
 		return nil, commonogenerrors.NewNotFoundError("user not found")
 	}
-	return &publicapi.UserProfile{Username: foundUser.Username}, nil
+	return &publicapi.UserProfile{ID: googleuuid.UUID(foundUser.ID), Username: foundUser.Username}, nil
 }
 
 func (h *restHandler) GetHomepageData(ctx context.Context) (publicapi.GetHomepageDataRes, error) {
