@@ -1,25 +1,16 @@
 package transport
 
 import (
-	"cadence/pkg/common/maybe"
-)
+	"time"
 
-type OptValue[T any] interface {
-	IsSet() bool
-	Get() (v T, ok bool)
-}
+	"cadence/api/server/publicapi"
+	"cadence/pkg/common/maybe"
+	"cadence/pkg/common/valuetypes"
+)
 
 type OptNilValue[T any] interface {
 	OptValue[T]
 	IsNull() bool
-}
-
-func maybeValueFromOpt[T any](opt OptValue[T]) maybe.Maybe[T] {
-	if !opt.IsSet() {
-		return maybe.NewAbsent[T]()
-	}
-	value, _ := opt.Get()
-	return maybe.NewJust(value)
 }
 
 func maybeValueFromOptNil[T any](opt OptNilValue[T]) maybe.Maybe[T] {
@@ -31,4 +22,24 @@ func maybeValueFromOptNil[T any](opt OptNilValue[T]) maybe.Maybe[T] {
 	}
 	value, _ := opt.Get()
 	return maybe.NewJust(value)
+}
+
+func maybeDurationFromOptNil(opt publicapi.OptNilInt) maybe.Maybe[time.Duration] {
+	if !opt.Set {
+		return maybe.NewAbsent[time.Duration]()
+	}
+	if opt.Null {
+		return maybe.NewNone[time.Duration]()
+	}
+	return maybe.NewJust(intSecondsToDuration(opt.Value))
+}
+
+func maybeKeyFromOptNil(opt publicapi.OptNilString) (maybe.Maybe[valuetypes.MusicalKey], error) {
+	if !opt.Set {
+		return maybe.NewAbsent[valuetypes.MusicalKey](), nil
+	}
+	if opt.Null {
+		return maybe.NewNone[valuetypes.MusicalKey](), nil
+	}
+	return parseMusicalKey(opt.Value)
 }

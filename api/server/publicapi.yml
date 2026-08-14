@@ -800,12 +800,18 @@ components:
           format: uuid
         name:
           type: string
+        tracksCount:
+          type: integer
+        durationSeconds:
+          type: integer
         eventDate:
           type: string
           format: date
       required:
         - id
         - name
+        - tracksCount
+        - durationSeconds
 
     CreateBandSetlistsRequestBody:
       type: object
@@ -843,6 +849,8 @@ components:
           format: uuid
         name:
           type: string
+        durationSeconds:
+          type: integer
         eventLocation:
           type: string
         eventDate:
@@ -855,6 +863,7 @@ components:
       required:
         - id
         - name
+        - durationSeconds
         - tracks
 
     SetlistTrackItem:

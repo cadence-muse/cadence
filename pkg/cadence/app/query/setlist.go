@@ -14,15 +14,18 @@ type SetlistQueryService interface {
 }
 
 type SetlistListItem struct {
-	ID        uuid.UUID
-	Name      string
-	EventDate maybe.Maybe[time.Time]
+	ID          uuid.UUID
+	Name        string
+	TracksCount int           // TODO implement retrieval
+	Duration    time.Duration // TODO implement retrieval
+	EventDate   maybe.Maybe[time.Time]
 }
 
 type SetlistData struct {
 	ID            uuid.UUID
 	BandID        uuid.UUID
 	Name          string
+	Duration      time.Duration // TODO implement retrieval
 	EventLocation maybe.Maybe[string]
 	EventDate     maybe.Maybe[time.Time]
 	Tracks        []SetlistTrackItem

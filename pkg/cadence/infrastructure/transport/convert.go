@@ -50,19 +50,22 @@ func convertQueryTrackDataToAPI(track query.TrackData) publicapi.BandTrack {
 
 func convertQuerySetlistListItemToAPI(setlist query.SetlistListItem) publicapi.SetlistListItem {
 	return publicapi.SetlistListItem{
-		ID:        googleuuid.UUID(setlist.ID),
-		Name:      setlist.Name,
-		EventDate: optDateFromMaybe(setlist.EventDate),
+		ID:              googleuuid.UUID(setlist.ID),
+		Name:            setlist.Name,
+		TracksCount:     setlist.TracksCount,
+		DurationSeconds: durationToIntSeconds(setlist.Duration),
+		EventDate:       optDateFromMaybe(setlist.EventDate),
 	}
 }
 
 func convertQuerySetlistDataToAPI(setlist query.SetlistData) publicapi.BandSetlist {
 	return publicapi.BandSetlist{
-		ID:            googleuuid.UUID(setlist.ID),
-		Name:          setlist.Name,
-		EventLocation: optStringFromMaybe(setlist.EventLocation),
-		EventDate:     optDateFromMaybe(setlist.EventDate),
-		Tracks:        slices.Map(setlist.Tracks, convertQuerySetlistTrackItemToAPI),
+		ID:              googleuuid.UUID(setlist.ID),
+		Name:            setlist.Name,
+		DurationSeconds: durationToIntSeconds(setlist.Duration),
+		EventLocation:   optStringFromMaybe(setlist.EventLocation),
+		EventDate:       optDateFromMaybe(setlist.EventDate),
+		Tracks:          slices.Map(setlist.Tracks, convertQuerySetlistTrackItemToAPI),
 	}
 }
 
@@ -76,76 +79,18 @@ func convertQuerySetlistTrackItemToAPI(track query.SetlistTrackItem) publicapi.S
 	}
 }
 
-func optDateFromMaybe(v maybe.Maybe[time.Time]) publicapi.OptDate {
-	value, ok := maybe.JustValid(v)
-	if !ok {
-		return publicapi.OptDate{}
-	}
-	return publicapi.NewOptDate(value)
-}
-
-func optIntFromDuration(duration maybe.Maybe[time.Duration]) publicapi.OptInt {
-	value, ok := maybe.JustValid(duration)
-	if !ok {
-		return publicapi.OptInt{}
-	}
-	return publicapi.NewOptInt(int(value / time.Second))
-}
-
-func optIntFromMaybe(v maybe.Maybe[int]) publicapi.OptInt {
-	value, ok := maybe.JustValid(v)
-	if !ok {
-		return publicapi.OptInt{}
-	}
-	return publicapi.NewOptInt(value)
-}
-
-func optStringFromMaybe(v maybe.Maybe[string]) publicapi.OptString {
-	value, ok := maybe.JustValid(v)
-	if !ok {
-		return publicapi.OptString{}
-	}
-	return publicapi.NewOptString(value)
-}
-
-func maybeDurationFromOpt(opt publicapi.OptInt) maybe.Maybe[time.Duration] {
-	if !opt.Set {
-		return maybe.NewAbsent[time.Duration]()
-	}
-	return maybe.NewJust(time.Duration(opt.Value) * time.Second)
-}
-
-func maybeKeyFromOpt(opt publicapi.OptString) (maybe.Maybe[valuetypes.MusicalKey], error) {
-	if !opt.Set {
-		return maybe.NewAbsent[valuetypes.MusicalKey](), nil
-	}
-	return parseMusicalKey(opt.Value)
-}
-
-func maybeDurationFromOptNil(opt publicapi.OptNilInt) maybe.Maybe[time.Duration] {
-	if !opt.Set {
-		return maybe.NewAbsent[time.Duration]()
-	}
-	if opt.Null {
-		return maybe.NewNone[time.Duration]()
-	}
-	return maybe.NewJust(time.Duration(opt.Value) * time.Second)
-}
-
-func maybeKeyFromOptNil(opt publicapi.OptNilString) (maybe.Maybe[valuetypes.MusicalKey], error) {
-	if !opt.Set {
-		return maybe.NewAbsent[valuetypes.MusicalKey](), nil
-	}
-	if opt.Null {
-		return maybe.NewNone[valuetypes.MusicalKey](), nil
-	}
-	return parseMusicalKey(opt.Value)
-}
-
 func parseMusicalKey(value string) (maybe.Maybe[valuetypes.MusicalKey], error) {
 	key, err := valuetypes.MakeKey(value)
 	if err != nil {
 		return maybe.NewNone[valuetypes.MusicalKey](), err
 	}
 	return maybe.NewJust(key), nil
+}
+
+func intSecondsToDuration(seconds int) time.Duration {
+	return time.Duration(seconds) * time.Second
+}
+
+func durationToIntSeconds(duration time.Duration) int {
+	return int(duration / time.Second)
 }
