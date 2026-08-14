@@ -15,7 +15,8 @@ type valuer interface {
 //nolint:nestif
 func (m *Maybe[T]) Scan(src any) error {
 	if src == nil {
-		// Nothing to scan, just return
+		// DB column is present but null - explicit None, not Absent
+		m.state = stateNone
 		return nil
 	}
 
@@ -24,7 +25,7 @@ func (m *Maybe[T]) Scan(src any) error {
 		if err != nil {
 			return err
 		}
-		m.just = true
+		m.state = stateJust
 		return err
 	}
 
@@ -33,7 +34,7 @@ func (m *Maybe[T]) Scan(src any) error {
 		if err != nil {
 			return err
 		}
-		m.just = true
+		m.state = stateJust
 		return err
 	}
 
@@ -63,7 +64,7 @@ func (m *Maybe[T]) Scan(src any) error {
 			}
 		}
 
-		m.v, m.just = v, true
+		m.v, m.state = v, stateJust
 		return nil
 	}
 
@@ -72,12 +73,12 @@ func (m *Maybe[T]) Scan(src any) error {
 		return fmt.Errorf("failed to type cast from %T to %T", src, v)
 	}
 
-	m.v, m.just = v, true
+	m.v, m.state = v, stateJust
 	return nil
 }
 
 func (m Maybe[T]) Value() (driver.Value, error) {
-	if !m.just {
+	if m.state != stateJust {
 		return nil, nil
 	}
 
