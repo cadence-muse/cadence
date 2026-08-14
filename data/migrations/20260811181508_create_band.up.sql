@@ -5,6 +5,8 @@ CREATE TABLE band
     invite_code TEXT        NOT NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by  UUID        NOT NULL,
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_by  UUID
+    updated_at  TIMESTAMPTZ,
+    updated_by  UUID,
+    deleted_at  TIMESTAMPTZ,
+    deleted_by  UUID
 );

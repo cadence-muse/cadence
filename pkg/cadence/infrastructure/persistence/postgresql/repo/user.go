@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"cadence/pkg/cadence/domain"
 	"cadence/pkg/common/postgresql"
@@ -31,14 +32,21 @@ func (repo *userRepository) NextID() domain.UserID {
 
 func (repo *userRepository) Store(user *domain.User) error {
 	const sqlQuery = `
-		INSERT INTO "user" (id, username, password_hash)
-		VALUES ($1, $2, $3)
+		INSERT INTO "user" (id, username, password_hash, created_at)
+		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (id) DO UPDATE
 		SET username      = EXCLUDED.username,
 		    password_hash = EXCLUDED.password_hash,
-		    updated_at    = now()
+		    updated_at    = EXCLUDED.created_at
 	`
-	_, err := repo.client.ExecContext(repo.ctx, sqlQuery, user.ID(), user.Username(), user.PasswordHash())
+	_, err := repo.client.ExecContext(
+		repo.ctx,
+		sqlQuery,
+		user.ID(),
+		user.Username(),
+		user.PasswordHash(),
+		time.Now(),
+	)
 	return err
 }
 

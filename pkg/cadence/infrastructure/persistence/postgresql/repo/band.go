@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"cadence/pkg/cadence/domain"
 	"cadence/pkg/common/postgresql"
@@ -35,11 +36,11 @@ func (repo *bandRepository) NextID() domain.BandID {
 
 func (repo *bandRepository) Store(band *domain.Band) error {
 	const sqlQuery = `
-		INSERT INTO band (id, name, invite_code, created_by)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO band (id, name, invite_code, created_at, created_by)
+		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (id) DO UPDATE
 		SET name       = EXCLUDED.name,
-		    updated_at = now(),
+		    updated_at = EXCLUDED.created_at,
 		    updated_by = EXCLUDED.created_by
 	`
 	_, err := repo.client.ExecContext(
@@ -48,6 +49,7 @@ func (repo *bandRepository) Store(band *domain.Band) error {
 		band.ID(),
 		band.Name(),
 		band.InviteCode(),
+		time.Now(),
 		repo.subjectID,
 	)
 	if err != nil {

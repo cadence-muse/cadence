@@ -41,9 +41,9 @@ func (repo *trackRepository) Store(track *domain.Track) error {
 		INSERT INTO track (
 			id, band_id, title, artist,
 			duration_seconds, tempo, key, notes,
-		    created_by
+		    created_at, created_by
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		ON CONFLICT (id) DO UPDATE
 		SET band_id          = EXCLUDED.band_id,
 		    title            = EXCLUDED.title,
@@ -52,7 +52,7 @@ func (repo *trackRepository) Store(track *domain.Track) error {
 		    tempo            = EXCLUDED.tempo,
 		    key              = EXCLUDED.key,
 		    notes            = EXCLUDED.notes,
-		    updated_at       = now(),
+		    updated_at       = EXCLUDED.created_at,
 		    updated_by       = EXCLUDED.created_by
 	`
 
@@ -82,6 +82,7 @@ func (repo *trackRepository) Store(track *domain.Track) error {
 		tempo,
 		key,
 		track.Notes(),
+		time.Now(),
 		repo.subjectID,
 	)
 	return err
