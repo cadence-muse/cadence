@@ -40,7 +40,7 @@ mise run generate
 mise run build
 
 # Lint
-mise run check:lint
+mise run lint
 
 # Unit tests
 mise run test:unit
