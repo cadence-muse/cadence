@@ -15,6 +15,11 @@ Cadence is a simple repertoire manager for actively gigging bands. Key features 
 - **Per-band Repertoire:** Maintain a repertoire of your bands with keys, tempos and other useful information.
 - **Per-band Setlists:** Plan and collaborate on setlists for your gigs.
 
+This repo contains only the core backend. Other repositories for this project:
+
+- [cadence-client](https://github.com/nightnoryu/cadence-client) - cross-platform (web & mobile) client for API.
+- [cadence-platform](https://github.com/nightnoryu/cadence-platform) - k8s settings for deployment.
+
 ## 🛠️ Local development
 
 To get a local copy of the project up and running, follow these steps.
