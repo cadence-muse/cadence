@@ -23,3 +23,6 @@ jobs:
 
       - name: Run full build
         run: mise run
+
+      - name: Run e2e tests
+        run: mise run test:e2e

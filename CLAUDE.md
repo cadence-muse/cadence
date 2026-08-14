@@ -43,16 +43,22 @@ mise run build
 mise run check:lint
 
 # Unit tests
-mise run check:test
+mise run test:unit
 
 # Lint + test
 mise run check
+
+# End-to-end tests (requires Docker; spins up real Postgres/Redis via testcontainers)
+mise run test:e2e
 
 # Scaffold a new migration pair
 bin/create-db-migration <name>
 ```
 
 `compose.yml` runs local Postgres + Redis (+ app) for manual testing; copy `compose.override.example.yml` to override.
+
+E2E tests live under `test/e2e/` behind the `e2e` build tag, so `go test ./...` and `mise run test:unit` skip them;
+run them explicitly via `mise run test:e2e` (needs a running Docker daemon).
 
 ## Architecture
 
@@ -122,4 +128,10 @@ A task is considered done only when all the following pass without errors:
 
 ```shell
 mise run
+```
+
+2. E2E tests, if touching public API behavior, transport wiring, or persistence - run:
+
+```shell
+mise run test:e2e
 ```

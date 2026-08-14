@@ -38,7 +38,7 @@ To get a local copy of the project up and running, follow these steps.
     $EDITOR compose.override.yml
     ```
 
-2. Build the binary with mise
+2. Build the binary with mise (+ lint and run unit tests)
 
     ```shell
     mise run
@@ -60,6 +60,16 @@ mise run && docker restart cadence
 
 # Stop the application
 docker compose down
+```
+
+### Tests
+
+```shell
+# Unit tests - part of the overall mise run
+mise run test:unit
+
+# E2E tests - launched separately, spin up docker containers
+mise run test:e2e
 ```
 
 ## 📜 License

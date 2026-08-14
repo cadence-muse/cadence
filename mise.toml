@@ -26,10 +26,13 @@ run = "go mod tidy"
 run = "go build -trimpath -v --gcflags 'all=-N -l' -o ./bin/cadence ./cmd/cadence"
 
 [tasks.check]
-depends = [ "check:*" ]
+depends = [ "lint", "test:unit" ]
 
-[tasks."check:test"]
+[tasks.lint]
+run = "golangci-lint run"
+
+[tasks."test:unit"]
 run = "go test ./..."
 
-[tasks."check:lint"]
-run = "golangci-lint run"
+[tasks."test:e2e"]
+run = "go test -tags e2e ./test/e2e/..."
