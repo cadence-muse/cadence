@@ -6,6 +6,7 @@ type RepoProvider interface {
 	UserRepository() domain.UserRepository
 	BandRepository() domain.BandRepository
 	TrackRepository() domain.TrackRepository
+	SetlistRepository() domain.SetlistRepository
 
 	Complete(err error) error
 }
