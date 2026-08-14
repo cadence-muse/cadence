@@ -8,8 +8,10 @@ import (
 )
 
 type BandQueryService interface {
-	ListUserBands(ctx context.Context, userID uuid.UUID) ([]BandListItem, error)
 	FindBand(ctx context.Context, id uuid.UUID) (maybe.Maybe[BandData], error)
+
+	ListUserBands(ctx context.Context, userID uuid.UUID) ([]BandListItem, error)
+	CountUserBands(ctx context.Context, userID uuid.UUID) (int, error)
 }
 
 type BandListItem struct {

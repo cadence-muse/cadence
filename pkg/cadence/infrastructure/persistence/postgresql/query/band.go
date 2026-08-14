@@ -38,6 +38,21 @@ func (s *bandQueryService) ListUserBands(ctx context.Context, userID uuid.UUID) 
 	}), nil
 }
 
+func (s *bandQueryService) CountUserBands(ctx context.Context, userID uuid.UUID) (int, error) {
+	const sqlQuery = `
+		SELECT COUNT(*)
+		FROM band b
+		JOIN band_member bm ON bm.band_id = b.id
+		WHERE bm.user_id = $1
+	`
+	var result int
+	if err := s.client.GetContext(ctx, &result, sqlQuery, userID); err != nil {
+		return 0, err
+	}
+
+	return result, nil
+}
+
 func (s *bandQueryService) FindBand(ctx context.Context, id uuid.UUID) (maybe.Maybe[query.BandData], error) {
 	const sqlQuery = `SELECT id, name, invite_code FROM band WHERE id = $1`
 	var row sqlxBandData

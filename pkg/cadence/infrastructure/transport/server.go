@@ -142,9 +142,15 @@ func (h *restHandler) GetHomepageData(ctx context.Context) (publicapi.GetHomepag
 	if !ok {
 		return nil, commonogenerrors.NewNotFoundError("user not found")
 	}
+
+	bandsCount, err := h.bandQueryService.CountUserBands(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &publicapi.HomepageData{
 		Username:   foundUser.Username,
-		BandsCount: 67,
+		BandsCount: bandsCount,
 	}, nil
 }
 
