@@ -9,7 +9,7 @@ tags:
   - name: Songs
 
 security:
-  - cookieAuth: [ ]
+  - sessionAuth: [ ]
 
 paths:
   /api/register:
@@ -62,7 +62,7 @@ paths:
       summary: Get logged in user profile info
       tags: [ Users ]
       security:
-        - cookieAuth: [ ]
+        - sessionAuth: [ ]
       responses:
         '200':
           description: Success
@@ -79,7 +79,7 @@ paths:
       summary: Get homepage data for current user
       tags: [ Users ]
       security:
-        - cookieAuth: [ ]
+        - sessionAuth: [ ]
       responses:
         '200':
           description: Success
@@ -96,7 +96,7 @@ paths:
       summary: Returns a list of current user's bands
       tags: [ Bands ]
       security:
-        - cookieAuth: [ ]
+        - sessionAuth: [ ]
       responses:
         '200':
           description: Success
@@ -113,7 +113,7 @@ paths:
       summary: Create a new band
       tags: [ Bands ]
       security:
-        - cookieAuth: [ ]
+        - sessionAuth: [ ]
       requestBody:
         required: true
         content:
@@ -136,7 +136,7 @@ paths:
       summary: Get detailed band info
       tags: [ Bands ]
       security:
-        - cookieAuth: [ ]
+        - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandId'
       responses:
@@ -153,7 +153,7 @@ paths:
       operationId: UpdateBand
       summary: Update band info
       security:
-        - cookieAuth: [ ]
+        - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandId'
       requestBody:
@@ -173,7 +173,7 @@ paths:
       operationId: JoinBand
       summary: Join a band by invite code
       security:
-        - cookieAuth: [ ]
+        - sessionAuth: [ ]
       requestBody:
         required: true
         content:
@@ -191,7 +191,7 @@ paths:
       operationId: ListBandTracks
       summary: List all band tracks
       security:
-        - cookieAuth: [ ]
+        - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandId'
       responses:
@@ -209,7 +209,7 @@ paths:
       operationId: CreateBandTrack
       summary: Create band track
       security:
-        - cookieAuth: [ ]
+        - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandId'
       requestBody:
@@ -233,7 +233,7 @@ paths:
       operationId: GetBandTrack
       summary: Get detailed band track info
       security:
-        - cookieAuth: [ ]
+        - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandId'
         - $ref: '#/components/parameters/TrackId'
@@ -251,7 +251,7 @@ paths:
       operationId: UpdateBandTrack
       summary: Update band track info
       security:
-        - cookieAuth: [ ]
+        - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandId'
         - $ref: '#/components/parameters/TrackId'
@@ -269,11 +269,11 @@ paths:
 
 components:
   securitySchemes:
-    cookieAuth:
+    sessionAuth:
       type: apiKey
-      in: cookie
-      name: cadencesession
-      description: Session cookie for authentication
+      in: header
+      name: Authorization
+      description: Session ID passed via the Authorization header
 
   responses:
     BadRequest:

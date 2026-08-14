@@ -15,7 +15,7 @@ type authHandler struct {
 	sessionStore app.SessionStore
 }
 
-func (h *authHandler) HandleCookieAuth(ctx context.Context, _ OperationName, t CookieAuth) (context.Context, error) {
+func (h *authHandler) HandleSessionAuth(ctx context.Context, _ OperationName, t SessionAuth) (context.Context, error) {
 	userID, err := h.sessionStore.ValidateSession(ctx, t.APIKey)
 	if err != nil {
 		return nil, err
@@ -25,6 +25,6 @@ func (h *authHandler) HandleCookieAuth(ctx context.Context, _ OperationName, t C
 	return ctx, nil
 }
 
-func (s *CookieAuth) CookieAuth(_ context.Context, _ OperationName) (CookieAuth, error) {
+func (s *SessionAuth) SessionAuth(_ context.Context, _ OperationName) (SessionAuth, error) {
 	return *s, nil
 }
