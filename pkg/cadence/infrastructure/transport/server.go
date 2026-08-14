@@ -357,3 +357,28 @@ func (h *restHandler) RemoveBandTrack(ctx context.Context, params publicapi.Remo
 	}
 	return &publicapi.RemoveBandTrackNoContent{}, nil
 }
+
+func (h *restHandler) ListBandSetlists(_ context.Context, _ publicapi.ListBandSetlistsParams) (publicapi.ListBandSetlistsRes, error) {
+	// TODO implement
+	panic("implement me")
+}
+
+func (h *restHandler) CreateBandSetlist(_ context.Context, _ *publicapi.CreateBandSetlistsRequestBody, _ publicapi.CreateBandSetlistParams) (publicapi.CreateBandSetlistRes, error) {
+	// TODO implement
+	panic("implement me")
+}
+
+func (h *restHandler) GetBandSetlist(_ context.Context, _ publicapi.GetBandSetlistParams) (publicapi.GetBandSetlistRes, error) {
+	// TODO implement
+	panic("implement me")
+}
+
+func (h *restHandler) UpdateBandSetlist(_ context.Context, _ *publicapi.UpdateBandSetlistRequestBody, _ publicapi.UpdateBandSetlistParams) (publicapi.UpdateBandSetlistRes, error) {
+	// TODO implement
+	panic("implement me")
+}
+
+func (h *restHandler) RemoveBandSetlist(_ context.Context, _ publicapi.RemoveBandSetlistParams) (publicapi.RemoveBandSetlistRes, error) {
+	// TODO implement
+	panic("implement me")
+}
