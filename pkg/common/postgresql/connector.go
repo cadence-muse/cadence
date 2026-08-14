@@ -1,10 +1,10 @@
 package postgresql
 
 import (
-	"errors"
-	"fmt"
+	stderrors "errors"
 	"time"
 
+	"github.com/go-faster/errors"
 	_ "github.com/jackc/pgx/v5/stdlib" // registers the "postgres" database/sql driver
 	"github.com/jmoiron/sqlx"
 
@@ -37,7 +37,7 @@ type connector struct {
 func (c *connector) Open(dsn DSN, cfg Config) (err error) {
 	c.db, err = sqlx.Open(dbDriverName, dsn.String())
 	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
+		return errors.Wrap(err, "failed to open database")
 	}
 	c.db.SetMaxOpenConns(cfg.MaxConnections)
 	c.db.SetConnMaxLifetime(cfg.ConnectionLifetime)
@@ -50,7 +50,7 @@ func (c *connector) TransactionalClient() TransactionalClient {
 
 func (c *connector) Migrator(logger log.Logger) (Migrator, error) {
 	if c.db == nil {
-		return nil, errors.New("DB not initialized")
+		return nil, stderrors.New("DB not initialized")
 	}
 	return &migrator{db: c.db, logger: logger}, nil
 }
@@ -58,7 +58,7 @@ func (c *connector) Migrator(logger log.Logger) (Migrator, error) {
 func (c *connector) Close() error {
 	if c.db != nil {
 		err := c.db.Close()
-		return fmt.Errorf("failed to disconnect: %w", err)
+		return errors.Wrap(err, "failed to disconnect")
 	}
-	return errors.New("DB not initialized")
+	return stderrors.New("DB not initialized")
 }

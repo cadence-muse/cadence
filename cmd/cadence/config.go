@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
 	"github.com/caarlos0/env/v11"
+	"github.com/go-faster/errors"
 
 	"cadence/pkg/common/postgresql"
 	"cadence/pkg/common/redis"
@@ -14,7 +14,7 @@ import (
 func parseEnv() (*config, error) {
 	c := new(config)
 	if err := env.ParseWithOptions(c, env.Options{Prefix: strings.ToUpper(appID) + "_"}); err != nil {
-		return nil, fmt.Errorf("failed to parse env: %w", err)
+		return nil, errors.Wrap(err, "failed to parse env")
 	}
 	return c, nil
 }

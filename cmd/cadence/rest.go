@@ -5,10 +5,9 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"net/http"
 
+	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
 	ht "github.com/ogen-go/ogen/http"
 	ogenjson "github.com/ogen-go/ogen/json"
@@ -67,7 +66,7 @@ func convertToRawMap(input map[string]interface{}) (map[string]jx.Raw, error) {
 	for key, val := range input {
 		jsonBytes, err := json.Marshal(val)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal key %s: %w", key, err)
+			return nil, errors.Wrapf(err, "failed to marshal key %s", key)
 		}
 		rawMap[key] = jsonBytes
 	}

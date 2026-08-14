@@ -3,13 +3,12 @@ package postgresql
 import (
 	"context"
 	"database/sql"
-	"errors"
-	"fmt"
 	"io/fs"
 	"regexp"
 	"sort"
 	"time"
 
+	"github.com/go-faster/errors"
 	"github.com/jmoiron/sqlx"
 
 	"cadence/data/migrations"
@@ -45,7 +44,7 @@ func (m migrator) MigrateUp() (err error) {
 
 	conn, err := m.db.Connx(ctx)
 	if err != nil {
-		err = fmt.Errorf("failed to open migrator connection: %w", err)
+		err = errors.Wrap(err, "failed to open migrator connection")
 		return err
 	}
 
@@ -57,17 +56,17 @@ func (m migrator) MigrateUp() (err error) {
 	}()
 
 	if _, err = conn.ExecContext(ctx, createSchemaMigrationTableSQL); err != nil {
-		return fmt.Errorf("failed to create schema_migration table: %w", err)
+		return errors.Wrap(err, "failed to create schema_migration table")
 	}
 
 	files, err := readMigrationFiles()
 	if err != nil {
-		return fmt.Errorf("failed to read migration files: %w", err)
+		return errors.Wrap(err, "failed to read migration files")
 	}
 
 	var appliedVersions []string
 	if err = conn.SelectContext(ctx, &appliedVersions, "SELECT version FROM schema_migration"); err != nil {
-		return fmt.Errorf("failed to read applied migrations: %w", err)
+		return errors.Wrap(err, "failed to read applied migrations")
 	}
 
 	fileVersions := make(map[string]struct{}, len(files))
@@ -76,7 +75,7 @@ func (m migrator) MigrateUp() (err error) {
 	}
 	for _, version := range appliedVersions {
 		if _, ok := fileVersions[version]; !ok {
-			return fmt.Errorf("migration %s is applied but its file is missing from data/migrations", version)
+			return errors.Wrapf(err, "migration %s is applied but its file is missing from data/migrations", version)
 		}
 	}
 
@@ -90,7 +89,7 @@ func (m migrator) MigrateUp() (err error) {
 			continue
 		}
 		if err = m.applyMigration(ctx, conn, f); err != nil {
-			return fmt.Errorf("failed to apply migration %s: %w", f.version, err)
+			return errors.Wrapf(err, "failed to apply migration %s", f.version)
 		}
 	}
 
@@ -100,28 +99,28 @@ func (m migrator) MigrateUp() (err error) {
 func (m migrator) applyMigration(ctx context.Context, conn *sqlx.Conn, f migrationFile) error {
 	content, err := fs.ReadFile(migrations.FS, f.path)
 	if err != nil {
-		return fmt.Errorf("failed to read migration file: %w", err)
+		return errors.Wrap(err, "failed to read migration file")
 	}
 
 	tx, err := conn.BeginTxx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %w", err)
+		return errors.Wrap(err, "failed to begin transaction")
 	}
 
 	start := time.Now()
 
 	if _, err = tx.ExecContext(ctx, string(content)); err != nil {
 		_ = tx.Rollback()
-		return fmt.Errorf("failed to execute migration: %w", err)
+		return errors.Wrap(err, "failed to execute migration: %w")
 	}
 
 	if _, err = tx.ExecContext(ctx, "INSERT INTO schema_migration (version) VALUES ($1)", f.version); err != nil {
 		_ = tx.Rollback()
-		return fmt.Errorf("failed to record migration version: %w", err)
+		return errors.Wrap(err, "failed to record migration version")
 	}
 
 	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("failed to commit migration: %w", err)
+		return errors.Wrap(err, "failed to commit migration")
 	}
 
 	duration := time.Since(start)

@@ -3,9 +3,8 @@ package repo
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
-
-	"github.com/go-faster/errors"
 
 	"cadence/pkg/cadence/domain"
 	"cadence/pkg/common/maybe"

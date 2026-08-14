@@ -2,18 +2,18 @@ package main
 
 import (
 	"context"
-	"errors"
-	"fmt"
+	stderrors "errors"
 	"io"
 	"net/http"
 	"time"
 
+	"github.com/go-faster/errors"
 	"github.com/gorilla/mux"
 
 	"cadence/pkg/common/log"
 )
 
-var errServiceStopped = errors.New("service stopped without errors")
+var errServiceStopped = stderrors.New("service stopped without errors")
 
 const shutdownTimeout = 10 * time.Second
 
@@ -22,7 +22,7 @@ func service(ctx context.Context, config *config, logger log.Logger) error {
 
 	container, err := newDependencyContainer(config, logger, router, errorHandler)
 	if err != nil {
-		return fmt.Errorf("failed to initialize the dependency container: %w", err)
+		return errors.Wrap(err, "failed to initialize the dependency container")
 	}
 	defer func() {
 		if closeErr := container.Close(); closeErr != nil {
