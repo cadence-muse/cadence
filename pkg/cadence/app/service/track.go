@@ -71,9 +71,9 @@ func (s *TrackService) Create(ctx context.Context, params CreateTrackParams) (tr
 
 func (s *TrackService) Update(ctx context.Context, params UpdateTrackParams) error {
 	return s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
-		trackRepo := repoProvider.TrackRepository()
+		repo := repoProvider.TrackRepository()
 
-		track, err := trackRepo.Get(params.TrackID)
+		track, err := repo.Get(params.TrackID)
 		if err != nil {
 			return err
 		}
@@ -104,6 +104,6 @@ func (s *TrackService) Update(ctx context.Context, params UpdateTrackParams) err
 			track.SetNotes(params.Notes)
 		}
 
-		return trackRepo.Store(track)
+		return repo.Store(track)
 	})
 }

@@ -5,6 +5,7 @@ import (
 
 	"cadence/pkg/cadence/app"
 	"cadence/pkg/cadence/domain"
+	"cadence/pkg/common/maybe"
 	"cadence/pkg/common/transactional"
 	"cadence/pkg/common/uuid"
 )
@@ -17,11 +18,21 @@ type BandService struct {
 	executor transactional.Executor[app.RepoProvider]
 }
 
-func (s *BandService) Create(ctx context.Context, ownerID uuid.UUID, name string) (bandID uuid.UUID, err error) {
+type CreateBandParams struct {
+	OwnerID uuid.UUID
+	Name    string
+}
+
+type UpdateBandParams struct {
+	BandID uuid.UUID
+	Name   maybe.Maybe[string]
+}
+
+func (s *BandService) Create(ctx context.Context, params CreateBandParams) (bandID uuid.UUID, err error) {
 	err = s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.BandRepository()
 
-		band, bandErr := domain.NewBand(repo.NextID(), name, ownerID)
+		band, bandErr := domain.NewBand(repo.NextID(), params.Name, params.OwnerID)
 		if bandErr != nil {
 			return bandErr
 		}
@@ -34,6 +45,25 @@ func (s *BandService) Create(ctx context.Context, ownerID uuid.UUID, name string
 		return nil
 	})
 	return bandID, err
+}
+
+func (s *BandService) Update(ctx context.Context, params UpdateBandParams) (err error) {
+	return s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
+		repo := repoProvider.BandRepository()
+
+		band, err := repo.Get(params.BandID)
+		if err != nil {
+			return err
+		}
+
+		if name, ok := maybe.JustValid(params.Name); ok {
+			if err := band.SetName(name); err != nil {
+				return err
+			}
+		}
+
+		return repo.Store(band)
+	})
 }
 
 func (s *BandService) JoinByInviteCode(ctx context.Context, userID uuid.UUID, inviteCode string) error {

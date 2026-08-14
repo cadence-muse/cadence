@@ -73,6 +73,15 @@ func (b *Band) Name() string {
 	return b.name
 }
 
+func (b *Band) SetName(name string) error {
+	err := validateBandNameLength(name)
+	if err != nil {
+		return err
+	}
+	b.name = name
+	return nil
+}
+
 func (b *Band) InviteCode() string {
 	return b.inviteCode
 }

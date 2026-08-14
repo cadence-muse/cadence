@@ -165,7 +165,10 @@ func (h *restHandler) CreateBand(ctx context.Context, req *publicapi.CreateBandR
 	if !ok {
 		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
 	}
-	id, err := h.bandService.Create(ctx, userID, req.GetName())
+	id, err := h.bandService.Create(ctx, service.CreateBandParams{
+		OwnerID: userID,
+		Name:    req.GetName(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -184,8 +187,23 @@ func (h *restHandler) GetBand(ctx context.Context, params publicapi.GetBandParam
 	return new(convertQueryBandDataToAPI(foundBand)), nil
 }
 
-func (h *restHandler) UpdateBand(_ context.Context, _ *publicapi.UpdateBandRequestBody, _ publicapi.UpdateBandParams) (publicapi.UpdateBandRes, error) {
-	panic("implement me")
+func (h *restHandler) UpdateBand(ctx context.Context, req *publicapi.UpdateBandRequestBody, params publicapi.UpdateBandParams) (publicapi.UpdateBandRes, error) {
+	err := h.bandService.Update(ctx, service.UpdateBandParams{
+		BandID: uuid.UUID(params.BandId),
+		Name:   maybeValueFromOpt[string](req.GetName()),
+	})
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrBandNotFound):
+			return nil, commonogenerrors.NewNotFoundError(err.Error())
+		case errors.Is(err, domain.ErrEmptyBandName),
+			errors.Is(err, domain.ErrBandNameTooLong):
+			return nil, commonogenerrors.NewInvalidInputError(err.Error())
+		default:
+			return nil, err
+		}
+	}
+	return &publicapi.UpdateBandOK{}, nil
 }
 
 func (h *restHandler) JoinBand(ctx context.Context, req *publicapi.JoinBandRequestBody) (publicapi.JoinBandRes, error) {
@@ -208,7 +226,7 @@ func (h *restHandler) CreateBandTrack(ctx context.Context, req *publicapi.Create
 		return nil, commonogenerrors.NewInvalidInputError(err.Error())
 	}
 
-	_, err = h.trackService.Create(ctx, service.CreateTrackParams{
+	trackID, err := h.trackService.Create(ctx, service.CreateTrackParams{
 		BandID:   uuid.UUID(params.BandId),
 		Title:    req.GetTitle(),
 		Artist:   req.GetArtist(),
@@ -228,7 +246,7 @@ func (h *restHandler) CreateBandTrack(ctx context.Context, req *publicapi.Create
 			return nil, err
 		}
 	}
-	return &publicapi.CreateBandTrackCreated{}, nil
+	return &publicapi.CreateBandTrackResponseBody{ID: googleuuid.UUID(trackID)}, nil
 }
 
 func (h *restHandler) GetBandTrack(ctx context.Context, params publicapi.GetBandTrackParams) (publicapi.GetBandTrackRes, error) {

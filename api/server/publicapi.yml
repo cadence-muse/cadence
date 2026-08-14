@@ -221,6 +221,10 @@ paths:
       responses:
         '201':
           description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateBandTrackResponseBody'
         '400':
           $ref: '#/components/responses/BadRequest'
 
@@ -432,20 +436,34 @@ components:
           format: uuid
         name:
           type: string
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/BandMember'
         inviteCode:
           type: string
       required:
         - id
         - name
+        - members
         - inviteCode
+
+    BandMember:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+      required:
+        - username
 
     UpdateBandRequestBody:
       type: object
       properties:
         name:
           type: string
-      required:
-        - name
 
     JoinBandRequestBody:
       type: object
@@ -500,6 +518,15 @@ components:
       required:
         - title
         - artist
+
+    CreateBandTrackResponseBody:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+      required:
+        - id
 
     BandTrack:
       type: object
