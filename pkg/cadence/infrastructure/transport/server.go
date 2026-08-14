@@ -202,18 +202,83 @@ func (h *restHandler) JoinBand(ctx context.Context, req *publicapi.JoinBandReque
 	return &publicapi.JoinBandOK{}, nil
 }
 
-func (h *restHandler) CreateBandTrack(_ context.Context, _ *publicapi.CreateBandTrackRequestBody, _ publicapi.CreateBandTrackParams) (publicapi.CreateBandTrackRes, error) {
-	panic("implement me")
+func (h *restHandler) CreateBandTrack(ctx context.Context, req *publicapi.CreateBandTrackRequestBody, params publicapi.CreateBandTrackParams) (publicapi.CreateBandTrackRes, error) {
+	key, err := maybeKeyFromOpt(req.GetKey())
+	if err != nil {
+		return nil, commonogenerrors.NewInvalidInputError(err.Error())
+	}
+
+	_, err = h.trackService.Create(ctx, service.CreateTrackParams{
+		BandID:   uuid.UUID(params.BandId),
+		Title:    req.GetTitle(),
+		Artist:   req.GetArtist(),
+		Duration: maybeDurationFromOpt(req.GetDurationSeconds()),
+		Tempo:    maybeValueFromOpt[int](req.GetTempo()),
+		Key:      key,
+		Notes:    maybeValueFromOpt[string](req.GetNotes()),
+	})
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrEmptyTrackTitle),
+			errors.Is(err, domain.ErrTrackTitleTooLong),
+			errors.Is(err, domain.ErrEmptyTrackArtist),
+			errors.Is(err, domain.ErrTrackArtistTooLong):
+			return nil, commonogenerrors.NewInvalidInputError(err.Error())
+		default:
+			return nil, err
+		}
+	}
+	return &publicapi.CreateBandTrackCreated{}, nil
 }
 
-func (h *restHandler) GetBandTrack(_ context.Context, _ *publicapi.BandTrack, _ publicapi.GetBandTrackParams) (publicapi.GetBandTrackRes, error) {
-	panic("implement me")
+func (h *restHandler) GetBandTrack(ctx context.Context, params publicapi.GetBandTrackParams) (publicapi.GetBandTrackRes, error) {
+	track, err := h.trackQueryService.FindTrack(ctx, uuid.UUID(params.BandId), uuid.UUID(params.TrackId))
+	if err != nil {
+		return nil, err
+	}
+	foundTrack, ok := maybe.JustValid(track)
+	if !ok {
+		return nil, commonogenerrors.NewNotFoundError("track not found")
+	}
+	return new(convertQueryTrackDataToAPI(foundTrack)), nil
 }
 
-func (h *restHandler) ListBandTracks(_ context.Context, _ publicapi.ListBandTracksParams) (publicapi.ListBandTracksRes, error) {
-	panic("implement me")
+func (h *restHandler) ListBandTracks(ctx context.Context, params publicapi.ListBandTracksParams) (publicapi.ListBandTracksRes, error) {
+	tracks, err := h.trackQueryService.ListBandTracks(ctx, uuid.UUID(params.BandId))
+	if err != nil {
+		return nil, err
+	}
+	return &publicapi.ListBandTracksResponseBody{Items: slices.Map(tracks, convertQueryTrackListItemToAPI)}, nil
 }
 
-func (h *restHandler) UpdateBandTrack(_ context.Context, _ *publicapi.UpdateBandTrackRequestBody, _ publicapi.UpdateBandTrackParams) (publicapi.UpdateBandTrackRes, error) {
-	panic("implement me")
+func (h *restHandler) UpdateBandTrack(ctx context.Context, req *publicapi.UpdateBandTrackRequestBody, params publicapi.UpdateBandTrackParams) (publicapi.UpdateBandTrackRes, error) {
+	key, err := maybeKeyFromOptNil(req.GetKey())
+	if err != nil {
+		return nil, commonogenerrors.NewInvalidInputError(err.Error())
+	}
+
+	err = h.trackService.Update(ctx, service.UpdateTrackParams{
+		BandID:   uuid.UUID(params.BandId),
+		TrackID:  uuid.UUID(params.TrackId),
+		Title:    maybeValueFromOpt[string](req.GetTitle()),
+		Artist:   maybeValueFromOpt[string](req.GetArtist()),
+		Duration: maybeDurationFromOptNil(req.GetDurationSeconds()),
+		Tempo:    maybeValueFromOptNil[int](req.GetTempo()),
+		Key:      key,
+		Notes:    maybeValueFromOptNil[string](req.GetNotes()),
+	})
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrTrackNotFound):
+			return nil, commonogenerrors.NewNotFoundError(err.Error())
+		case errors.Is(err, domain.ErrEmptyTrackTitle),
+			errors.Is(err, domain.ErrTrackTitleTooLong),
+			errors.Is(err, domain.ErrEmptyTrackArtist),
+			errors.Is(err, domain.ErrTrackArtistTooLong):
+			return nil, commonogenerrors.NewInvalidInputError(err.Error())
+		default:
+			return nil, err
+		}
+	}
+	return &publicapi.UpdateBandTrackOK{}, nil
 }

@@ -233,15 +233,13 @@ paths:
       parameters:
         - $ref: '#/components/parameters/BandId'
         - $ref: '#/components/parameters/TrackId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BandTrack'
       responses:
         '200':
           description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BandTrack'
         '400':
           $ref: '#/components/responses/BadRequest'
 
@@ -531,5 +529,17 @@ components:
       properties:
         title:
           type: string
-      required:
-        - title
+        artist:
+          type: string
+        durationSeconds:
+          type: integer
+          nullable: true
+        tempo:
+          type: integer
+          nullable: true
+        key:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true

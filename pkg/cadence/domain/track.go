@@ -125,6 +125,38 @@ func (t *Track) Notes() maybe.Maybe[string] {
 	return t.notes
 }
 
+func (t *Track) SetTitle(title string) error {
+	if err := validateTrackTitleLength(title); err != nil {
+		return err
+	}
+	t.title = title
+	return nil
+}
+
+func (t *Track) SetArtist(artist string) error {
+	if err := validateTrackArtistLength(artist); err != nil {
+		return err
+	}
+	t.artist = artist
+	return nil
+}
+
+func (t *Track) SetDuration(duration maybe.Maybe[time.Duration]) {
+	t.duration = duration
+}
+
+func (t *Track) SetTempo(tempo maybe.Maybe[int]) {
+	t.tempo = tempo
+}
+
+func (t *Track) SetKey(key maybe.Maybe[valuetypes.MusicalKey]) {
+	t.key = key
+}
+
+func (t *Track) SetNotes(notes maybe.Maybe[string]) {
+	t.notes = notes
+}
+
 func validateTrackTitleLength(title string) error {
 	return checkStringLimits(title, maxTrackTitleLength, ErrEmptyTrackTitle, ErrTrackTitleTooLong)
 }
