@@ -121,3 +121,24 @@ func TestBand_RemoveMember(t *testing.T) {
 		assert.Len(t, band.Members(), 1)
 	})
 }
+
+func TestBand_HasMember(t *testing.T) {
+	ownerID := uuid.Generate()
+	band, err := NewBand(uuid.Generate(), "Band", ownerID)
+	require.NoError(t, err)
+
+	assert.True(t, band.HasMember(ownerID))
+	assert.False(t, band.HasMember(uuid.Generate()))
+}
+
+func TestBand_IsOwner(t *testing.T) {
+	ownerID := uuid.Generate()
+	memberID := uuid.Generate()
+	band, err := NewBand(uuid.Generate(), "Band", ownerID)
+	require.NoError(t, err)
+	band.AddMember(memberID, BandRoleMember)
+
+	assert.True(t, band.IsOwner(ownerID))
+	assert.False(t, band.IsOwner(memberID))
+	assert.False(t, band.IsOwner(uuid.Generate()))
+}

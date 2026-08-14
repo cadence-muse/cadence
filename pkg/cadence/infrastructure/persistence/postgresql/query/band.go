@@ -25,7 +25,7 @@ func (s *bandQueryService) ListUserBands(ctx context.Context, userID uuid.UUID) 
 		SELECT b.id, b.name
 		FROM band b
 		JOIN band_member bm ON bm.band_id = b.id
-		WHERE bm.user_id = $1
+		WHERE bm.user_id = $1 AND b.deleted_at IS NULL
 		ORDER BY b.name
 	`
 	var rows []sqlxBandListItem
@@ -43,7 +43,7 @@ func (s *bandQueryService) CountUserBands(ctx context.Context, userID uuid.UUID)
 		SELECT COUNT(*)
 		FROM band b
 		JOIN band_member bm ON bm.band_id = b.id
-		WHERE bm.user_id = $1
+		WHERE bm.user_id = $1 AND b.deleted_at IS NULL
 	`
 	var result int
 	if err := s.client.GetContext(ctx, &result, sqlQuery, userID); err != nil {
@@ -54,7 +54,7 @@ func (s *bandQueryService) CountUserBands(ctx context.Context, userID uuid.UUID)
 }
 
 func (s *bandQueryService) FindBand(ctx context.Context, id uuid.UUID) (maybe.Maybe[query.BandData], error) {
-	const sqlQuery = `SELECT id, name, invite_code FROM band WHERE id = $1`
+	const sqlQuery = `SELECT id, name, invite_code FROM band WHERE id = $1 AND deleted_at IS NULL`
 	var row sqlxBandData
 	err := s.client.GetContext(ctx, &row, sqlQuery, id)
 	if err != nil {

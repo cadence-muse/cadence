@@ -15,9 +15,12 @@ const (
 )
 
 var (
-	ErrEmptyBandName   = errors.New("band name can not be empty")
-	ErrBandNameTooLong = fmt.Errorf("band name length should be less than or equal to %d", maxBandNameLength)
-	ErrBandNotFound    = errors.New("band not found")
+	ErrEmptyBandName      = errors.New("band name can not be empty")
+	ErrBandNameTooLong    = fmt.Errorf("band name length should be less than or equal to %d", maxBandNameLength)
+	ErrBandNotFound       = errors.New("band not found")
+	ErrNotBandOwner       = errors.New("only band owner is allowed to perform this action")
+	ErrBandMemberNotFound = errors.New("band member not found")
+	ErrCannotRemoveOwner  = errors.New("band owner can not be removed from the band")
 )
 
 type Band struct {
@@ -32,6 +35,7 @@ type BandRepository interface {
 	Store(*Band) error
 	Get(BandID) (*Band, error)
 	GetByInviteCode(inviteCode string) (*Band, error)
+	Remove(BandID) error
 }
 
 func NewBand(
@@ -106,6 +110,24 @@ func (b *Band) RemoveMember(userID UserID) {
 			return
 		}
 	}
+}
+
+func (b *Band) HasMember(userID UserID) bool {
+	for _, member := range b.members {
+		if member.userID == userID {
+			return true
+		}
+	}
+	return false
+}
+
+func (b *Band) IsOwner(userID UserID) bool {
+	for _, member := range b.members {
+		if member.userID == userID {
+			return member.role == BandRoleOwner
+		}
+	}
+	return false
 }
 
 func validateBandNameLength(name string) error {

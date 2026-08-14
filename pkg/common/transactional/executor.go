@@ -25,7 +25,7 @@ func (e *executor[TRepoProvider]) Execute(ctx context.Context, fn func(repoProvi
 	return e.ExecuteWithLock(ctx, "", fn)
 }
 
-func (e *executor[TRepoProvider]) ExecuteWithLock(ctx context.Context, lockName string, fn func(repoProvider TRepoProvider) error) error {
+func (e *executor[TRepoProvider]) ExecuteWithLock(ctx context.Context, lockName string, fn func(repoProvider TRepoProvider) error) (err error) {
 	unitOfWork, err := e.transactionFactory.NewLockableTransaction(ctx, lockName)
 	if err != nil {
 		return err

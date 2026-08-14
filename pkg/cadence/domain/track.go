@@ -39,6 +39,7 @@ type TrackRepository interface {
 	NextID() TrackID
 	Store(*Track) error
 	Get(TrackID) (*Track, error)
+	Remove(TrackID) error
 }
 
 func NewTrack(

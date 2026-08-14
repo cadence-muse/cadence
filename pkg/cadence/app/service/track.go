@@ -107,3 +107,19 @@ func (s *TrackService) Update(ctx context.Context, params UpdateTrackParams) err
 		return repo.Store(track)
 	})
 }
+
+func (s *TrackService) Remove(ctx context.Context, bandID, trackID uuid.UUID) error {
+	return s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
+		repo := repoProvider.TrackRepository()
+
+		track, err := repo.Get(trackID)
+		if err != nil {
+			return err
+		}
+		if track.BandID() != bandID {
+			return domain.ErrTrackNotFound
+		}
+
+		return repo.Remove(trackID)
+	})
+}

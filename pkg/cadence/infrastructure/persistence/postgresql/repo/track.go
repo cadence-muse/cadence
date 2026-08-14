@@ -93,7 +93,7 @@ func (repo *trackRepository) Get(id domain.TrackID) (*domain.Track, error) {
 		SELECT id, band_id, title, artist,
 		       duration_seconds, tempo, key, notes
 		FROM track
-		WHERE id = $1
+		WHERE id = $1 AND deleted_at IS NULL
 		`
 
 	var row sqlxTrack
@@ -129,6 +129,17 @@ func (repo *trackRepository) Get(id domain.TrackID) (*domain.Track, error) {
 		key,
 		row.Notes,
 	), nil
+}
+
+func (repo *trackRepository) Remove(id domain.TrackID) error {
+	const sqlQuery = `
+		UPDATE track
+		SET deleted_at = $2,
+		    deleted_by = $3
+		WHERE id = $1 AND deleted_at IS NULL
+	`
+	_, err := repo.client.ExecContext(repo.ctx, sqlQuery, id, time.Now(), repo.subjectID)
+	return err
 }
 
 type sqlxTrack struct {

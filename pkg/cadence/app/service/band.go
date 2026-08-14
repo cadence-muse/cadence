@@ -79,3 +79,44 @@ func (s *BandService) JoinByInviteCode(ctx context.Context, userID uuid.UUID, in
 		return repo.Store(band)
 	})
 }
+
+func (s *BandService) Remove(ctx context.Context, bandID, requesterID uuid.UUID) error {
+	return s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
+		repo := repoProvider.BandRepository()
+
+		band, err := repo.Get(bandID)
+		if err != nil {
+			return err
+		}
+
+		if !band.IsOwner(requesterID) {
+			return domain.ErrNotBandOwner
+		}
+
+		return repo.Remove(bandID)
+	})
+}
+
+func (s *BandService) RemoveMember(ctx context.Context, bandID, targetUserID, requesterID uuid.UUID) error {
+	return s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
+		repo := repoProvider.BandRepository()
+
+		band, err := repo.Get(bandID)
+		if err != nil {
+			return err
+		}
+
+		if requesterID != targetUserID && !band.IsOwner(requesterID) {
+			return domain.ErrNotBandOwner
+		}
+		if !band.HasMember(targetUserID) {
+			return domain.ErrBandMemberNotFound
+		}
+		if band.IsOwner(targetUserID) {
+			return domain.ErrCannotRemoveOwner
+		}
+
+		band.RemoveMember(targetUserID)
+		return repo.Store(band)
+	})
+}

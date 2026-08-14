@@ -213,8 +213,22 @@ func (h *restHandler) UpdateBand(ctx context.Context, req *publicapi.UpdateBandR
 }
 
 func (h *restHandler) RemoveBand(ctx context.Context, params publicapi.RemoveBandParams) (publicapi.RemoveBandRes, error) {
-	// TODO implement
-	panic("implement me")
+	userID, ok := auth.UserIDFromContext(ctx)
+	if !ok {
+		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
+	}
+	err := h.bandService.Remove(ctx, uuid.UUID(params.BandId), userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrBandNotFound):
+			return nil, commonogenerrors.NewNotFoundError(err.Error())
+		case errors.Is(err, domain.ErrNotBandOwner):
+			return nil, commonogenerrors.NewPermissionDeniedError(err.Error())
+		default:
+			return nil, err
+		}
+	}
+	return &publicapi.RemoveBandNoContent{}, nil
 }
 
 func (h *restHandler) JoinBand(ctx context.Context, req *publicapi.JoinBandRequestBody) (publicapi.JoinBandRes, error) {
@@ -232,8 +246,24 @@ func (h *restHandler) JoinBand(ctx context.Context, req *publicapi.JoinBandReque
 }
 
 func (h *restHandler) RemoveBandMember(ctx context.Context, params publicapi.RemoveBandMemberParams) (publicapi.RemoveBandMemberRes, error) {
-	// TODO implement
-	panic("implement me")
+	userID, ok := auth.UserIDFromContext(ctx)
+	if !ok {
+		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
+	}
+	err := h.bandService.RemoveMember(ctx, uuid.UUID(params.BandId), uuid.UUID(params.UserId), userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrBandNotFound), errors.Is(err, domain.ErrBandMemberNotFound):
+			return nil, commonogenerrors.NewNotFoundError(err.Error())
+		case errors.Is(err, domain.ErrNotBandOwner):
+			return nil, commonogenerrors.NewPermissionDeniedError(err.Error())
+		case errors.Is(err, domain.ErrCannotRemoveOwner):
+			return nil, commonogenerrors.NewInvalidInputError(err.Error())
+		default:
+			return nil, err
+		}
+	}
+	return &publicapi.RemoveBandMemberNoContent{}, nil
 }
 
 func (h *restHandler) CreateBandTrack(ctx context.Context, req *publicapi.CreateBandTrackRequestBody, params publicapi.CreateBandTrackParams) (publicapi.CreateBandTrackRes, error) {
@@ -318,6 +348,12 @@ func (h *restHandler) UpdateBandTrack(ctx context.Context, req *publicapi.Update
 }
 
 func (h *restHandler) RemoveBandTrack(ctx context.Context, params publicapi.RemoveBandTrackParams) (publicapi.RemoveBandTrackRes, error) {
-	// TODO implement
-	panic("implement me")
+	err := h.trackService.Remove(ctx, uuid.UUID(params.BandId), uuid.UUID(params.TrackId))
+	if err != nil {
+		if errors.Is(err, domain.ErrTrackNotFound) {
+			return nil, commonogenerrors.NewNotFoundError(err.Error())
+		}
+		return nil, err
+	}
+	return &publicapi.RemoveBandTrackNoContent{}, nil
 }

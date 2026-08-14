@@ -78,7 +78,7 @@ func (repo *bandRepository) storeMembers(band *domain.Band) error {
 }
 
 func (repo *bandRepository) Get(id domain.BandID) (*domain.Band, error) {
-	const sqlQuery = `SELECT id, name, invite_code FROM band WHERE id = $1`
+	const sqlQuery = `SELECT id, name, invite_code FROM band WHERE id = $1 AND deleted_at IS NULL`
 	var row sqlxBand
 	err := repo.client.GetContext(repo.ctx, &row, sqlQuery, id)
 	if err != nil {
@@ -96,7 +96,7 @@ func (repo *bandRepository) Get(id domain.BandID) (*domain.Band, error) {
 }
 
 func (repo *bandRepository) GetByInviteCode(inviteCode string) (*domain.Band, error) {
-	const sqlQuery = `SELECT id, name, invite_code FROM band WHERE invite_code = $1`
+	const sqlQuery = `SELECT id, name, invite_code FROM band WHERE invite_code = $1 AND deleted_at IS NULL`
 	var row sqlxBand
 	err := repo.client.GetContext(repo.ctx, &row, sqlQuery, inviteCode)
 	if err != nil {
@@ -111,6 +111,29 @@ func (repo *bandRepository) GetByInviteCode(inviteCode string) (*domain.Band, er
 		return nil, err
 	}
 	return domain.LoadBand(row.ID, row.Name, row.InviteCode, members), nil
+}
+
+func (repo *bandRepository) Remove(id domain.BandID) error {
+	deletedAt := time.Now()
+
+	const sqlQuery = `
+		UPDATE band
+		SET deleted_at = $2,
+		    deleted_by = $3
+		WHERE id = $1 AND deleted_at IS NULL
+	`
+	if _, err := repo.client.ExecContext(repo.ctx, sqlQuery, id, deletedAt, repo.subjectID); err != nil {
+		return err
+	}
+
+	const cascadeSQLQuery = `
+		UPDATE track
+		SET deleted_at = $2,
+		    deleted_by = $3
+		WHERE band_id = $1 AND deleted_at IS NULL
+	`
+	_, err := repo.client.ExecContext(repo.ctx, cascadeSQLQuery, id, deletedAt, repo.subjectID)
+	return err
 }
 
 func (repo *bandRepository) getMembers(bandID domain.BandID) ([]domain.BandMember, error) {

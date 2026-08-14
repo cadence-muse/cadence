@@ -25,7 +25,7 @@ func (s *trackQueryService) ListBandTracks(ctx context.Context, bandID uuid.UUID
 	const sqlQuery = `
 		SELECT id, title, artist, duration_seconds
 		FROM track
-		WHERE band_id = $1
+		WHERE band_id = $1 AND deleted_at IS NULL
 		ORDER BY title
 	`
 	var rows []sqlxTrackListItem
@@ -47,7 +47,7 @@ func (s *trackQueryService) FindTrack(ctx context.Context, bandID, trackID uuid.
 	const sqlQuery = `
 		SELECT id, band_id, title, artist, duration_seconds, tempo, key, notes
 		FROM track
-		WHERE id = $1 AND band_id = $2
+		WHERE id = $1 AND band_id = $2 AND deleted_at IS NULL
 	`
 	var row sqlxTrackData
 	err := s.client.GetContext(ctx, &row, sqlQuery, trackID, bandID)
