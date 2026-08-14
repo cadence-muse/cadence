@@ -57,8 +57,14 @@ bin/create-db-migration <name>
 
 `compose.yml` runs local Postgres + Redis (+ app) for manual testing; copy `compose.override.example.yml` to override.
 
+## Tests
+
 E2E tests live under `test/e2e/` behind the `e2e` build tag, so `go test ./...` and `mise run test:unit` skip them;
 run them explicitly via `mise run test:e2e` (needs a running Docker daemon).
+
+Unit tests (testify) are colocated with the code (`domain/`, `common/`). E2E is a single full-journey test
+(`test/e2e/user_journey_test.go`) covering register/login/band/track/setlist flows against real Postgres/Redis
+via testcontainers - extend that flow with new assertions rather than adding separate E2E test files.
 
 ## Architecture
 
