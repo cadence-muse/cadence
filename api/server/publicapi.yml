@@ -168,6 +168,19 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+    delete:
+      operationId: Remove band
+      summary: Remove band. Only band owner is allowed to remove the band.
+      security:
+        - sessionAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/BandId'
+      responses:
+        '204':
+          description: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
   /api/band/join:
     post:
       operationId: JoinBand
@@ -182,6 +195,21 @@ paths:
               $ref: '#/components/schemas/JoinBandRequestBody'
       responses:
         '200':
+          description: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/band/{bandId}/remove-member/{userId}:
+    delete:
+      operationId: RemoveBandMember
+      summary: Remove band member by user ID. You can remove yourself and owner can remove anybody from the band.
+      security:
+        - sessionAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/BandId'
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '204':
           description: Success
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -267,6 +295,20 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+    delete:
+      operationId: RemoveBandTrack
+      summary: Remove band track
+      security:
+        - sessionAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/BandId'
+        - $ref: '#/components/parameters/TrackId'
+      responses:
+        '204':
+          description: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
 components:
   securitySchemes:
     sessionAuth:
@@ -284,6 +326,14 @@ components:
             $ref: '#/components/schemas/BadRequestResponseBody'
 
   parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
     BandId:
       name: bandId
       in: path

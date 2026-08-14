@@ -212,6 +212,11 @@ func (h *restHandler) UpdateBand(ctx context.Context, req *publicapi.UpdateBandR
 	return &publicapi.UpdateBandOK{}, nil
 }
 
+func (h *restHandler) RemoveBand(ctx context.Context, params publicapi.RemoveBandParams) (publicapi.RemoveBandRes, error) {
+	// TODO implement
+	panic("implement me")
+}
+
 func (h *restHandler) JoinBand(ctx context.Context, req *publicapi.JoinBandRequestBody) (publicapi.JoinBandRes, error) {
 	userID, ok := auth.UserIDFromContext(ctx)
 	if !ok {
@@ -224,6 +229,11 @@ func (h *restHandler) JoinBand(ctx context.Context, req *publicapi.JoinBandReque
 		return nil, err
 	}
 	return &publicapi.JoinBandOK{}, nil
+}
+
+func (h *restHandler) RemoveBandMember(ctx context.Context, params publicapi.RemoveBandMemberParams) (publicapi.RemoveBandMemberRes, error) {
+	// TODO implement
+	panic("implement me")
 }
 
 func (h *restHandler) CreateBandTrack(ctx context.Context, req *publicapi.CreateBandTrackRequestBody, params publicapi.CreateBandTrackParams) (publicapi.CreateBandTrackRes, error) {
@@ -305,4 +315,9 @@ func (h *restHandler) UpdateBandTrack(ctx context.Context, req *publicapi.Update
 		}
 	}
 	return &publicapi.UpdateBandTrackOK{}, nil
+}
+
+func (h *restHandler) RemoveBandTrack(ctx context.Context, params publicapi.RemoveBandTrackParams) (publicapi.RemoveBandTrackRes, error) {
+	// TODO implement
+	panic("implement me")
 }
