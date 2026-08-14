@@ -14,3 +14,8 @@ func Generate() UUID {
 	}
 	return UUID(impl)
 }
+
+func (u UUID) String() string {
+	impl := uuid.UUID(u)
+	return impl.String()
+}

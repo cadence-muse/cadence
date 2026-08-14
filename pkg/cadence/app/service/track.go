@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"cadence/pkg/cadence/app"
@@ -70,7 +71,7 @@ func (s *TrackService) Create(ctx context.Context, params CreateTrackParams) (tr
 }
 
 func (s *TrackService) Update(ctx context.Context, params UpdateTrackParams) error {
-	return s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
+	return s.executor.ExecuteWithLock(ctx, getTrackLockName(params.TrackID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.TrackRepository()
 
 		track, err := repo.Get(params.TrackID)
@@ -109,7 +110,7 @@ func (s *TrackService) Update(ctx context.Context, params UpdateTrackParams) err
 }
 
 func (s *TrackService) Remove(ctx context.Context, bandID, trackID uuid.UUID) error {
-	return s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
+	return s.executor.ExecuteWithLock(ctx, getTrackLockName(trackID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.TrackRepository()
 
 		track, err := repo.Get(trackID)
@@ -122,4 +123,8 @@ func (s *TrackService) Remove(ctx context.Context, bandID, trackID uuid.UUID) er
 
 		return repo.Remove(trackID)
 	})
+}
+
+func getTrackLockName(id uuid.UUID) string {
+	return fmt.Sprintf("track_%s", id.String())
 }

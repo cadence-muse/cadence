@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"cadence/pkg/cadence/app"
 	"cadence/pkg/cadence/domain"
@@ -48,7 +49,7 @@ func (s *BandService) Create(ctx context.Context, params CreateBandParams) (band
 }
 
 func (s *BandService) Update(ctx context.Context, params UpdateBandParams) (err error) {
-	return s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
+	return s.executor.ExecuteWithLock(ctx, getBandLockName(params.BandID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.BandRepository()
 
 		band, err := repo.Get(params.BandID)
@@ -81,7 +82,7 @@ func (s *BandService) JoinByInviteCode(ctx context.Context, userID uuid.UUID, in
 }
 
 func (s *BandService) Remove(ctx context.Context, bandID, requesterID uuid.UUID) error {
-	return s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
+	return s.executor.ExecuteWithLock(ctx, getBandLockName(bandID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.BandRepository()
 
 		band, err := repo.Get(bandID)
@@ -98,7 +99,7 @@ func (s *BandService) Remove(ctx context.Context, bandID, requesterID uuid.UUID)
 }
 
 func (s *BandService) RemoveMember(ctx context.Context, bandID, targetUserID, requesterID uuid.UUID) error {
-	return s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
+	return s.executor.ExecuteWithLock(ctx, getBandLockName(bandID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.BandRepository()
 
 		band, err := repo.Get(bandID)
@@ -119,4 +120,8 @@ func (s *BandService) RemoveMember(ctx context.Context, bandID, targetUserID, re
 		band.RemoveMember(targetUserID)
 		return repo.Store(band)
 	})
+}
+
+func getBandLockName(id uuid.UUID) string {
+	return fmt.Sprintf("band_%s", id.String())
 }
