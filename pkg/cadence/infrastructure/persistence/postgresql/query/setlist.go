@@ -23,10 +23,15 @@ type setlistQueryService struct {
 
 func (s *setlistQueryService) ListBandSetlists(ctx context.Context, bandID uuid.UUID) ([]query.SetlistListItem, error) {
 	const sqlQuery = `
-		SELECT id, name, event_date
-		FROM setlist
-		WHERE band_id = $1 AND deleted_at IS NULL
-		ORDER BY event_date ASC NULLS LAST
+		SELECT s.id, s.name, s.event_date,
+		       COUNT(t.id) AS tracks_count,
+		       COALESCE(SUM(t.duration_seconds), 0) AS duration_seconds
+		FROM setlist s
+		LEFT JOIN setlist_track st ON st.setlist_id = s.id
+		LEFT JOIN track t ON t.id = st.track_id AND t.deleted_at IS NULL
+		WHERE s.band_id = $1 AND s.deleted_at IS NULL
+		GROUP BY s.id, s.name, s.event_date
+		ORDER BY s.event_date ASC NULLS LAST
 	`
 	var rows []sqlxSetlistListItem
 	if err := s.client.SelectContext(ctx, &rows, sqlQuery, bandID); err != nil {
@@ -35,9 +40,11 @@ func (s *setlistQueryService) ListBandSetlists(ctx context.Context, bandID uuid.
 
 	return slices.Map(rows, func(row sqlxSetlistListItem) query.SetlistListItem {
 		return query.SetlistListItem{
-			ID:        row.ID,
-			Name:      row.Name,
-			EventDate: row.EventDate,
+			ID:          row.ID,
+			Name:        row.Name,
+			TracksCount: row.TracksCount,
+			Duration:    time.Duration(row.DurationSeconds) * time.Second,
+			EventDate:   row.EventDate,
 		}
 	}), nil
 }
@@ -62,10 +69,18 @@ func (s *setlistQueryService) FindSetlist(ctx context.Context, bandID, setlistID
 		return maybe.NewNone[query.SetlistData](), err
 	}
 
+	var duration time.Duration
+	for _, track := range tracks {
+		if value, ok := maybe.JustValid(track.Duration); ok {
+			duration += value
+		}
+	}
+
 	return maybe.NewJust(query.SetlistData{
 		ID:            row.ID,
 		BandID:        row.BandID,
 		Name:          row.Name,
+		Duration:      duration,
 		EventLocation: row.EventLocation,
 		EventDate:     row.EventDate,
 		Tracks:        tracks,
@@ -98,9 +113,11 @@ func (s *setlistQueryService) listSetlistTracks(ctx context.Context, setlistID u
 }
 
 type sqlxSetlistListItem struct {
-	ID        uuid.UUID              `db:"id"`
-	Name      string                 `db:"name"`
-	EventDate maybe.Maybe[time.Time] `db:"event_date"`
+	ID              uuid.UUID              `db:"id"`
+	Name            string                 `db:"name"`
+	TracksCount     int                    `db:"tracks_count"`
+	DurationSeconds int                    `db:"duration_seconds"`
+	EventDate       maybe.Maybe[time.Time] `db:"event_date"`
 }
 
 type sqlxSetlistData struct {
