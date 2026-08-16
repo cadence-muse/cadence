@@ -43,6 +43,33 @@ func (s *trackQueryService) ListBandTracks(ctx context.Context, bandID uuid.UUID
 	}), nil
 }
 
+func (s *trackQueryService) ListUserTracks(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID]) ([]query.UserTrackListItem, error) {
+	const sqlQuery = `
+		SELECT t.id, t.title, t.artist, t.duration_seconds, t.band_id, b.name AS band_name
+		FROM track t
+		JOIN band_member bm ON bm.band_id = t.band_id
+		JOIN band b ON b.id = t.band_id
+		WHERE bm.user_id = $1 AND t.deleted_at IS NULL AND b.deleted_at IS NULL
+		  AND ($2::uuid IS NULL OR t.band_id = $2)
+		ORDER BY t.title
+	`
+	var rows []sqlxUserTrackListItem
+	if err := s.client.SelectContext(ctx, &rows, sqlQuery, userID, bandID); err != nil {
+		return nil, err
+	}
+
+	return slices.Map(rows, func(row sqlxUserTrackListItem) query.UserTrackListItem {
+		return query.UserTrackListItem{
+			ID:       row.ID,
+			Title:    row.Title,
+			Artist:   row.Artist,
+			Duration: durationFromSeconds(row.DurationSeconds),
+			BandID:   row.BandID,
+			BandName: row.BandName,
+		}
+	}), nil
+}
+
 func (s *trackQueryService) FindTrack(ctx context.Context, bandID, trackID uuid.UUID) (maybe.Maybe[query.TrackData], error) {
 	const sqlQuery = `
 		SELECT id, band_id, title, artist, duration_seconds, tempo, key, notes
@@ -83,6 +110,15 @@ type sqlxTrackListItem struct {
 	Title           string           `db:"title"`
 	Artist          string           `db:"artist"`
 	DurationSeconds maybe.Maybe[int] `db:"duration_seconds"`
+}
+
+type sqlxUserTrackListItem struct {
+	ID              uuid.UUID        `db:"id"`
+	Title           string           `db:"title"`
+	Artist          string           `db:"artist"`
+	DurationSeconds maybe.Maybe[int] `db:"duration_seconds"`
+	BandID          uuid.UUID        `db:"band_id"`
+	BandName        string           `db:"band_name"`
 }
 
 type sqlxTrackData struct {

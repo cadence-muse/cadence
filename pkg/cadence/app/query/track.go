@@ -10,6 +10,7 @@ import (
 
 type TrackQueryService interface {
 	ListBandTracks(ctx context.Context, bandID uuid.UUID) ([]TrackListItem, error)
+	ListUserTracks(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID]) ([]UserTrackListItem, error)
 	FindTrack(ctx context.Context, bandID, trackID uuid.UUID) (maybe.Maybe[TrackData], error)
 }
 
@@ -18,6 +19,15 @@ type TrackListItem struct {
 	Title    string
 	Artist   string
 	Duration maybe.Maybe[time.Duration]
+}
+
+type UserTrackListItem struct {
+	ID       uuid.UUID
+	Title    string
+	Artist   string
+	Duration maybe.Maybe[time.Duration]
+	BandID   uuid.UUID
+	BandName string
 }
 
 type TrackData struct {

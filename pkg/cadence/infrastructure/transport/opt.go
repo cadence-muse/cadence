@@ -5,6 +5,7 @@ import (
 
 	"cadence/api/server/publicapi"
 	"cadence/pkg/common/maybe"
+	"cadence/pkg/common/uuid"
 	"cadence/pkg/common/valuetypes"
 )
 
@@ -65,4 +66,12 @@ func maybeKeyFromOpt(opt publicapi.OptString) (maybe.Maybe[valuetypes.MusicalKey
 		return maybe.NewAbsent[valuetypes.MusicalKey](), nil
 	}
 	return parseMusicalKey(opt.Value)
+}
+
+func maybeUUIDFromOpt(opt publicapi.OptUUID) maybe.Maybe[uuid.UUID] {
+	value, ok := opt.Get()
+	if !ok {
+		return maybe.NewAbsent[uuid.UUID]()
+	}
+	return maybe.NewJust(uuid.UUID(value))
 }

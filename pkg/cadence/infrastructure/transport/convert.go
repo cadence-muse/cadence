@@ -37,6 +37,17 @@ func convertQueryTrackListItemToAPI(track query.TrackListItem) publicapi.TrackLi
 	}
 }
 
+func convertQueryUserTrackListItemToAPI(track query.UserTrackListItem) publicapi.UserTrackListItem {
+	return publicapi.UserTrackListItem{
+		ID:              googleuuid.UUID(track.ID),
+		Title:           track.Title,
+		Artist:          track.Artist,
+		DurationSeconds: optIntFromDuration(track.Duration),
+		BandId:          googleuuid.UUID(track.BandID),
+		BandName:        track.BandName,
+	}
+}
+
 func convertQueryTrackDataToAPI(track query.TrackData) publicapi.BandTrack {
 	return publicapi.BandTrack{
 		ID:              googleuuid.UUID(track.ID),
@@ -56,6 +67,18 @@ func convertQuerySetlistListItemToAPI(setlist query.SetlistListItem) publicapi.S
 		TracksCount:     setlist.TracksCount,
 		DurationSeconds: durationToIntSeconds(setlist.Duration),
 		EventDate:       optDateFromMaybe(setlist.EventDate),
+	}
+}
+
+func convertQueryUserSetlistListItemToAPI(setlist query.UserSetlistListItem) publicapi.UserSetlistListItem {
+	return publicapi.UserSetlistListItem{
+		ID:              googleuuid.UUID(setlist.ID),
+		Name:            setlist.Name,
+		TracksCount:     setlist.TracksCount,
+		DurationSeconds: durationToIntSeconds(setlist.Duration),
+		EventDate:       optDateFromMaybe(setlist.EventDate),
+		BandId:          googleuuid.UUID(setlist.BandID),
+		BandName:        setlist.BandName,
 	}
 }
 

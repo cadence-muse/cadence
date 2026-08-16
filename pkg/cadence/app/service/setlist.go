@@ -127,6 +127,27 @@ func (s *SetlistService) AddTrack(ctx context.Context, bandID, setlistID, trackI
 	})
 }
 
+func (s *SetlistService) AddTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID) error {
+	return s.executor.ExecuteWithLock(ctx, getSetlistLockName(setlistID), func(repoProvider app.RepoProvider) error {
+		setlist, err := getBandSetlist(repoProvider, bandID, setlistID)
+		if err != nil {
+			return err
+		}
+
+		if err := verifyTracksBelongToBand(repoProvider, bandID, trackIDs); err != nil {
+			return err
+		}
+
+		for _, trackID := range trackIDs {
+			if err := setlist.AddTrack(trackID); err != nil {
+				return err
+			}
+		}
+
+		return repoProvider.SetlistRepository().Store(setlist)
+	})
+}
+
 func (s *SetlistService) RemoveTrack(ctx context.Context, bandID, setlistID, trackID uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getSetlistLockName(setlistID), func(repoProvider app.RepoProvider) error {
 		setlist, err := getBandSetlist(repoProvider, bandID, setlistID)

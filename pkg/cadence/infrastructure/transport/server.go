@@ -370,13 +370,27 @@ func (h *restHandler) RemoveBandTrack(ctx context.Context, params publicapi.Remo
 }
 
 func (h *restHandler) ListUserTracks(ctx context.Context, params publicapi.ListUserTracksParams) (publicapi.ListUserTracksRes, error) {
-	// TODO implement me
-	panic("implement me")
+	userID, ok := auth.UserIDFromContext(ctx)
+	if !ok {
+		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
+	}
+	tracks, err := h.trackQueryService.ListUserTracks(ctx, userID, maybeUUIDFromOpt(params.BandId))
+	if err != nil {
+		return nil, err
+	}
+	return &publicapi.ListUserTracksResponseBody{Items: slices.Map(tracks, convertQueryUserTrackListItemToAPI)}, nil
 }
 
 func (h *restHandler) ListUserSetlists(ctx context.Context, params publicapi.ListUserSetlistsParams) (publicapi.ListUserSetlistsRes, error) {
-	// TODO implement me
-	panic("implement me")
+	userID, ok := auth.UserIDFromContext(ctx)
+	if !ok {
+		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
+	}
+	setlists, err := h.setlistQueryService.ListUserSetlists(ctx, userID, maybeUUIDFromOpt(params.BandId))
+	if err != nil {
+		return nil, err
+	}
+	return &publicapi.ListUserSetlistsResponseBody{Items: slices.Map(setlists, convertQueryUserSetlistListItemToAPI)}, nil
 }
 
 func (h *restHandler) ListBandSetlists(ctx context.Context, params publicapi.ListBandSetlistsParams) (publicapi.ListBandSetlistsRes, error) {
@@ -476,8 +490,21 @@ func (h *restHandler) AddSetlistTrack(ctx context.Context, req *publicapi.AddSet
 }
 
 func (h *restHandler) AddSetlistTracks(ctx context.Context, req *publicapi.AddSetlistTracksRequestBody, params publicapi.AddSetlistTracksParams) (publicapi.AddSetlistTracksRes, error) {
-	// TODO implement me
-	panic("implement me")
+	trackIDs := slices.Map(req.GetTrackIds(), func(id googleuuid.UUID) uuid.UUID { return uuid.UUID(id) })
+	err := h.setlistService.AddTracks(ctx, uuid.UUID(params.BandId), uuid.UUID(params.SetlistId), trackIDs)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrSetlistNotFound), errors.Is(err, domain.ErrTrackNotFound):
+			return nil, commonogenerrors.NewNotFoundError(err.Error())
+		case errors.Is(err, domain.ErrTrackAlreadyInSetlist):
+			return nil, commonogenerrors.NewAlreadyExistsError(err.Error())
+		case errors.Is(err, domain.ErrTooManySetlistTracks):
+			return nil, commonogenerrors.NewInvalidInputError(err.Error())
+		default:
+			return nil, err
+		}
+	}
+	return &publicapi.AddSetlistTracksNoContent{}, nil
 }
 
 func (h *restHandler) RemoveSetlistTrack(ctx context.Context, params publicapi.RemoveSetlistTrackParams) (publicapi.RemoveSetlistTrackRes, error) {
