@@ -48,7 +48,7 @@ mise run test:unit
 # Lint + test
 mise run check
 
-# End-to-end tests (requires Docker; spins up real Postgres/Redis via testcontainers)
+# End-to-end tests (spins up real Postgres/Redis via testcontainers)
 mise run test:e2e
 
 # Scaffold a new migration pair
