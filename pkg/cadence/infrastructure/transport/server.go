@@ -369,6 +369,16 @@ func (h *restHandler) RemoveBandTrack(ctx context.Context, params publicapi.Remo
 	return &publicapi.RemoveBandTrackNoContent{}, nil
 }
 
+func (h *restHandler) ListUserTracks(ctx context.Context, params publicapi.ListUserTracksParams) (publicapi.ListUserTracksRes, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (h *restHandler) ListUserSetlists(ctx context.Context, params publicapi.ListUserSetlistsParams) (publicapi.ListUserSetlistsRes, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
 func (h *restHandler) ListBandSetlists(ctx context.Context, params publicapi.ListBandSetlistsParams) (publicapi.ListBandSetlistsRes, error) {
 	setlists, err := h.setlistQueryService.ListBandSetlists(ctx, uuid.UUID(params.BandId))
 	if err != nil {
@@ -463,6 +473,11 @@ func (h *restHandler) AddSetlistTrack(ctx context.Context, req *publicapi.AddSet
 		}
 	}
 	return &publicapi.AddSetlistTrackNoContent{}, nil
+}
+
+func (h *restHandler) AddSetlistTracks(ctx context.Context, req *publicapi.AddSetlistTracksRequestBody, params publicapi.AddSetlistTracksParams) (publicapi.AddSetlistTracksRes, error) {
+	// TODO implement me
+	panic("implement me")
 }
 
 func (h *restHandler) RemoveSetlistTrack(ctx context.Context, params publicapi.RemoveSetlistTrackParams) (publicapi.RemoveSetlistTrackRes, error) {
