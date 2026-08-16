@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"cadence/data/migrations"
 	"cadence/pkg/common/log"
 	"cadence/pkg/common/postgresql"
 )
@@ -32,7 +33,7 @@ func newDatabaseMigrator(
 		return nil, err
 	}
 
-	m, err := connector.Migrator(logger)
+	m, err := connector.Migrator(logger, migrations.FS)
 	if err != nil {
 		return nil, err
 	}

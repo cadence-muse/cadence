@@ -11,7 +11,6 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/jmoiron/sqlx"
 
-	"cadence/data/migrations"
 	"cadence/pkg/common/log"
 )
 
@@ -30,6 +29,7 @@ type Migrator interface {
 type migrator struct {
 	db     *sqlx.DB
 	logger log.Logger
+	fs     fs.FS
 }
 
 type migrationFile struct {
@@ -59,7 +59,7 @@ func (m migrator) MigrateUp() (err error) {
 		return errors.Wrap(err, "failed to create schema_migration table")
 	}
 
-	files, err := readMigrationFiles()
+	files, err := m.readMigrationFiles()
 	if err != nil {
 		return errors.Wrap(err, "failed to read migration files")
 	}
@@ -97,7 +97,7 @@ func (m migrator) MigrateUp() (err error) {
 }
 
 func (m migrator) applyMigration(ctx context.Context, conn *sqlx.Conn, f migrationFile) error {
-	content, err := fs.ReadFile(migrations.FS, f.path)
+	content, err := fs.ReadFile(m.fs, f.path)
 	if err != nil {
 		return errors.Wrap(err, "failed to read migration file")
 	}
@@ -129,8 +129,8 @@ func (m migrator) applyMigration(ctx context.Context, conn *sqlx.Conn, f migrati
 	return nil
 }
 
-func readMigrationFiles() ([]migrationFile, error) {
-	entries, err := fs.ReadDir(migrations.FS, ".")
+func (m migrator) readMigrationFiles() ([]migrationFile, error) {
+	entries, err := fs.ReadDir(m.fs, ".")
 	if err != nil {
 		return nil, err
 	}

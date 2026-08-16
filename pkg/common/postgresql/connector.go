@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	stderrors "errors"
+	"io/fs"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -26,7 +27,7 @@ func NewConnector() Connector {
 type Connector interface {
 	Open(dsn DSN, cfg Config) error
 	TransactionalClient() TransactionalClient
-	Migrator(logger log.Logger) (Migrator, error)
+	Migrator(logger log.Logger, migrationsFS fs.FS) (Migrator, error)
 	Close() error
 }
 
@@ -48,11 +49,11 @@ func (c *connector) TransactionalClient() TransactionalClient {
 	return &transactionalClient{c.db}
 }
 
-func (c *connector) Migrator(logger log.Logger) (Migrator, error) {
+func (c *connector) Migrator(logger log.Logger, migrationsFS fs.FS) (Migrator, error) {
 	if c.db == nil {
 		return nil, stderrors.New("DB not initialized")
 	}
-	return &migrator{db: c.db, logger: logger}, nil
+	return &migrator{db: c.db, logger: logger, fs: migrationsFS}, nil
 }
 
 func (c *connector) Close() error {
