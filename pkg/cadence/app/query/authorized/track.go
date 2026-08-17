@@ -1,4 +1,4 @@
-package authorized
+package authorized // nolint:dupl
 
 import (
 	"context"
