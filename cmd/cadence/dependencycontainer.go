@@ -6,10 +6,11 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/gorilla/mux"
 	"github.com/ogen-go/ogen/middleware"
-	"github.com/ogen-go/ogen/ogenerrors"
 
 	"cadence/pkg/cadence/app"
+	authorizedquery "cadence/pkg/cadence/app/query/authorized"
 	appservice "cadence/pkg/cadence/app/service"
+	authorizedservice "cadence/pkg/cadence/app/service/authorized"
 	"cadence/pkg/cadence/infrastructure/persistence/postgresql/query"
 	"cadence/pkg/cadence/infrastructure/persistence/postgresql/repo"
 	redisinfra "cadence/pkg/cadence/infrastructure/persistence/redis"
@@ -33,7 +34,6 @@ func newDependencyContainer(
 	config *config,
 	logger log.Logger,
 	router *mux.Router,
-	errorHandler ogenerrors.ErrorHandler,
 ) (*dependencyContainer, error) {
 	migrator, err := newDatabaseMigrator(config, logger)
 	if err != nil {
@@ -52,14 +52,14 @@ func newDependencyContainer(
 	userService := appservice.NewUserService(executor)
 	userQueryService := query.NewUserQueryService(transactionalClient)
 
-	bandService := appservice.NewBandService(executor)
-	bandQueryService := query.NewBandQueryService(transactionalClient)
+	bandService := authorizedservice.NewBandService(appservice.NewBandService(executor), executor)
+	bandQueryService := authorizedquery.NewBandQueryService(query.NewBandQueryService(transactionalClient), executor)
 
-	trackService := appservice.NewTrackService(executor)
-	trackQueryService := query.NewTrackQueryService(transactionalClient)
+	trackService := authorizedservice.NewTrackService(appservice.NewTrackService(executor), executor)
+	trackQueryService := authorizedquery.NewTrackQueryService(query.NewTrackQueryService(transactionalClient), executor)
 
-	setlistService := appservice.NewSetlistService(executor)
-	setlistQueryService := query.NewSetlistQueryService(transactionalClient)
+	setlistService := authorizedservice.NewSetlistService(appservice.NewSetlistService(executor), executor)
+	setlistQueryService := authorizedquery.NewSetlistQueryService(query.NewSetlistQueryService(transactionalClient), executor)
 
 	redisClient := redis.NewClient(config.redisConfig())
 	sessionStore := redisinfra.NewSessionStore(redisClient, redisinfra.Config{
@@ -68,7 +68,7 @@ func newDependencyContainer(
 	})
 
 	apiServer, err := transport.NewAPIServer(
-		errorHandler,
+		transport.ErrorHandler,
 		middlewares,
 		userService,
 		userQueryService,

@@ -8,14 +8,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ogen-go/ogen/ogenerrors"
 	"github.com/stretchr/testify/require"
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	tcredis "github.com/testcontainers/testcontainers-go/modules/redis"
 
 	"cadence/api/server/publicapi"
+	"cadence/data/migrations"
 	"cadence/pkg/cadence/app"
+	authorizedquery "cadence/pkg/cadence/app/query/authorized"
 	appservice "cadence/pkg/cadence/app/service"
+	authorizedservice "cadence/pkg/cadence/app/service/authorized"
 	pgquery "cadence/pkg/cadence/infrastructure/persistence/postgresql/query"
 	"cadence/pkg/cadence/infrastructure/persistence/postgresql/repo"
 	redisinfra "cadence/pkg/cadence/infrastructure/persistence/redis"
@@ -80,7 +82,7 @@ func setupTestEnv(t *testing.T) *testEnv {
 	require.NoError(t, connector.Open(dsn, postgresql.Config{MaxConnections: 10, ConnectionLifetime: time.Minute}))
 	t.Cleanup(func() { _ = connector.Close() })
 
-	migrator, err := connector.Migrator(logger)
+	migrator, err := connector.Migrator(logger, migrations.FS)
 	require.NoError(t, err)
 	require.NoError(t, migrator.MigrateUp())
 
@@ -91,12 +93,12 @@ func setupTestEnv(t *testing.T) *testEnv {
 
 	userService := appservice.NewUserService(executor)
 	userQueryService := pgquery.NewUserQueryService(transactionalClient)
-	bandService := appservice.NewBandService(executor)
-	bandQueryService := pgquery.NewBandQueryService(transactionalClient)
-	trackService := appservice.NewTrackService(executor)
-	trackQueryService := pgquery.NewTrackQueryService(transactionalClient)
-	setlistService := appservice.NewSetlistService(executor)
-	setlistQueryService := pgquery.NewSetlistQueryService(transactionalClient)
+	bandService := authorizedservice.NewBandService(appservice.NewBandService(executor), executor)
+	bandQueryService := authorizedquery.NewBandQueryService(pgquery.NewBandQueryService(transactionalClient), executor)
+	trackService := authorizedservice.NewTrackService(appservice.NewTrackService(executor), executor)
+	trackQueryService := authorizedquery.NewTrackQueryService(pgquery.NewTrackQueryService(transactionalClient), executor)
+	setlistService := authorizedservice.NewSetlistService(appservice.NewSetlistService(executor), executor)
+	setlistQueryService := authorizedquery.NewSetlistQueryService(pgquery.NewSetlistQueryService(transactionalClient), executor)
 
 	redisClient := redis.NewClient(redis.Config{Host: redisHost, Port: int(redisPort.Num())})
 	t.Cleanup(func() { require.NoError(t, redisClient.Close()) })
@@ -107,7 +109,7 @@ func setupTestEnv(t *testing.T) *testEnv {
 	})
 
 	apiHandler, err := transport.NewAPIServer(
-		ogenerrors.DefaultErrorHandler,
+		transport.ErrorHandler,
 		nil,
 		userService,
 		userQueryService,

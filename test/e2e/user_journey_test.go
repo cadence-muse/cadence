@@ -355,6 +355,65 @@ func TestUserJourney(t *testing.T) {
 		require.Equal(t, setlistID, setlistsBody.Items[0].ID)
 	})
 
+	t.Run("stranger can not read or write the band's data", func(t *testing.T) {
+		const (
+			strangerUsername = "eve"
+			strangerPassword = "yet-another-horse-battery-staple"
+		)
+
+		registerRes, registerErr := env.client.Register(ctx, &publicapi.RegisterRequestBody{
+			Username: strangerUsername,
+			Password: strangerPassword,
+		})
+		requireResponse[publicapi.RegisterResponseBody](t, registerRes, registerErr)
+
+		loginRes, loginErr := env.client.Login(ctx, &publicapi.LoginRequestBody{
+			Username: strangerUsername,
+			Password: strangerPassword,
+		})
+		loginBody := requireResponse[publicapi.LoginResponseBody](t, loginRes, loginErr)
+
+		env.sec.token = loginBody.Token
+		defer func() { env.sec.token = ownerToken }()
+
+		getBandRes, getBandErr := env.client.GetBand(ctx, publicapi.GetBandParams{BandId: bandID})
+		requireErrorResponse(t, getBandRes, getBandErr, publicapi.ErrorCodePermissionDenied)
+
+		updateBandRes, updateBandErr := env.client.UpdateBand(ctx, &publicapi.UpdateBandRequestBody{
+			Name: publicapi.NewOptString("Hijacked"),
+		}, publicapi.UpdateBandParams{BandId: bandID})
+		requireErrorResponse(t, updateBandRes, updateBandErr, publicapi.ErrorCodePermissionDenied)
+
+		listTracksRes, listTracksErr := env.client.ListBandTracks(ctx, publicapi.ListBandTracksParams{BandId: bandID})
+		requireErrorResponse(t, listTracksRes, listTracksErr, publicapi.ErrorCodePermissionDenied)
+
+		getTrackRes, getTrackErr := env.client.GetBandTrack(ctx, publicapi.GetBandTrackParams{BandId: bandID, TrackId: track1})
+		requireErrorResponse(t, getTrackRes, getTrackErr, publicapi.ErrorCodePermissionDenied)
+
+		createTrackRes, createTrackErr := env.client.CreateBandTrack(ctx, &publicapi.CreateBandTrackRequestBody{
+			Title:  "Intruder Track",
+			Artist: "Eve",
+		}, publicapi.CreateBandTrackParams{BandId: bandID})
+		requireErrorResponse(t, createTrackRes, createTrackErr, publicapi.ErrorCodePermissionDenied)
+
+		removeTrackRes, removeTrackErr := env.client.RemoveBandTrack(ctx, publicapi.RemoveBandTrackParams{BandId: bandID, TrackId: track1})
+		requireErrorResponse(t, removeTrackRes, removeTrackErr, publicapi.ErrorCodePermissionDenied)
+
+		getSetlistRes, getSetlistErr := env.client.GetBandSetlist(ctx, publicapi.GetBandSetlistParams{BandId: bandID, SetlistId: setlistID})
+		requireErrorResponse(t, getSetlistRes, getSetlistErr, publicapi.ErrorCodePermissionDenied)
+
+		listSetlistsRes, listSetlistsErr := env.client.ListBandSetlists(ctx, publicapi.ListBandSetlistsParams{BandId: bandID})
+		requireErrorResponse(t, listSetlistsRes, listSetlistsErr, publicapi.ErrorCodePermissionDenied)
+
+		removeSetlistRes, removeSetlistErr := env.client.RemoveBandSetlist(ctx, publicapi.RemoveBandSetlistParams{BandId: bandID, SetlistId: setlistID})
+		requireErrorResponse(t, removeSetlistRes, removeSetlistErr, publicapi.ErrorCodePermissionDenied)
+
+		addSetlistTrackRes, addSetlistTrackErr := env.client.AddSetlistTrack(ctx, &publicapi.AddSetlistTrackRequestBody{
+			TrackId: track1,
+		}, publicapi.AddSetlistTrackParams{BandId: bandID, SetlistId: setlistID})
+		requireErrorResponse(t, addSetlistTrackRes, addSetlistTrackErr, publicapi.ErrorCodePermissionDenied)
+	})
+
 	t.Run("owner removes the member from the band", func(t *testing.T) {
 		res, err := env.client.RemoveBandMember(ctx, publicapi.RemoveBandMemberParams{
 			BandId: bandID,
@@ -393,4 +452,12 @@ func requireResponse[T any](t *testing.T, res any, err error) *T {
 	body, ok := res.(*T)
 	require.Truef(t, ok, "unexpected response type %T", res)
 	return body
+}
+
+func requireErrorResponse(t *testing.T, res any, err error, code publicapi.ErrorCode) {
+	t.Helper()
+	require.NoError(t, err)
+	body, ok := res.(*publicapi.BadRequestResponseBody)
+	require.Truef(t, ok, "unexpected response type %T", res)
+	require.Equal(t, code, body.Code)
 }

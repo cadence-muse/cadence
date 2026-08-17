@@ -21,7 +21,7 @@ type trackQueryService struct {
 	client postgresql.ClientContext
 }
 
-func (s *trackQueryService) ListBandTracks(ctx context.Context, bandID uuid.UUID) ([]query.TrackListItem, error) {
+func (s *trackQueryService) ListBandTracks(ctx context.Context, bandID, _ uuid.UUID) ([]query.TrackListItem, error) {
 	const sqlQuery = `
 		SELECT id, title, artist, duration_seconds
 		FROM track
@@ -70,7 +70,7 @@ func (s *trackQueryService) ListUserTracks(ctx context.Context, userID uuid.UUID
 	}), nil
 }
 
-func (s *trackQueryService) FindTrack(ctx context.Context, bandID, trackID uuid.UUID) (maybe.Maybe[query.TrackData], error) {
+func (s *trackQueryService) FindTrack(ctx context.Context, bandID, trackID, _ uuid.UUID) (maybe.Maybe[query.TrackData], error) {
 	const sqlQuery = `
 		SELECT id, band_id, title, artist, duration_seconds, tempo, key, notes
 		FROM track

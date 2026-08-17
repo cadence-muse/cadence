@@ -9,9 +9,9 @@ import (
 )
 
 type TrackQueryService interface {
-	ListBandTracks(ctx context.Context, bandID uuid.UUID) ([]TrackListItem, error)
+	ListBandTracks(ctx context.Context, bandID, requesterID uuid.UUID) ([]TrackListItem, error)
 	ListUserTracks(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID]) ([]UserTrackListItem, error)
-	FindTrack(ctx context.Context, bandID, trackID uuid.UUID) (maybe.Maybe[TrackData], error)
+	FindTrack(ctx context.Context, bandID, trackID, requesterID uuid.UUID) (maybe.Maybe[TrackData], error)
 }
 
 type TrackListItem struct {

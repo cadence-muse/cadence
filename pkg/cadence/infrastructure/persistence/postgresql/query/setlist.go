@@ -21,7 +21,7 @@ type setlistQueryService struct {
 	client postgresql.ClientContext
 }
 
-func (s *setlistQueryService) ListBandSetlists(ctx context.Context, bandID uuid.UUID) ([]query.SetlistListItem, error) {
+func (s *setlistQueryService) ListBandSetlists(ctx context.Context, bandID, _ uuid.UUID) ([]query.SetlistListItem, error) {
 	const sqlQuery = `
 		SELECT s.id, s.name, s.event_date,
 		       COUNT(t.id) AS tracks_count,
@@ -82,7 +82,7 @@ func (s *setlistQueryService) ListUserSetlists(ctx context.Context, userID uuid.
 	}), nil
 }
 
-func (s *setlistQueryService) FindSetlist(ctx context.Context, bandID, setlistID uuid.UUID) (maybe.Maybe[query.SetlistData], error) {
+func (s *setlistQueryService) FindSetlist(ctx context.Context, bandID, setlistID, _ uuid.UUID) (maybe.Maybe[query.SetlistData], error) {
 	const sqlQuery = `
 		SELECT id, band_id, name, event_location, event_date
 		FROM setlist

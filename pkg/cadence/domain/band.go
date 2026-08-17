@@ -19,6 +19,7 @@ var (
 	ErrBandNameTooLong    = fmt.Errorf("band name length should be less than or equal to %d", maxBandNameLength)
 	ErrBandNotFound       = errors.New("band not found")
 	ErrNotBandOwner       = errors.New("only band owner is allowed to perform this action")
+	ErrNotBandMember      = errors.New("requester is not a member of this band")
 	ErrBandMemberNotFound = errors.New("band member not found")
 	ErrCannotRemoveOwner  = errors.New("band owner can not be removed from the band")
 )

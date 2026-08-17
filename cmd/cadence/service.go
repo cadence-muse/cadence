@@ -20,7 +20,7 @@ const shutdownTimeout = 10 * time.Second
 func service(ctx context.Context, config *config, logger log.Logger) error {
 	router := mux.NewRouter()
 
-	container, err := newDependencyContainer(config, logger, router, errorHandler)
+	container, err := newDependencyContainer(config, logger, router)
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize the dependency container")
 	}

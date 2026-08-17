@@ -11,11 +11,19 @@ import (
 	"cadence/pkg/common/uuid"
 )
 
-func NewBandService(executor transactional.Executor[app.RepoProvider]) *BandService {
-	return &BandService{executor: executor}
+func NewBandService(executor transactional.Executor[app.RepoProvider]) BandService {
+	return &bandService{executor: executor}
 }
 
-type BandService struct {
+type BandService interface {
+	Create(ctx context.Context, params CreateBandParams) (uuid.UUID, error)
+	Update(ctx context.Context, params UpdateBandParams, requesterID uuid.UUID) error
+	JoinByInviteCode(ctx context.Context, userID uuid.UUID, inviteCode string) error
+	Remove(ctx context.Context, bandID, requesterID uuid.UUID) error
+	RemoveMember(ctx context.Context, bandID, targetUserID, requesterID uuid.UUID) error
+}
+
+type bandService struct {
 	executor transactional.Executor[app.RepoProvider]
 }
 
@@ -29,7 +37,7 @@ type UpdateBandParams struct {
 	Name   maybe.Maybe[string]
 }
 
-func (s *BandService) Create(ctx context.Context, params CreateBandParams) (bandID uuid.UUID, err error) {
+func (s *bandService) Create(ctx context.Context, params CreateBandParams) (bandID uuid.UUID, err error) {
 	err = s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.BandRepository()
 
@@ -48,7 +56,7 @@ func (s *BandService) Create(ctx context.Context, params CreateBandParams) (band
 	return bandID, err
 }
 
-func (s *BandService) Update(ctx context.Context, params UpdateBandParams) (err error) {
+func (s *bandService) Update(ctx context.Context, params UpdateBandParams, _ uuid.UUID) (err error) {
 	return s.executor.ExecuteWithLock(ctx, getBandLockName(params.BandID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.BandRepository()
 
@@ -67,7 +75,7 @@ func (s *BandService) Update(ctx context.Context, params UpdateBandParams) (err 
 	})
 }
 
-func (s *BandService) JoinByInviteCode(ctx context.Context, userID uuid.UUID, inviteCode string) error {
+func (s *bandService) JoinByInviteCode(ctx context.Context, userID uuid.UUID, inviteCode string) error {
 	return s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.BandRepository()
 
@@ -81,7 +89,7 @@ func (s *BandService) JoinByInviteCode(ctx context.Context, userID uuid.UUID, in
 	})
 }
 
-func (s *BandService) Remove(ctx context.Context, bandID, requesterID uuid.UUID) error {
+func (s *bandService) Remove(ctx context.Context, bandID, requesterID uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getBandLockName(bandID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.BandRepository()
 
@@ -98,7 +106,7 @@ func (s *BandService) Remove(ctx context.Context, bandID, requesterID uuid.UUID)
 	})
 }
 
-func (s *BandService) RemoveMember(ctx context.Context, bandID, targetUserID, requesterID uuid.UUID) error {
+func (s *bandService) RemoveMember(ctx context.Context, bandID, targetUserID, requesterID uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getBandLockName(bandID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.BandRepository()
 

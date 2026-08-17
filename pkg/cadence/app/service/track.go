@@ -13,11 +13,17 @@ import (
 	"cadence/pkg/common/valuetypes"
 )
 
-func NewTrackService(executor transactional.Executor[app.RepoProvider]) *TrackService {
-	return &TrackService{executor: executor}
+func NewTrackService(executor transactional.Executor[app.RepoProvider]) TrackService {
+	return &trackService{executor: executor}
 }
 
-type TrackService struct {
+type TrackService interface {
+	Create(ctx context.Context, params CreateTrackParams, requesterID uuid.UUID) (uuid.UUID, error)
+	Update(ctx context.Context, params UpdateTrackParams, requesterID uuid.UUID) error
+	Remove(ctx context.Context, bandID, trackID, requesterID uuid.UUID) error
+}
+
+type trackService struct {
 	executor transactional.Executor[app.RepoProvider]
 }
 
@@ -42,7 +48,7 @@ type UpdateTrackParams struct {
 	Notes    maybe.Maybe[string]
 }
 
-func (s *TrackService) Create(ctx context.Context, params CreateTrackParams) (trackID uuid.UUID, err error) {
+func (s *trackService) Create(ctx context.Context, params CreateTrackParams, _ uuid.UUID) (trackID uuid.UUID, err error) {
 	err = s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
 		trackRepo := repoProvider.TrackRepository()
 
@@ -70,7 +76,7 @@ func (s *TrackService) Create(ctx context.Context, params CreateTrackParams) (tr
 	return trackID, err
 }
 
-func (s *TrackService) Update(ctx context.Context, params UpdateTrackParams) error {
+func (s *trackService) Update(ctx context.Context, params UpdateTrackParams, _ uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getTrackLockName(params.TrackID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.TrackRepository()
 
@@ -109,7 +115,7 @@ func (s *TrackService) Update(ctx context.Context, params UpdateTrackParams) err
 	})
 }
 
-func (s *TrackService) Remove(ctx context.Context, bandID, trackID uuid.UUID) error {
+func (s *trackService) Remove(ctx context.Context, bandID, trackID, _ uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getTrackLockName(trackID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.TrackRepository()
 
