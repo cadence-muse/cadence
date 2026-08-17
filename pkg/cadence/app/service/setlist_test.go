@@ -24,7 +24,7 @@ func TestSetlistService_Create(t *testing.T) {
 			BandID:   bandID,
 			Name:     "Summer Show",
 			TrackIDs: []uuid.UUID{trackID},
-		})
+		}, uuid.Generate())
 		require.NoError(t, err)
 
 		setlist, err := executor.repoProvider().SetlistRepository().Get(setlistID)
@@ -44,7 +44,7 @@ func TestSetlistService_Create(t *testing.T) {
 			BandID:   bandID,
 			Name:     "Summer Show",
 			TrackIDs: []uuid.UUID{otherBandTrackID},
-		})
+		}, uuid.Generate())
 		require.ErrorIs(t, err, domain.ErrTrackNotFound)
 	})
 
@@ -55,7 +55,7 @@ func TestSetlistService_Create(t *testing.T) {
 		_, err := svc.Create(context.Background(), CreateSetlistParams{
 			BandID: uuid.Generate(),
 			Name:   "Summer Show",
-		})
+		}, uuid.Generate())
 		require.ErrorIs(t, err, domain.ErrBandNotFound)
 	})
 }
@@ -71,7 +71,7 @@ func TestSetlistService_Update(t *testing.T) {
 			BandID:    bandID,
 			SetlistID: setlistID,
 			Name:      maybe.NewJust("New Name"),
-		})
+		}, uuid.Generate())
 		require.NoError(t, err)
 
 		setlist, err := executor.repoProvider().SetlistRepository().Get(setlistID)
@@ -88,7 +88,7 @@ func TestSetlistService_Update(t *testing.T) {
 			BandID:    uuid.Generate(),
 			SetlistID: setlistID,
 			Name:      maybe.NewJust("New Name"),
-		})
+		}, uuid.Generate())
 		require.ErrorIs(t, err, domain.ErrSetlistNotFound)
 	})
 }
@@ -100,7 +100,7 @@ func TestSetlistService_Remove(t *testing.T) {
 		bandID := uuid.Generate()
 		setlistID := seedSetlist(t, executor, bandID, nil)
 
-		err := svc.Remove(context.Background(), bandID, setlistID)
+		err := svc.Remove(context.Background(), bandID, setlistID, uuid.Generate())
 		require.NoError(t, err)
 
 		_, err = executor.repoProvider().SetlistRepository().Get(setlistID)
@@ -112,7 +112,7 @@ func TestSetlistService_Remove(t *testing.T) {
 		svc := NewSetlistService(executor)
 		setlistID := seedSetlist(t, executor, uuid.Generate(), nil)
 
-		err := svc.Remove(context.Background(), uuid.Generate(), setlistID)
+		err := svc.Remove(context.Background(), uuid.Generate(), setlistID, uuid.Generate())
 		require.ErrorIs(t, err, domain.ErrSetlistNotFound)
 	})
 }
@@ -125,7 +125,7 @@ func TestSetlistService_AddTrack(t *testing.T) {
 		setlistID := seedSetlist(t, executor, bandID, nil)
 		trackID := seedTrack(t, executor, bandID)
 
-		err := svc.AddTrack(context.Background(), bandID, setlistID, trackID)
+		err := svc.AddTrack(context.Background(), bandID, setlistID, trackID, uuid.Generate())
 		require.NoError(t, err)
 
 		setlist, err := executor.repoProvider().SetlistRepository().Get(setlistID)
@@ -140,7 +140,7 @@ func TestSetlistService_AddTrack(t *testing.T) {
 		setlistID := seedSetlist(t, executor, bandID, nil)
 		otherBandTrackID := seedTrack(t, executor, uuid.Generate())
 
-		err := svc.AddTrack(context.Background(), bandID, setlistID, otherBandTrackID)
+		err := svc.AddTrack(context.Background(), bandID, setlistID, otherBandTrackID, uuid.Generate())
 		require.ErrorIs(t, err, domain.ErrTrackNotFound)
 	})
 }
@@ -153,7 +153,7 @@ func TestSetlistService_RemoveTrack(t *testing.T) {
 		trackID := seedTrack(t, executor, bandID)
 		setlistID := seedSetlist(t, executor, bandID, []uuid.UUID{trackID})
 
-		err := svc.RemoveTrack(context.Background(), bandID, setlistID, trackID)
+		err := svc.RemoveTrack(context.Background(), bandID, setlistID, trackID, uuid.Generate())
 		require.NoError(t, err)
 
 		setlist, err := executor.repoProvider().SetlistRepository().Get(setlistID)
@@ -167,7 +167,7 @@ func TestSetlistService_RemoveTrack(t *testing.T) {
 		bandID := uuid.Generate()
 		setlistID := seedSetlist(t, executor, bandID, nil)
 
-		err := svc.RemoveTrack(context.Background(), bandID, setlistID, uuid.Generate())
+		err := svc.RemoveTrack(context.Background(), bandID, setlistID, uuid.Generate(), uuid.Generate())
 		require.ErrorIs(t, err, domain.ErrTrackNotInSetlist)
 	})
 }
@@ -181,7 +181,7 @@ func TestSetlistService_ReorderTracks(t *testing.T) {
 		trackB := seedTrack(t, executor, bandID)
 		setlistID := seedSetlist(t, executor, bandID, []uuid.UUID{trackA, trackB})
 
-		err := svc.ReorderTracks(context.Background(), bandID, setlistID, []uuid.UUID{trackB, trackA})
+		err := svc.ReorderTracks(context.Background(), bandID, setlistID, []uuid.UUID{trackB, trackA}, uuid.Generate())
 		require.NoError(t, err)
 
 		setlist, err := executor.repoProvider().SetlistRepository().Get(setlistID)
@@ -196,7 +196,7 @@ func TestSetlistService_ReorderTracks(t *testing.T) {
 		trackA := seedTrack(t, executor, bandID)
 		setlistID := seedSetlist(t, executor, bandID, []uuid.UUID{trackA})
 
-		err := svc.ReorderTracks(context.Background(), bandID, setlistID, []uuid.UUID{trackA, uuid.Generate()})
+		err := svc.ReorderTracks(context.Background(), bandID, setlistID, []uuid.UUID{trackA, uuid.Generate()}, uuid.Generate())
 		require.ErrorIs(t, err, domain.ErrInvalidSetlistTrackOrder)
 	})
 }

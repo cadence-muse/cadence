@@ -158,7 +158,7 @@ func (s *setlistService) AddTracks(ctx context.Context, bandID, setlistID uuid.U
 	})
 }
 
-func (s *setlistService) RemoveTrack(ctx context.Context, bandID, setlistID, trackID uuid.UUID, requesterID uuid.UUID) error {
+func (s *setlistService) RemoveTrack(ctx context.Context, bandID, setlistID, trackID, _ uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getSetlistLockName(setlistID), func(repoProvider app.RepoProvider) error {
 		setlist, err := getBandSetlist(repoProvider, bandID, setlistID)
 		if err != nil {
@@ -173,7 +173,7 @@ func (s *setlistService) RemoveTrack(ctx context.Context, bandID, setlistID, tra
 	})
 }
 
-func (s *setlistService) ReorderTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID, requesterID uuid.UUID) error {
+func (s *setlistService) ReorderTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID, _ uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getSetlistLockName(setlistID), func(repoProvider app.RepoProvider) error {
 		setlist, err := getBandSetlist(repoProvider, bandID, setlistID)
 		if err != nil {

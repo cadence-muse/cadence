@@ -34,7 +34,7 @@ func TestBandService_Update(t *testing.T) {
 		svc := NewBandService(executor)
 		bandID := seedBand(t, executor, uuid.Generate())
 
-		err := svc.Update(context.Background(), UpdateBandParams{BandID: bandID, Name: maybe.NewJust("New Name")})
+		err := svc.Update(context.Background(), UpdateBandParams{BandID: bandID, Name: maybe.NewJust("New Name")}, uuid.Generate())
 		require.NoError(t, err)
 
 		band, err := executor.repoProvider().BandRepository().Get(bandID)
@@ -46,7 +46,7 @@ func TestBandService_Update(t *testing.T) {
 		executor := newFakeExecutor()
 		svc := NewBandService(executor)
 
-		err := svc.Update(context.Background(), UpdateBandParams{BandID: uuid.Generate(), Name: maybe.NewJust("New Name")})
+		err := svc.Update(context.Background(), UpdateBandParams{BandID: uuid.Generate(), Name: maybe.NewJust("New Name")}, uuid.Generate())
 		require.ErrorIs(t, err, domain.ErrBandNotFound)
 	})
 }
