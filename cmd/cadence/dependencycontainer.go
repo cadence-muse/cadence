@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/go-faster/errors"
 	"github.com/gorilla/mux"
 	"github.com/ogen-go/ogen/middleware"
@@ -19,9 +21,12 @@ import (
 	"cadence/pkg/common/transactional"
 )
 
+const healthCheckKey = "resilience:health-check"
+
 type dependencyContainer struct {
-	dbConnector postgresql.Connector
-	redisClient redis.Client
+	dbConnector         postgresql.Connector
+	transactionalClient postgresql.TransactionalClient
+	redisClient         redis.Client
 }
 
 func newDependencyContainer(
@@ -81,9 +86,22 @@ func newDependencyContainer(
 	router.PathPrefix("/api").Handler(corsMiddleware(config.CORSAllowedOrigins)(apiServer))
 
 	return &dependencyContainer{
-		dbConnector: migrator.connector,
-		redisClient: redisClient,
+		dbConnector:         migrator.connector,
+		transactionalClient: transactionalClient,
+		redisClient:         redisClient,
 	}, nil
+}
+
+// Ready reports whether dependencies are reachable and the service can serve traffic.
+func (c *dependencyContainer) Ready(ctx context.Context) error {
+	var dbAlive int
+	if err := c.transactionalClient.GetContext(ctx, &dbAlive, "SELECT 1"); err != nil {
+		return errors.Wrap(err, "database is not reachable")
+	}
+	if _, err := c.redisClient.Exists(ctx, healthCheckKey); err != nil {
+		return errors.Wrap(err, "redis is not reachable")
+	}
+	return nil
 }
 
 func (c *dependencyContainer) Close() error {

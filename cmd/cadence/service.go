@@ -30,7 +30,18 @@ func service(ctx context.Context, config *config, logger log.Logger) error {
 		}
 	}()
 
-	router.HandleFunc("/resilience/ready", func(w http.ResponseWriter, _ *http.Request) {
+	router.HandleFunc("/resilience/live", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = io.WriteString(w, http.StatusText(http.StatusOK))
+	})
+
+	router.HandleFunc("/resilience/ready", func(w http.ResponseWriter, r *http.Request) {
+		if readyErr := container.Ready(r.Context()); readyErr != nil {
+			logger.Error(readyErr, "readiness check failed")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = io.WriteString(w, http.StatusText(http.StatusServiceUnavailable))
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 		_, _ = io.WriteString(w, http.StatusText(http.StatusOK))
 	})

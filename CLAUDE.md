@@ -111,7 +111,7 @@ Use `bin/create-db-migration <name>` to scaffold a new pair.
 - `gorilla/mux` router
 - Public API: `/api/*` registered via `PathPrefix`, CORS middleware (`CADENCE_CORS_ALLOWED_ORIGINS`)
 - Auth: session-token based (`SessionAuth` security scheme backed by Redis), see `pkg/common/auth`
-- Health: `/resilience/ready`
+- Health: `/resilience/live` (liveness, process up), `/resilience/ready` (readiness, checks DB/Redis)
 - OpenAPI spec: `api/server/publicapi.yml`; generated client/server code lands in `api/server/publicapi/`
   (never hand-edit, regenerate via `mise run generate`)
 
