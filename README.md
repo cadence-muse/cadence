@@ -9,16 +9,22 @@
 
 ## 💡 Overview
 
-Cadence is a simple repertoire manager for actively gigging bands. Key features include:
+Cadence is a simple repertoire manager for gigging bands. Key features include:
 
 - **Bands Participation:** Be a member of several bands and keep them all at a glance.
 - **Per-band Repertoire:** Maintain a repertoire of your bands with keys, tempos and other useful information.
 - **Per-band Setlists:** Plan and collaborate on setlists for your gigs.
 
-This repo contains only the core backend. Other repositories for this project:
+This repo contains only the core backend. Check out the cross-platform client
+in [nightnoryu/cadence-client](https://github.com/nightnoryu/cadence-client).
 
-- [cadence-client](https://github.com/nightnoryu/cadence-client) - cross-platform (web & mobile) client for API.
-- [cadence-platform](https://github.com/nightnoryu/cadence-platform) - kubernetes deployment settings for the whole application.
+## 💻 Tech Stack
+
+- **Backend**: Go, PostgreSQL, Redis
+- **Client**: Dart, Flutter
+- **CI/CD**: mise, GitHub Actions, GitHub Container Registry
+- **Deployment**: k3s
+- **Landing website**: Hugo
 
 ## 🛠️ Local development
 
@@ -38,7 +44,7 @@ To get a local copy of the project up and running, follow these steps.
     $EDITOR compose.override.yml
     ```
 
-2. Build the binary with mise (+ lint and run unit tests)
+2. Build the binary with mise, lint and run unit tests (see other commands in `mise.toml`)
 
     ```shell
     mise run
@@ -60,16 +66,6 @@ mise run && docker restart cadence
 
 # Stop the application
 docker compose down
-```
-
-### Tests
-
-```shell
-# Unit tests - part of the overall mise run
-mise run test:unit
-
-# E2E tests - launched separately, spin up docker containers
-mise run test:e2e
 ```
 
 ## 📜 License
