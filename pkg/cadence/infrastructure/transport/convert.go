@@ -31,8 +31,9 @@ func convertQueryBandDataToAPI(band query.BandData) publicapi.Band {
 
 func convertQueryBandMemberDataToAPI(member query.BandMemberData) publicapi.BandMember {
 	return publicapi.BandMember{
-		ID:       publicapi.NewOptUUID(googleuuid.UUID(member.ID)),
+		ID:       googleuuid.UUID(member.ID),
 		Username: member.Username,
+		Role:     publicapi.BandMemberRole(member.Role),
 	}
 }
 

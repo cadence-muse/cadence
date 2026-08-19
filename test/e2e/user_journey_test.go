@@ -90,10 +90,9 @@ func TestUserJourney(t *testing.T) {
 		inviteCode = body.InviteCode
 
 		require.Len(t, body.Members, 1)
-		memberOwnerID, ok := body.Members[0].ID.Get()
-		require.True(t, ok)
-		require.Equal(t, ownerID, memberOwnerID)
+		require.Equal(t, ownerID, body.Members[0].ID)
 		require.Equal(t, ownerUsername, body.Members[0].Username)
+		require.Equal(t, publicapi.BandMemberRoleOwner, body.Members[0].Role)
 	})
 
 	t.Run("list bands contains the new band", func(t *testing.T) {
@@ -155,6 +154,13 @@ func TestUserJourney(t *testing.T) {
 		getRes, getErr := env.client.GetBand(ctx, publicapi.GetBandParams{BandId: bandID})
 		getBody := requireResponse[publicapi.Band](t, getRes, getErr)
 		require.Len(t, getBody.Members, 2)
+
+		membersByID := make(map[uuid.UUID]publicapi.BandMember, len(getBody.Members))
+		for _, m := range getBody.Members {
+			membersByID[m.ID] = m
+		}
+		require.Equal(t, publicapi.BandMemberRoleOwner, membersByID[ownerID].Role)
+		require.Equal(t, publicapi.BandMemberRoleMember, membersByID[memberID].Role)
 	})
 
 	t.Run("create band tracks", func(t *testing.T) {
@@ -385,6 +391,13 @@ func TestUserJourney(t *testing.T) {
 		getAfterRes, getAfterErr := env.client.GetBand(ctx, publicapi.GetBandParams{BandId: tempBandID})
 		getAfterBody := requireResponse[publicapi.Band](t, getAfterRes, getAfterErr)
 		require.Equal(t, memberID, getAfterBody.OwnerId)
+
+		membersByID := make(map[uuid.UUID]publicapi.BandMember, len(getAfterBody.Members))
+		for _, m := range getAfterBody.Members {
+			membersByID[m.ID] = m
+		}
+		require.Equal(t, publicapi.BandMemberRoleOwner, membersByID[memberID].Role)
+		require.Equal(t, publicapi.BandMemberRoleMember, membersByID[ownerID].Role)
 
 		// former owner no longer holds special privileges - the new owner can remove them.
 		env.sec.token = memberToken

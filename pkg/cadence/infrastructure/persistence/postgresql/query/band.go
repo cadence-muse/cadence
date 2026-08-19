@@ -85,7 +85,7 @@ func (s *bandQueryService) FindBand(ctx context.Context, id uuid.UUID) (maybe.Ma
 
 func (s *bandQueryService) listBandMembers(ctx context.Context, bandID uuid.UUID) ([]query.BandMemberData, error) {
 	const sqlQuery = `
-		SELECT u.id, u.username
+		SELECT u.id, u.username, bm.role
 		FROM band_member bm
 		JOIN "user" u ON u.id = bm.user_id
 		WHERE bm.band_id = $1
@@ -97,7 +97,11 @@ func (s *bandQueryService) listBandMembers(ctx context.Context, bandID uuid.UUID
 	}
 
 	return slices.Map(rows, func(row sqlxBandMember) query.BandMemberData {
-		return query.BandMemberData(row)
+		return query.BandMemberData{
+			ID:       row.ID,
+			Username: row.Username,
+			Role:     query.BandMemberRole(row.Role),
+		}
 	}), nil
 }
 
@@ -116,4 +120,5 @@ type sqlxBandData struct {
 type sqlxBandMember struct {
 	ID       uuid.UUID `db:"id"`
 	Username string    `db:"username"`
+	Role     string    `db:"role"`
 }

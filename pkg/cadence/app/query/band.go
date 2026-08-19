@@ -30,4 +30,12 @@ type BandData struct {
 type BandMemberData struct {
 	ID       uuid.UUID
 	Username string
+	Role     BandMemberRole
 }
+
+type BandMemberRole string
+
+const (
+	BandMemberRoleOwner  BandMemberRole = "owner"
+	BandMemberRoleMember BandMemberRole = "member"
+)

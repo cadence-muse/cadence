@@ -27,7 +27,7 @@ func TestNewBand(t *testing.T) {
 		members := band.Members()
 		require.Len(t, members, 1)
 		assert.Equal(t, ownerID, members[0].UserID())
-		assert.Equal(t, BandRoleOwner, members[0].Role())
+		assert.Equal(t, BandMemberRoleOwner, members[0].Role())
 	})
 
 	t.Run("empty name is rejected", func(t *testing.T) {
@@ -57,7 +57,7 @@ func TestNewBand(t *testing.T) {
 func TestLoadBand(t *testing.T) {
 	id := uuid.Generate()
 	ownerID := uuid.Generate()
-	members := []BandMember{LoadBandMember(ownerID, BandRoleOwner)}
+	members := []BandMember{LoadBandMember(ownerID, BandMemberRoleOwner)}
 
 	band := LoadBand(id, "Loaded Band", "AB12CD", members)
 
@@ -92,7 +92,7 @@ func TestBand_AddMember(t *testing.T) {
 
 		members := band.Members()
 		require.Len(t, members, 1)
-		assert.Equal(t, BandRoleOwner, members[0].Role())
+		assert.Equal(t, BandMemberRoleOwner, members[0].Role())
 	})
 }
 
@@ -164,6 +164,18 @@ func TestBand_TransferOwnership(t *testing.T) {
 
 		err = band.TransferOwnership(ownerID, uuid.Generate())
 		require.ErrorIs(t, err, ErrBandMemberNotFound)
+		assert.True(t, band.IsOwner(ownerID))
+	})
+
+	t.Run("non-owner caller is rejected", func(t *testing.T) {
+		ownerID := uuid.Generate()
+		memberID := uuid.Generate()
+		band, err := NewBand(uuid.Generate(), "Band", ownerID)
+		require.NoError(t, err)
+		band.AddMember(memberID, BandRoleMember)
+
+		err = band.TransferOwnership(memberID, memberID)
+		require.ErrorIs(t, err, ErrNotBandOwner)
 		assert.True(t, band.IsOwner(ownerID))
 	})
 }

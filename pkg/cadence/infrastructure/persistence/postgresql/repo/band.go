@@ -154,7 +154,7 @@ func (repo *bandRepository) getMembers(bandID domain.BandID) ([]domain.BandMembe
 	}
 
 	return slices.Map(rows, func(row sqlxBandMember) domain.BandMember {
-		return domain.LoadBandMember(row.UserID, domain.BandRole(row.Role))
+		return domain.LoadBandMember(row.UserID, domain.BandMemberRole(row.Role))
 	}), nil
 }
 

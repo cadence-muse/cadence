@@ -52,7 +52,7 @@ func NewBand(
 		id:         id,
 		name:       name,
 		inviteCode: generateInviteCode(),
-		members:    []BandMember{{userID: ownerID, role: BandRoleOwner}},
+		members:    []BandMember{{userID: ownerID, role: BandMemberRoleOwner}},
 	}, nil
 }
 
@@ -95,7 +95,7 @@ func (b *Band) Members() []BandMember {
 	return b.members
 }
 
-func (b *Band) AddMember(userID UserID, role BandRole) {
+func (b *Band) AddMember(userID UserID, role BandMemberRole) {
 	for _, member := range b.members {
 		if member.userID == userID {
 			return
@@ -125,7 +125,7 @@ func (b *Band) HasMember(userID UserID) bool {
 func (b *Band) IsOwner(userID UserID) bool {
 	for _, member := range b.members {
 		if member.userID == userID {
-			return member.role == BandRoleOwner
+			return member.role == BandMemberRoleOwner
 		}
 	}
 	return false
@@ -148,11 +148,11 @@ func (b *Band) TransferOwnership(currentOwnerID, newOwnerID UserID) error {
 	}
 
 	for i, member := range b.members {
-		if member.role == BandRoleOwner {
+		if member.role == BandMemberRoleOwner {
 			b.members[i].role = BandRoleMember
 		}
 	}
-	b.members[newOwnerIndex].role = BandRoleOwner
+	b.members[newOwnerIndex].role = BandMemberRoleOwner
 	return nil
 }
 

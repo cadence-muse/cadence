@@ -784,8 +784,16 @@ components:
           format: uuid
         username:
           type: string
+        role:
+          $ref: '#/components/schemas/BandMemberRole'
       required:
+        - id
         - username
+        - role
+
+    BandMemberRole:
+      type: string
+      enum: [ owner, member ]
 
     UpdateBandRequestBody:
       type: object
