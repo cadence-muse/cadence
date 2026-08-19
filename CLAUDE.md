@@ -93,6 +93,46 @@ pkg/cadence/
   (client/DSN/migrator), `redis` (session store client), `transactional` (Unit-of-Work with optional
   Postgres advisory-lock support), `uuid` (UUIDv7)
 
+### CQRS split
+
+Write and read sides are fully separate stacks, one per aggregate, never sharing models:
+
+- Write side: `app/service` (business logic, mutates via `domain` entities) -> `infrastructure/persistence/postgresql/repo`
+  (`domain.XRepository` impl, `sqlx`-style, returns/accepts domain entities, e.g. `domain.LoadBand(...)`).
+- Read side: `app/query` (`XQueryService` interfaces) -> `infrastructure/persistence/postgresql/query`
+  (hand-written SQL, `SelectContext`/`GetContext` straight into flat DTOs like `TrackListItem`, `UserSetlistListItem`).
+  Read-side code never imports `domain` - no entities, no invariants, just projections for API responses.
+- Both sides get their own `authorized` decorator (see below) and their own constructor wired independently
+  in `cmd/cadence/dependencycontainer.go` (e.g. `trackService` and `trackQueryService` are separate objects,
+  both backed by the same `track` table but through different SQL and different Go types).
+- Adding a new read model: define the DTO + interface method in `app/query`, hand-write the SQL in
+  `infrastructure/persistence/postgresql/query`, add the `authorized` pass-through/`requireMember` check,
+  wire the constructor. Don't reuse `domain` types or `repo/` queries for read paths, even if the SQL would
+  look similar - keeps the read side free to diverge (joins, aggregates, search) without touching write-side
+  invariants.
+
+### Authorized services pattern
+
+`app/service/authorized` and `app/query/authorized` decorate the plain `app/service`/`app/query`
+implementations with request-level authorization, keeping the inner services free of auth concerns:
+
+- Each authorized type wraps an inner `service.XService`/`query.XQueryService` plus a
+  `transactional.Executor[app.RepoProvider]`, e.g. `authorizedservice.NewBandService(appservice.NewBandService(executor), executor)`.
+  Wired for every aggregate in `cmd/cadence/dependencycontainer.go`.
+- `requesterIDFromContext(ctx)` pulls the caller's user ID from session auth
+  (`pkg/common/auth`), returning `permission_denied` if unauthenticated.
+- `requireMember(ctx, executor, bandID, requesterID)` (in `app/service/authorized/band.go` and mirrored in
+  `app/query/authorized`) loads the band and checks `band.HasMember` before delegating - use this for any
+  op scoped to "any band member may do this".
+- Owner-only operations (e.g. `Band.TransferOwnership`, `Band.RegenerateInviteCode`) enforce `IsOwner` inside
+  the domain method itself and return `domain.ErrNotBandOwner`; the authorized wrapper just passes the call
+  through - don't duplicate the owner check at the authorized layer.
+- Ops implicitly scoped to the caller (`ListUserTracks`, `ListUserSetlists`, `JoinByInviteCode` - keyed by
+  `userID` or by invite code, not by band membership) also pass through unchecked.
+- New service/query methods on band-scoped aggregates should follow this same split: put "is this requester
+  even allowed near this band" in the authorized wrapper via `requireMember`, and finer-grained role checks
+  (owner vs member) in the domain type.
+
 ## Databases
 
 ### Migrations
