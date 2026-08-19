@@ -52,6 +52,10 @@ func (s *authorizedBandService) TransferOwnership(ctx context.Context, bandID, r
 	return s.next.TransferOwnership(ctx, bandID, requesterID, newOwnerID)
 }
 
+func (s *authorizedBandService) RegenerateInviteCode(ctx context.Context, bandID, requesterID uuid.UUID) (string, error) {
+	return s.next.RegenerateInviteCode(ctx, bandID, requesterID)
+}
+
 func requireMember(ctx context.Context, executor transactional.Executor[app.RepoProvider], bandID, requesterID uuid.UUID) error {
 	return executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
 		band, err := repoProvider.BandRepository().Get(bandID)

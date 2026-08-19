@@ -337,6 +337,25 @@ func (h *restHandler) TransferBandOwnership(ctx context.Context, req *publicapi.
 	return &publicapi.TransferBandOwnershipOK{}, nil
 }
 
+func (h *restHandler) RotateBandInviteCode(ctx context.Context, params publicapi.RotateBandInviteCodeParams) (publicapi.RotateBandInviteCodeRes, error) {
+	userID, ok := auth.UserIDFromContext(ctx)
+	if !ok {
+		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
+	}
+	inviteCode, err := h.bandService.RegenerateInviteCode(ctx, uuid.UUID(params.BandId), userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrBandNotFound):
+			return nil, commonogenerrors.NewNotFoundError(err.Error())
+		case errors.Is(err, domain.ErrNotBandOwner):
+			return nil, commonogenerrors.NewPermissionDeniedError(err.Error())
+		default:
+			return nil, err
+		}
+	}
+	return &publicapi.RotateBandInviteCodeResponseBody{NewInviteCode: inviteCode}, nil
+}
+
 func (h *restHandler) CreateBandTrack(ctx context.Context, req *publicapi.CreateBandTrackRequestBody, params publicapi.CreateBandTrackParams) (publicapi.CreateBandTrackRes, error) {
 	key, err := maybeKeyFromOpt(req.GetKey())
 	if err != nil {

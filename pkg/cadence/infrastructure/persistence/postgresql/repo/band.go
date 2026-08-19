@@ -39,9 +39,10 @@ func (repo *bandRepository) Store(band *domain.Band) error {
 		INSERT INTO band (id, name, invite_code, created_at, created_by)
 		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (id) DO UPDATE
-		SET name       = EXCLUDED.name,
-		    updated_at = EXCLUDED.created_at,
-		    updated_by = EXCLUDED.created_by
+		SET name        = EXCLUDED.name,
+		    invite_code = EXCLUDED.invite_code,
+		    updated_at  = EXCLUDED.created_at,
+		    updated_by  = EXCLUDED.created_by
 	`
 	_, err := repo.client.ExecContext(
 		repo.ctx,

@@ -246,6 +246,24 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+  /api/band/{bandId}/rotate-invite-code:
+    post:
+      operationId: RotateBandInviteCode
+      summary: Regenerate band invite code, available only to owner
+      security:
+        - sessionAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/BandId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RotateBandInviteCodeResponseBody'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
   /api/band/{bandId}/transfer-ownership:
     post:
       operationId: TransferBandOwnership
@@ -362,13 +380,19 @@ paths:
           $ref: '#/components/responses/BadRequest'
 
   /api/track/list:
-    get:
+    post:
       operationId: ListUserTracks
       summary: List all tracks across bands the current user belongs to, optionally filtered by band
       security:
         - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandIdFilter'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListUserTracksRequestBody'
       responses:
         '200':
           description: Success
@@ -380,13 +404,19 @@ paths:
           $ref: '#/components/responses/BadRequest'
 
   /api/setlist/list:
-    get:
+    post:
       operationId: ListUserSetlists
       summary: List all setlists across bands the current user belongs to, optionally filtered by band
       security:
         - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandIdFilter'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListUserSetlistsRequestBody'
       responses:
         '200':
           description: Success
@@ -809,6 +839,14 @@ components:
       required:
         - inviteCode
 
+    RotateBandInviteCodeResponseBody:
+      type: object
+      properties:
+        newInviteCode:
+          type: string
+      required:
+        - newInviteCode
+
     TransferBandOwnershipRequestBody:
       type: object
       properties:
@@ -916,6 +954,13 @@ components:
           type: string
           nullable: true
 
+    ListUserTracksRequestBody:
+      type: object
+      properties:
+        searchQuery:
+          type: string
+          description: Search by artist or title match
+
     ListUserTracksResponseBody:
       type: object
       properties:
@@ -980,6 +1025,13 @@ components:
         - name
         - tracksCount
         - durationSeconds
+
+    ListUserSetlistsRequestBody:
+      type: object
+      properties: 
+        searchQuery:
+          type: string
+          description: Search by name match
 
     ListUserSetlistsResponseBody:
       type: object

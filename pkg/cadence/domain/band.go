@@ -131,6 +131,14 @@ func (b *Band) IsOwner(userID UserID) bool {
 	return false
 }
 
+func (b *Band) RegenerateInviteCode(requesterID UserID) error {
+	if !b.IsOwner(requesterID) {
+		return ErrNotBandOwner
+	}
+	b.inviteCode = generateInviteCode()
+	return nil
+}
+
 func (b *Band) TransferOwnership(currentOwnerID, newOwnerID UserID) error {
 	if !b.IsOwner(currentOwnerID) {
 		return ErrNotBandOwner
