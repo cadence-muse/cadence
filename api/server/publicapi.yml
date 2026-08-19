@@ -56,6 +56,19 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+  /api/logout:
+    post:
+      operationId: Logout
+      summary: Remove user session
+      tags: [ Users ]
+      security:
+        - sessionAuth: [ ]
+      responses:
+        '200':
+          description: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
   /api/me:
     get:
       operationId: GetUserProfile

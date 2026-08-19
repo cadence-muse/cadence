@@ -124,6 +124,19 @@ func (h *restHandler) Login(ctx context.Context, req *publicapi.LoginRequestBody
 	return &publicapi.LoginResponseBody{Token: token}, nil
 }
 
+func (h *restHandler) Logout(ctx context.Context) (publicapi.LogoutRes, error) {
+	token, ok := auth.SessionTokenFromContext(ctx)
+	if !ok {
+		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
+	}
+
+	if err := h.sessionStore.DeleteSession(ctx, token); err != nil {
+		return nil, err
+	}
+
+	return &publicapi.LogoutOK{}, nil
+}
+
 func (h *restHandler) GetUserProfile(ctx context.Context) (publicapi.GetUserProfileRes, error) {
 	userID, ok := auth.UserIDFromContext(ctx)
 	if !ok {

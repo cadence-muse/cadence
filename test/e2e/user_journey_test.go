@@ -444,6 +444,14 @@ func TestUserJourney(t *testing.T) {
 		body := requireResponse[publicapi.HomepageData](t, homepageRes, homepageErr)
 		require.Equal(t, 0, body.BandsCount)
 	})
+
+	t.Run("owner logs out and session is invalidated", func(t *testing.T) {
+		logoutRes, logoutErr := env.client.Logout(ctx)
+		requireResponse[publicapi.LogoutOK](t, logoutRes, logoutErr)
+
+		_, profileErr := env.client.GetUserProfile(ctx)
+		require.Error(t, profileErr)
+	})
 }
 
 func requireResponse[T any](t *testing.T, res any, err error) *T {
