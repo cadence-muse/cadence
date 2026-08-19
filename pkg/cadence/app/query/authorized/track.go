@@ -30,8 +30,8 @@ func (s *authorizedTrackQueryService) ListBandTracks(ctx context.Context, bandID
 	return s.next.ListBandTracks(ctx, bandID)
 }
 
-func (s *authorizedTrackQueryService) ListUserTracks(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID]) ([]query.UserTrackListItem, error) {
-	return s.next.ListUserTracks(ctx, userID, bandID)
+func (s *authorizedTrackQueryService) ListUserTracks(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID], searchQuery maybe.Maybe[string]) ([]query.UserTrackListItem, error) {
+	return s.next.ListUserTracks(ctx, userID, bandID, searchQuery)
 }
 
 func (s *authorizedTrackQueryService) FindTrack(ctx context.Context, bandID, trackID uuid.UUID) (maybe.Maybe[query.TrackData], error) {

@@ -30,8 +30,8 @@ func (s *authorizedSetlistQueryService) ListBandSetlists(ctx context.Context, ba
 	return s.next.ListBandSetlists(ctx, bandID)
 }
 
-func (s *authorizedSetlistQueryService) ListUserSetlists(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID]) ([]query.UserSetlistListItem, error) {
-	return s.next.ListUserSetlists(ctx, userID, bandID)
+func (s *authorizedSetlistQueryService) ListUserSetlists(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID], searchQuery maybe.Maybe[string]) ([]query.UserSetlistListItem, error) {
+	return s.next.ListUserSetlists(ctx, userID, bandID, searchQuery)
 }
 
 func (s *authorizedSetlistQueryService) FindSetlist(ctx context.Context, bandID, setlistID uuid.UUID) (maybe.Maybe[query.SetlistData], error) {

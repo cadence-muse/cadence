@@ -472,24 +472,26 @@ func (h *restHandler) RemoveBandTrack(ctx context.Context, params publicapi.Remo
 	return &publicapi.RemoveBandTrackNoContent{}, nil
 }
 
-func (h *restHandler) ListUserTracks(ctx context.Context, params publicapi.ListUserTracksParams) (publicapi.ListUserTracksRes, error) {
+func (h *restHandler) ListUserTracks(ctx context.Context, req publicapi.OptListUserTracksRequestBody, params publicapi.ListUserTracksParams) (publicapi.ListUserTracksRes, error) {
 	userID, ok := auth.UserIDFromContext(ctx)
 	if !ok {
 		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
 	}
-	tracks, err := h.trackQueryService.ListUserTracks(ctx, userID, maybeUUIDFromOpt(params.BandId))
+	body, _ := req.Get()
+	tracks, err := h.trackQueryService.ListUserTracks(ctx, userID, maybeUUIDFromOpt(params.BandId), maybeValueFromOpt[string](body.SearchQuery))
 	if err != nil {
 		return nil, err
 	}
 	return &publicapi.ListUserTracksResponseBody{Items: slices.Map(tracks, convertQueryUserTrackListItemToAPI)}, nil
 }
 
-func (h *restHandler) ListUserSetlists(ctx context.Context, params publicapi.ListUserSetlistsParams) (publicapi.ListUserSetlistsRes, error) {
+func (h *restHandler) ListUserSetlists(ctx context.Context, req publicapi.OptListUserSetlistsRequestBody, params publicapi.ListUserSetlistsParams) (publicapi.ListUserSetlistsRes, error) {
 	userID, ok := auth.UserIDFromContext(ctx)
 	if !ok {
 		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
 	}
-	setlists, err := h.setlistQueryService.ListUserSetlists(ctx, userID, maybeUUIDFromOpt(params.BandId))
+	body, _ := req.Get()
+	setlists, err := h.setlistQueryService.ListUserSetlists(ctx, userID, maybeUUIDFromOpt(params.BandId), maybeValueFromOpt[string](body.SearchQuery))
 	if err != nil {
 		return nil, err
 	}

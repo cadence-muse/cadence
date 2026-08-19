@@ -43,7 +43,7 @@ func (s *trackQueryService) ListBandTracks(ctx context.Context, bandID uuid.UUID
 	}), nil
 }
 
-func (s *trackQueryService) ListUserTracks(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID]) ([]query.UserTrackListItem, error) {
+func (s *trackQueryService) ListUserTracks(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID], searchQuery maybe.Maybe[string]) ([]query.UserTrackListItem, error) {
 	const sqlQuery = `
 		SELECT t.id, t.title, t.artist, t.duration_seconds, t.band_id, b.name AS band_name
 		FROM track t
@@ -51,10 +51,11 @@ func (s *trackQueryService) ListUserTracks(ctx context.Context, userID uuid.UUID
 		JOIN band b ON b.id = t.band_id
 		WHERE bm.user_id = $1 AND t.deleted_at IS NULL AND b.deleted_at IS NULL
 		  AND ($2::uuid IS NULL OR t.band_id = $2)
+		  AND ($3::text IS NULL OR t.search_vector @@ websearch_to_tsquery('simple', $3))
 		ORDER BY t.title
 	`
 	var rows []sqlxUserTrackListItem
-	if err := s.client.SelectContext(ctx, &rows, sqlQuery, userID, bandID); err != nil {
+	if err := s.client.SelectContext(ctx, &rows, sqlQuery, userID, bandID, searchQuery); err != nil {
 		return nil, err
 	}
 

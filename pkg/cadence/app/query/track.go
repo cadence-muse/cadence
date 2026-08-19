@@ -10,7 +10,7 @@ import (
 
 type TrackQueryService interface {
 	ListBandTracks(ctx context.Context, bandID uuid.UUID) ([]TrackListItem, error)
-	ListUserTracks(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID]) ([]UserTrackListItem, error)
+	ListUserTracks(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID], searchQuery maybe.Maybe[string]) ([]UserTrackListItem, error)
 	FindTrack(ctx context.Context, bandID, trackID uuid.UUID) (maybe.Maybe[TrackData], error)
 }
 

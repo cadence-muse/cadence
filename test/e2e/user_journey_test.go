@@ -327,7 +327,7 @@ func TestUserJourney(t *testing.T) {
 	})
 
 	t.Run("list user tracks across bands", func(t *testing.T) {
-		res, err := env.client.ListUserTracks(ctx, publicapi.ListUserTracksParams{})
+		res, err := env.client.ListUserTracks(ctx, publicapi.OptListUserTracksRequestBody{}, publicapi.ListUserTracksParams{})
 		body := requireResponse[publicapi.ListUserTracksResponseBody](t, res, err)
 		require.Len(t, body.Items, 5)
 		for _, item := range body.Items {
@@ -335,17 +335,30 @@ func TestUserJourney(t *testing.T) {
 			require.Equal(t, "The Wanderers Reborn", item.BandName)
 		}
 
-		filteredRes, filteredErr := env.client.ListUserTracks(ctx, publicapi.ListUserTracksParams{BandId: publicapi.NewOptUUID(bandID)})
+		filteredRes, filteredErr := env.client.ListUserTracks(ctx, publicapi.OptListUserTracksRequestBody{}, publicapi.ListUserTracksParams{BandId: publicapi.NewOptUUID(bandID)})
 		filteredBody := requireResponse[publicapi.ListUserTracksResponseBody](t, filteredRes, filteredErr)
 		require.Len(t, filteredBody.Items, 5)
 
-		otherBandRes, otherBandErr := env.client.ListUserTracks(ctx, publicapi.ListUserTracksParams{BandId: publicapi.NewOptUUID(uuid.New())})
+		otherBandRes, otherBandErr := env.client.ListUserTracks(ctx, publicapi.OptListUserTracksRequestBody{}, publicapi.ListUserTracksParams{BandId: publicapi.NewOptUUID(uuid.New())})
 		otherBandBody := requireResponse[publicapi.ListUserTracksResponseBody](t, otherBandRes, otherBandErr)
 		require.Empty(t, otherBandBody.Items)
+
+		searchRes, searchErr := env.client.ListUserTracks(ctx, publicapi.NewOptListUserTracksRequestBody(publicapi.ListUserTracksRequestBody{
+			SearchQuery: publicapi.NewOptString("Remastered"),
+		}), publicapi.ListUserTracksParams{})
+		searchBody := requireResponse[publicapi.ListUserTracksResponseBody](t, searchRes, searchErr)
+		require.Len(t, searchBody.Items, 1)
+		require.Equal(t, track1, searchBody.Items[0].ID)
+
+		noMatchRes, noMatchErr := env.client.ListUserTracks(ctx, publicapi.NewOptListUserTracksRequestBody(publicapi.ListUserTracksRequestBody{
+			SearchQuery: publicapi.NewOptString("nonexistentsong"),
+		}), publicapi.ListUserTracksParams{})
+		noMatchBody := requireResponse[publicapi.ListUserTracksResponseBody](t, noMatchRes, noMatchErr)
+		require.Empty(t, noMatchBody.Items)
 	})
 
 	t.Run("list user setlists across bands", func(t *testing.T) {
-		res, err := env.client.ListUserSetlists(ctx, publicapi.ListUserSetlistsParams{BandId: publicapi.NewOptUUID(bandID)})
+		res, err := env.client.ListUserSetlists(ctx, publicapi.OptListUserSetlistsRequestBody{}, publicapi.ListUserSetlistsParams{BandId: publicapi.NewOptUUID(bandID)})
 		body := requireResponse[publicapi.ListUserSetlistsResponseBody](t, res, err)
 		require.Len(t, body.Items, 1)
 		require.Equal(t, setlistID, body.Items[0].ID)
@@ -353,20 +366,52 @@ func TestUserJourney(t *testing.T) {
 		require.Equal(t, 4, body.Items[0].TracksCount)
 		require.Equal(t, bandID, body.Items[0].BandId)
 		require.Equal(t, "The Wanderers Reborn", body.Items[0].BandName)
+
+		searchRes, searchErr := env.client.ListUserSetlists(ctx, publicapi.NewOptListUserSetlistsRequestBody(publicapi.ListUserSetlistsRequestBody{
+			SearchQuery: publicapi.NewOptString("Final"),
+		}), publicapi.ListUserSetlistsParams{})
+		searchBody := requireResponse[publicapi.ListUserSetlistsResponseBody](t, searchRes, searchErr)
+		require.Len(t, searchBody.Items, 1)
+		require.Equal(t, setlistID, searchBody.Items[0].ID)
+
+		noMatchRes, noMatchErr := env.client.ListUserSetlists(ctx, publicapi.NewOptListUserSetlistsRequestBody(publicapi.ListUserSetlistsRequestBody{
+			SearchQuery: publicapi.NewOptString("nonexistentname"),
+		}), publicapi.ListUserSetlistsParams{})
+		noMatchBody := requireResponse[publicapi.ListUserSetlistsResponseBody](t, noMatchRes, noMatchErr)
+		require.Empty(t, noMatchBody.Items)
 	})
 
 	t.Run("member also sees the band's tracks and setlists", func(t *testing.T) {
 		env.sec.token = memberToken
 		defer func() { env.sec.token = ownerToken }()
 
-		tracksRes, tracksErr := env.client.ListUserTracks(ctx, publicapi.ListUserTracksParams{})
+		tracksRes, tracksErr := env.client.ListUserTracks(ctx, publicapi.OptListUserTracksRequestBody{}, publicapi.ListUserTracksParams{})
 		tracksBody := requireResponse[publicapi.ListUserTracksResponseBody](t, tracksRes, tracksErr)
 		require.Len(t, tracksBody.Items, 5)
 
-		setlistsRes, setlistsErr := env.client.ListUserSetlists(ctx, publicapi.ListUserSetlistsParams{})
+		setlistsRes, setlistsErr := env.client.ListUserSetlists(ctx, publicapi.OptListUserSetlistsRequestBody{}, publicapi.ListUserSetlistsParams{})
 		setlistsBody := requireResponse[publicapi.ListUserSetlistsResponseBody](t, setlistsRes, setlistsErr)
 		require.Len(t, setlistsBody.Items, 1)
 		require.Equal(t, setlistID, setlistsBody.Items[0].ID)
+	})
+
+	t.Run("rotate band invite code", func(t *testing.T) {
+		getRes, getErr := env.client.GetBand(ctx, publicapi.GetBandParams{BandId: bandID})
+		getBody := requireResponse[publicapi.Band](t, getRes, getErr)
+		oldInviteCode := getBody.InviteCode
+
+		env.sec.token = memberToken
+		forbiddenRes, forbiddenErr := env.client.RotateBandInviteCode(ctx, publicapi.RotateBandInviteCodeParams{BandId: bandID})
+		requireErrorResponse(t, forbiddenRes, forbiddenErr, publicapi.ErrorCodePermissionDenied)
+		env.sec.token = ownerToken
+
+		rotateRes, rotateErr := env.client.RotateBandInviteCode(ctx, publicapi.RotateBandInviteCodeParams{BandId: bandID})
+		rotateBody := requireResponse[publicapi.RotateBandInviteCodeResponseBody](t, rotateRes, rotateErr)
+		require.NotEqual(t, oldInviteCode, rotateBody.NewInviteCode)
+
+		getAfterRes, getAfterErr := env.client.GetBand(ctx, publicapi.GetBandParams{BandId: bandID})
+		getAfterBody := requireResponse[publicapi.Band](t, getAfterRes, getAfterErr)
+		require.Equal(t, rotateBody.NewInviteCode, getAfterBody.InviteCode)
 	})
 
 	t.Run("transfer band ownership", func(t *testing.T) {
