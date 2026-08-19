@@ -177,6 +177,45 @@ func TestBandService_RemoveMember(t *testing.T) {
 	})
 }
 
+func TestBandService_TransferOwnership(t *testing.T) {
+	t.Run("owner transfers ownership to another member", func(t *testing.T) {
+		executor := newFakeExecutor()
+		svc := NewBandService(executor)
+		ownerID := uuid.Generate()
+		bandID := seedBand(t, executor, ownerID)
+		memberID := addBandMember(t, executor, bandID)
+
+		err := svc.TransferOwnership(context.Background(), bandID, ownerID, memberID)
+		require.NoError(t, err)
+
+		band, err := executor.repoProvider().BandRepository().Get(bandID)
+		require.NoError(t, err)
+		assert.True(t, band.IsOwner(memberID))
+		assert.False(t, band.IsOwner(ownerID))
+	})
+
+	t.Run("non-owner can not transfer ownership", func(t *testing.T) {
+		executor := newFakeExecutor()
+		svc := NewBandService(executor)
+		ownerID := uuid.Generate()
+		bandID := seedBand(t, executor, ownerID)
+		memberID := addBandMember(t, executor, bandID)
+
+		err := svc.TransferOwnership(context.Background(), bandID, memberID, memberID)
+		require.ErrorIs(t, err, domain.ErrNotBandOwner)
+	})
+
+	t.Run("transferring to a non-member is rejected", func(t *testing.T) {
+		executor := newFakeExecutor()
+		svc := NewBandService(executor)
+		ownerID := uuid.Generate()
+		bandID := seedBand(t, executor, ownerID)
+
+		err := svc.TransferOwnership(context.Background(), bandID, ownerID, uuid.Generate())
+		require.ErrorIs(t, err, domain.ErrBandMemberNotFound)
+	})
+}
+
 func seedBand(t *testing.T, executor *fakeExecutor, ownerID uuid.UUID) uuid.UUID {
 	t.Helper()
 

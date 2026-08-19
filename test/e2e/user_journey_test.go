@@ -88,6 +88,12 @@ func TestUserJourney(t *testing.T) {
 		require.Equal(t, ownerID, body.OwnerId)
 		require.NotEmpty(t, body.InviteCode)
 		inviteCode = body.InviteCode
+
+		require.Len(t, body.Members, 1)
+		memberOwnerID, ok := body.Members[0].ID.Get()
+		require.True(t, ok)
+		require.Equal(t, ownerID, memberOwnerID)
+		require.Equal(t, ownerUsername, body.Members[0].Username)
 	})
 
 	t.Run("list bands contains the new band", func(t *testing.T) {
@@ -145,6 +151,10 @@ func TestUserJourney(t *testing.T) {
 		body := requireResponse[publicapi.ListBandsResponseBody](t, listRes, listErr)
 		require.Len(t, body.Items, 1)
 		require.Equal(t, bandID, body.Items[0].ID)
+
+		getRes, getErr := env.client.GetBand(ctx, publicapi.GetBandParams{BandId: bandID})
+		getBody := requireResponse[publicapi.Band](t, getRes, getErr)
+		require.Len(t, getBody.Members, 2)
 	})
 
 	t.Run("create band tracks", func(t *testing.T) {
@@ -225,10 +235,10 @@ func TestUserJourney(t *testing.T) {
 		trackBody := requireResponse[publicapi.CreateBandTrackResponseBody](t, trackRes, trackErr)
 		track3 = trackBody.ID
 
-		addRes, addErr := env.client.AddSetlistTrack(ctx, &publicapi.AddSetlistTrackRequestBody{
-			TrackId: track3,
-		}, publicapi.AddSetlistTrackParams{BandId: bandID, SetlistId: setlistID})
-		requireResponse[publicapi.AddSetlistTrackNoContent](t, addRes, addErr)
+		addRes, addErr := env.client.AddSetlistTracks(ctx, &publicapi.AddSetlistTracksRequestBody{
+			TrackIds: []uuid.UUID{track3},
+		}, publicapi.AddSetlistTracksParams{BandId: bandID, SetlistId: setlistID})
+		requireResponse[publicapi.AddSetlistTracksOK](t, addRes, addErr)
 
 		getRes, getErr := env.client.GetBandSetlist(ctx, publicapi.GetBandSetlistParams{BandId: bandID, SetlistId: setlistID})
 		body := requireResponse[publicapi.BandSetlist](t, getRes, getErr)
@@ -237,12 +247,10 @@ func TestUserJourney(t *testing.T) {
 	})
 
 	t.Run("remove a track from the setlist", func(t *testing.T) {
-		removeRes, removeErr := env.client.RemoveSetlistTrack(ctx, publicapi.RemoveSetlistTrackParams{
-			BandId:    bandID,
-			SetlistId: setlistID,
-			TrackId:   track2,
-		})
-		requireResponse[publicapi.RemoveSetlistTrackNoContent](t, removeRes, removeErr)
+		removeRes, removeErr := env.client.RemoveSetlistTracks(ctx, &publicapi.RemoveSetlistTracksRequestBody{
+			TrackIds: []uuid.UUID{track2},
+		}, publicapi.RemoveSetlistTracksParams{BandId: bandID, SetlistId: setlistID})
+		requireResponse[publicapi.RemoveSetlistTracksNoContent](t, removeRes, removeErr)
 
 		getRes, getErr := env.client.GetBandSetlist(ctx, publicapi.GetBandSetlistParams{BandId: bandID, SetlistId: setlistID})
 		body := requireResponse[publicapi.BandSetlist](t, getRes, getErr)
@@ -301,7 +309,7 @@ func TestUserJourney(t *testing.T) {
 		addRes, addErr := env.client.AddSetlistTracks(ctx, &publicapi.AddSetlistTracksRequestBody{
 			TrackIds: []uuid.UUID{track4, track5},
 		}, publicapi.AddSetlistTracksParams{BandId: bandID, SetlistId: setlistID})
-		requireResponse[publicapi.AddSetlistTracksNoContent](t, addRes, addErr)
+		requireResponse[publicapi.AddSetlistTracksOK](t, addRes, addErr)
 
 		getRes, getErr := env.client.GetBandSetlist(ctx, publicapi.GetBandSetlistParams{BandId: bandID, SetlistId: setlistID})
 		body := requireResponse[publicapi.BandSetlist](t, getRes, getErr)
@@ -353,6 +361,39 @@ func TestUserJourney(t *testing.T) {
 		setlistsBody := requireResponse[publicapi.ListUserSetlistsResponseBody](t, setlistsRes, setlistsErr)
 		require.Len(t, setlistsBody.Items, 1)
 		require.Equal(t, setlistID, setlistsBody.Items[0].ID)
+	})
+
+	t.Run("transfer band ownership", func(t *testing.T) {
+		createRes, createErr := env.client.CreateBand(ctx, &publicapi.CreateBandRequestBody{Name: "Temp Band"})
+		createBody := requireResponse[publicapi.CreateBandResponseBody](t, createRes, createErr)
+		tempBandID := createBody.ID
+
+		getRes, getErr := env.client.GetBand(ctx, publicapi.GetBandParams{BandId: tempBandID})
+		getBody := requireResponse[publicapi.Band](t, getRes, getErr)
+		tempInviteCode := getBody.InviteCode
+
+		env.sec.token = memberToken
+		joinRes, joinErr := env.client.JoinBand(ctx, &publicapi.JoinBandRequestBody{InviteCode: tempInviteCode})
+		requireResponse[publicapi.JoinBandOK](t, joinRes, joinErr)
+		env.sec.token = ownerToken
+
+		transferRes, transferErr := env.client.TransferBandOwnership(ctx, &publicapi.TransferBandOwnershipRequestBody{
+			UserId: memberID,
+		}, publicapi.TransferBandOwnershipParams{BandId: tempBandID})
+		requireResponse[publicapi.TransferBandOwnershipOK](t, transferRes, transferErr)
+
+		getAfterRes, getAfterErr := env.client.GetBand(ctx, publicapi.GetBandParams{BandId: tempBandID})
+		getAfterBody := requireResponse[publicapi.Band](t, getAfterRes, getAfterErr)
+		require.Equal(t, memberID, getAfterBody.OwnerId)
+
+		// former owner no longer holds special privileges - the new owner can remove them.
+		env.sec.token = memberToken
+		removeRes, removeErr := env.client.RemoveBandMember(ctx, publicapi.RemoveBandMemberParams{BandId: tempBandID, UserId: ownerID})
+		requireResponse[publicapi.RemoveBandMemberNoContent](t, removeRes, removeErr)
+
+		removeBandRes, removeBandErr := env.client.RemoveBand(ctx, publicapi.RemoveBandParams{BandId: tempBandID})
+		requireResponse[publicapi.RemoveBandNoContent](t, removeBandRes, removeBandErr)
+		env.sec.token = ownerToken
 	})
 
 	t.Run("stranger can not read or write the band's data", func(t *testing.T) {
@@ -408,9 +449,9 @@ func TestUserJourney(t *testing.T) {
 		removeSetlistRes, removeSetlistErr := env.client.RemoveBandSetlist(ctx, publicapi.RemoveBandSetlistParams{BandId: bandID, SetlistId: setlistID})
 		requireErrorResponse(t, removeSetlistRes, removeSetlistErr, publicapi.ErrorCodePermissionDenied)
 
-		addSetlistTrackRes, addSetlistTrackErr := env.client.AddSetlistTrack(ctx, &publicapi.AddSetlistTrackRequestBody{
-			TrackId: track1,
-		}, publicapi.AddSetlistTrackParams{BandId: bandID, SetlistId: setlistID})
+		addSetlistTrackRes, addSetlistTrackErr := env.client.AddSetlistTracks(ctx, &publicapi.AddSetlistTracksRequestBody{
+			TrackIds: []uuid.UUID{track1},
+		}, publicapi.AddSetlistTracksParams{BandId: bandID, SetlistId: setlistID})
 		requireErrorResponse(t, addSetlistTrackRes, addSetlistTrackErr, publicapi.ErrorCodePermissionDenied)
 	})
 
@@ -443,6 +484,30 @@ func TestUserJourney(t *testing.T) {
 		homepageRes, homepageErr := env.client.GetHomepageData(ctx)
 		body := requireResponse[publicapi.HomepageData](t, homepageRes, homepageErr)
 		require.Equal(t, 0, body.BandsCount)
+	})
+
+	t.Run("change password and log in with the new one", func(t *testing.T) {
+		const newOwnerPassword = "yet-another-correct-horse-battery"
+
+		changeRes, changeErr := env.client.ChangeUserPassword(ctx, &publicapi.ChangeUserPasswordRequestBody{
+			Password: newOwnerPassword,
+		})
+		requireResponse[publicapi.ChangeUserPasswordOK](t, changeRes, changeErr)
+
+		oldLoginRes, oldLoginErr := env.client.Login(ctx, &publicapi.LoginRequestBody{
+			Username: ownerUsername,
+			Password: ownerPassword,
+		})
+		requireErrorResponse(t, oldLoginRes, oldLoginErr, publicapi.ErrorCodePermissionDenied)
+
+		newLoginRes, newLoginErr := env.client.Login(ctx, &publicapi.LoginRequestBody{
+			Username: ownerUsername,
+			Password: newOwnerPassword,
+		})
+		newLoginBody := requireResponse[publicapi.LoginResponseBody](t, newLoginRes, newLoginErr)
+		require.NotEmpty(t, newLoginBody.Token)
+		ownerToken = newLoginBody.Token
+		env.sec.token = ownerToken
 	})
 
 	t.Run("owner logs out and session is invalidated", func(t *testing.T) {

@@ -128,6 +128,28 @@ func TestSetlist_RemoveTrack(t *testing.T) {
 	})
 }
 
+func TestSetlist_RemoveTracks(t *testing.T) {
+	t.Run("removes multiple existing tracks", func(t *testing.T) {
+		trackA, trackB, trackC := uuid.Generate(), uuid.Generate(), uuid.Generate()
+		setlist, err := NewSetlist(uuid.Generate(), uuid.Generate(), "Setlist", maybe.NewAbsent[string](), maybe.NewAbsent[time.Time](), []TrackID{trackA, trackB, trackC})
+		require.NoError(t, err)
+
+		require.NoError(t, setlist.RemoveTracks([]TrackID{trackA, trackC}))
+
+		assert.Equal(t, []TrackID{trackB}, setlist.TrackIDs())
+	})
+
+	t.Run("one id not in the setlist rejects the whole batch", func(t *testing.T) {
+		trackA := uuid.Generate()
+		setlist, err := NewSetlist(uuid.Generate(), uuid.Generate(), "Setlist", maybe.NewAbsent[string](), maybe.NewAbsent[time.Time](), []TrackID{trackA})
+		require.NoError(t, err)
+
+		err = setlist.RemoveTracks([]TrackID{trackA, uuid.Generate()})
+		require.ErrorIs(t, err, ErrTrackNotInSetlist)
+		assert.Equal(t, []TrackID{trackA}, setlist.TrackIDs())
+	})
+}
+
 func TestSetlist_Reorder(t *testing.T) {
 	t.Run("reorders tracks to the given order", func(t *testing.T) {
 		trackA, trackB, trackC := uuid.Generate(), uuid.Generate(), uuid.Generate()

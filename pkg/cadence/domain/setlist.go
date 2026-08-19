@@ -158,6 +158,20 @@ func (s *Setlist) RemoveTrack(trackID TrackID) error {
 	return ErrTrackNotInSetlist
 }
 
+func (s *Setlist) RemoveTracks(trackIDs []TrackID) error {
+	for _, trackID := range trackIDs {
+		if !slices.Contains(s.trackIDs, trackID) {
+			return ErrTrackNotInSetlist
+		}
+	}
+	for _, trackID := range trackIDs {
+		if err := s.RemoveTrack(trackID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s *Setlist) Reorder(trackIDs []TrackID) error {
 	if len(trackIDs) != len(s.trackIDs) || containsDuplicate(trackIDs) {
 		return ErrInvalidSetlistTrackOrder

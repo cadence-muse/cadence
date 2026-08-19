@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cadence/pkg/cadence/domain"
+	"cadence/pkg/common/uuid"
 )
 
 func TestUserService_Register(t *testing.T) {
@@ -65,5 +66,31 @@ func TestUserService_Authenticate(t *testing.T) {
 		_, err := svc.Authenticate(context.Background(), "unknown", "any-password")
 		require.ErrorIs(t, err, domain.ErrInvalidCredentials)
 		assert.NotErrorIs(t, err, domain.ErrUserNotFound)
+	})
+}
+
+func TestUserService_ChangePassword(t *testing.T) {
+	t.Run("new password can be used to authenticate, old one can not", func(t *testing.T) {
+		executor := newFakeExecutor()
+		svc := NewUserService(executor)
+		userID, err := svc.Register(context.Background(), "alice", "old-password")
+		require.NoError(t, err)
+
+		err = svc.ChangePassword(context.Background(), userID, "new-password")
+		require.NoError(t, err)
+
+		_, err = svc.Authenticate(context.Background(), "alice", "new-password")
+		require.NoError(t, err)
+
+		_, err = svc.Authenticate(context.Background(), "alice", "old-password")
+		require.ErrorIs(t, err, domain.ErrInvalidCredentials)
+	})
+
+	t.Run("user not found", func(t *testing.T) {
+		executor := newFakeExecutor()
+		svc := NewUserService(executor)
+
+		err := svc.ChangePassword(context.Background(), uuid.Generate(), "new-password")
+		require.ErrorIs(t, err, domain.ErrUserNotFound)
 	})
 }

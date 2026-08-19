@@ -86,6 +86,25 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+  /api/me/password:
+    post:
+      operationId: ChangeUserPassword
+      summary: Change user password
+      tags: [ Users ]
+      security:
+        - sessionAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeUserPasswordRequestBody'
+      responses:
+        '200':
+          description: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
   /api/homepage:
     get:
       operationId: GetHomepageData
@@ -164,7 +183,7 @@ paths:
 
     put:
       operationId: UpdateBand
-      summary: Update band info
+      summary: Update band info, allowed for any member
       security:
         - sessionAuth: [ ]
       parameters:
@@ -183,7 +202,7 @@ paths:
 
     delete:
       operationId: Remove band
-      summary: Remove band. Only band owner is allowed to remove the band.
+      summary: Remove the band, only allowed to the band owner
       security:
         - sessionAuth: [ ]
       parameters:
@@ -215,7 +234,7 @@ paths:
   /api/band/{bandId}/remove-member/{userId}:
     delete:
       operationId: RemoveBandMember
-      summary: Remove band member by user ID. You can remove yourself and owner can remove anybody from the band.
+      summary: Remove band member by user ID, you can remove yourself and owner can remove anybody from the band
       security:
         - sessionAuth: [ ]
       parameters:
@@ -223,6 +242,26 @@ paths:
         - $ref: '#/components/parameters/UserId'
       responses:
         '204':
+          description: Success
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/band/{bandId}/transfer-ownership:
+    post:
+      operationId: TransferBandOwnership
+      summary: Transfer band ownership to one if its members, only available to owner
+      security:
+        - sessionAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/BandId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferBandOwnershipRequestBody'
+      responses:
+        '200':
           description: Success
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -248,7 +287,7 @@ paths:
   /api/band/{bandId}/track:
     post:
       operationId: CreateBandTrack
-      summary: Create band track
+      summary: Create band track, available to any member
       security:
         - sessionAuth: [ ]
       parameters:
@@ -290,7 +329,7 @@ paths:
 
     put:
       operationId: UpdateBandTrack
-      summary: Update band track info
+      summary: Update band track info, available to any member
       security:
         - sessionAuth: [ ]
       parameters:
@@ -310,7 +349,7 @@ paths:
 
     delete:
       operationId: RemoveBandTrack
-      summary: Remove band track
+      summary: Remove band track, available to any member
       security:
         - sessionAuth: [ ]
       parameters:
@@ -379,7 +418,7 @@ paths:
   /api/band/{bandId}/setlist:
     post:
       operationId: CreateBandSetlist
-      summary: Create band setlist
+      summary: Create a setlist, available to any band member
       security:
         - sessionAuth: [ ]
       parameters:
@@ -421,7 +460,7 @@ paths:
 
     put:
       operationId: UpdateBandSetlist
-      summary: Update band setlist
+      summary: Update band setlist, available to any band member
       security:
         - sessionAuth: [ ]
       parameters:
@@ -441,33 +480,12 @@ paths:
 
     delete:
       operationId: RemoveBandSetlist
-      summary: Remove band setlist
+      summary: Remove band setlist, available to any band member
       security:
         - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandId'
         - $ref: '#/components/parameters/SetlistId'
-      responses:
-        '204':
-          description: Success
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /api/band/{bandId}/setlist/{setlistId}/track:
-    post:
-      operationId: AddSetlistTrack
-      summary: Add a track to a setlist
-      security:
-        - sessionAuth: [ ]
-      parameters:
-        - $ref: '#/components/parameters/BandId'
-        - $ref: '#/components/parameters/SetlistId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AddSetlistTrackRequestBody'
       responses:
         '204':
           description: Success
@@ -477,7 +495,7 @@ paths:
   /api/band/{bandId}/setlist/{setlistId}/tracks:
     post:
       operationId: AddSetlistTracks
-      summary: Add multiple tracks to a setlist
+      summary: Add tracks to a setlist, available to any band member
       security:
         - sessionAuth: [ ]
       parameters:
@@ -490,21 +508,25 @@ paths:
             schema:
               $ref: '#/components/schemas/AddSetlistTracksRequestBody'
       responses:
-        '204':
+        '200':
           description: Success
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/band/{bandId}/setlist/{setlistId}/track/{trackId}:
     delete:
-      operationId: RemoveSetlistTrack
+      operationId: RemoveSetlistTracks
       summary: Remove a track from a setlist
       security:
         - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandId'
         - $ref: '#/components/parameters/SetlistId'
-        - $ref: '#/components/parameters/TrackId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoveSetlistTracksRequestBody'
       responses:
         '204':
           description: Success
@@ -671,6 +693,15 @@ components:
         - id
         - username
 
+    ChangeUserPasswordRequestBody:
+      type: object
+      properties:
+        password:
+          type: string
+          format: password
+      required:
+        - password
+
     HomepageData:
       type: object
       properties:
@@ -769,6 +800,15 @@ components:
           type: string
       required:
         - inviteCode
+
+    TransferBandOwnershipRequestBody:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+      required:
+        - userId
 
     ListBandTracksResponseBody:
       type: object
@@ -1067,6 +1107,18 @@ components:
         - trackId
 
     AddSetlistTracksRequestBody:
+      type: object
+      properties:
+        trackIds:
+          type: array
+          maxItems: 100
+          items:
+            type: string
+            format: uuid
+      required:
+        - trackIds
+
+    RemoveSetlistTracksRequestBody:
       type: object
       properties:
         trackIds:

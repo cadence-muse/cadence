@@ -25,6 +25,14 @@ func convertQueryBandDataToAPI(band query.BandData) publicapi.Band {
 		Name:       band.Name,
 		OwnerId:    googleuuid.UUID(band.OwnerID),
 		InviteCode: band.InviteCode,
+		Members:    slices.Map(band.Members, convertQueryBandMemberDataToAPI),
+	}
+}
+
+func convertQueryBandMemberDataToAPI(member query.BandMemberData) publicapi.BandMember {
+	return publicapi.BandMember{
+		ID:       publicapi.NewOptUUID(googleuuid.UUID(member.ID)),
+		Username: member.Username,
 	}
 }
 

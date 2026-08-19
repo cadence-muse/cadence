@@ -21,6 +21,7 @@ type BandService interface {
 	JoinByInviteCode(ctx context.Context, userID uuid.UUID, inviteCode string) error
 	Remove(ctx context.Context, bandID, requesterID uuid.UUID) error
 	RemoveMember(ctx context.Context, bandID, targetUserID, requesterID uuid.UUID) error
+	TransferOwnership(ctx context.Context, bandID, requesterID, newOwnerID uuid.UUID) error
 }
 
 type bandService struct {
@@ -126,6 +127,24 @@ func (s *bandService) RemoveMember(ctx context.Context, bandID, targetUserID, re
 		}
 
 		band.RemoveMember(targetUserID)
+		return repo.Store(band)
+	})
+}
+
+func (s *bandService) TransferOwnership(ctx context.Context, bandID, requesterID, newOwnerID uuid.UUID) error {
+	return s.executor.ExecuteWithLock(ctx, getBandLockName(bandID), func(repoProvider app.RepoProvider) error {
+		repo := repoProvider.BandRepository()
+
+		band, err := repo.Get(bandID)
+		if err != nil {
+			return err
+		}
+
+		err = band.TransferOwnership(requesterID, newOwnerID)
+		if err != nil {
+			return err
+		}
+
 		return repo.Store(band)
 	})
 }

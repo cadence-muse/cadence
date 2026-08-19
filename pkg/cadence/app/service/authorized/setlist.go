@@ -51,17 +51,6 @@ func (s *authorizedSetlistService) Remove(ctx context.Context, bandID, setlistID
 	return s.next.Remove(ctx, bandID, setlistID)
 }
 
-func (s *authorizedSetlistService) AddTrack(ctx context.Context, bandID, setlistID, trackID uuid.UUID) error {
-	requesterID, err := requesterIDFromContext(ctx)
-	if err != nil {
-		return err
-	}
-	if err := requireMember(ctx, s.executor, bandID, requesterID); err != nil {
-		return err
-	}
-	return s.next.AddTrack(ctx, bandID, setlistID, trackID)
-}
-
 func (s *authorizedSetlistService) AddTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID) error {
 	requesterID, err := requesterIDFromContext(ctx)
 	if err != nil {
@@ -73,7 +62,7 @@ func (s *authorizedSetlistService) AddTracks(ctx context.Context, bandID, setlis
 	return s.next.AddTracks(ctx, bandID, setlistID, trackIDs)
 }
 
-func (s *authorizedSetlistService) RemoveTrack(ctx context.Context, bandID, setlistID, trackID uuid.UUID) error {
+func (s *authorizedSetlistService) RemoveTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID) error {
 	requesterID, err := requesterIDFromContext(ctx)
 	if err != nil {
 		return err
@@ -81,7 +70,7 @@ func (s *authorizedSetlistService) RemoveTrack(ctx context.Context, bandID, setl
 	if err := requireMember(ctx, s.executor, bandID, requesterID); err != nil {
 		return err
 	}
-	return s.next.RemoveTrack(ctx, bandID, setlistID, trackID)
+	return s.next.RemoveTracks(ctx, bandID, setlistID, trackIDs)
 }
 
 func (s *authorizedSetlistService) ReorderTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID) error {

@@ -52,6 +52,28 @@ func (s *UserService) Register(ctx context.Context, username, password string) (
 	return userID, err
 }
 
+func (s *UserService) ChangePassword(ctx context.Context, userID uuid.UUID, newPassword string) error {
+	return s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
+		repo := repoProvider.UserRepository()
+
+		user, err := repo.Get(userID)
+		if err != nil {
+			return err
+		}
+
+		passwordHash, hashErr := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+		if hashErr != nil {
+			return hashErr
+		}
+
+		if err := user.SetPasswordHash(string(passwordHash)); err != nil {
+			return err
+		}
+
+		return repo.Store(user)
+	})
+}
+
 func (s *UserService) Authenticate(ctx context.Context, username, password string) (userID uuid.UUID, err error) {
 	err = s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.UserRepository()

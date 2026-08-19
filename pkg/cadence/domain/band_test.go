@@ -142,3 +142,28 @@ func TestBand_IsOwner(t *testing.T) {
 	assert.False(t, band.IsOwner(memberID))
 	assert.False(t, band.IsOwner(uuid.Generate()))
 }
+
+func TestBand_TransferOwnership(t *testing.T) {
+	t.Run("flips owner and target roles", func(t *testing.T) {
+		ownerID := uuid.Generate()
+		memberID := uuid.Generate()
+		band, err := NewBand(uuid.Generate(), "Band", ownerID)
+		require.NoError(t, err)
+		band.AddMember(memberID, BandRoleMember)
+
+		require.NoError(t, band.TransferOwnership(ownerID, memberID))
+
+		assert.True(t, band.IsOwner(memberID))
+		assert.False(t, band.IsOwner(ownerID))
+	})
+
+	t.Run("transferring to a non-member is rejected", func(t *testing.T) {
+		ownerID := uuid.Generate()
+		band, err := NewBand(uuid.Generate(), "Band", ownerID)
+		require.NoError(t, err)
+
+		err = band.TransferOwnership(ownerID, uuid.Generate())
+		require.ErrorIs(t, err, ErrBandMemberNotFound)
+		assert.True(t, band.IsOwner(ownerID))
+	})
+}

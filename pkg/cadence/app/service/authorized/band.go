@@ -48,6 +48,10 @@ func (s *authorizedBandService) RemoveMember(ctx context.Context, bandID, target
 	return s.next.RemoveMember(ctx, bandID, targetUserID, requesterID)
 }
 
+func (s *authorizedBandService) TransferOwnership(ctx context.Context, bandID, requesterID, newOwnerID uuid.UUID) error {
+	return s.next.TransferOwnership(ctx, bandID, requesterID, newOwnerID)
+}
+
 func requireMember(ctx context.Context, executor transactional.Executor[app.RepoProvider], bandID, requesterID uuid.UUID) error {
 	return executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
 		band, err := repoProvider.BandRepository().Get(bandID)

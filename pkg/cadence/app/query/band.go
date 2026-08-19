@@ -24,4 +24,10 @@ type BandData struct {
 	Name       string
 	OwnerID    uuid.UUID
 	InviteCode string
+	Members    []BandMemberData
+}
+
+type BandMemberData struct {
+	ID       uuid.UUID
+	Username string
 }

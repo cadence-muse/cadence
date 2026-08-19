@@ -131,6 +131,31 @@ func (b *Band) IsOwner(userID UserID) bool {
 	return false
 }
 
+func (b *Band) TransferOwnership(currentOwnerID, newOwnerID UserID) error {
+	if !b.IsOwner(currentOwnerID) {
+		return ErrNotBandOwner
+	}
+
+	newOwnerIndex := -1
+	for i, member := range b.members {
+		if member.userID == newOwnerID {
+			newOwnerIndex = i
+			break
+		}
+	}
+	if newOwnerIndex == -1 {
+		return ErrBandMemberNotFound
+	}
+
+	for i, member := range b.members {
+		if member.role == BandRoleOwner {
+			b.members[i].role = BandRoleMember
+		}
+	}
+	b.members[newOwnerIndex].role = BandRoleOwner
+	return nil
+}
+
 func validateBandNameLength(name string) error {
 	return checkStringLimits(name, maxBandNameLength, ErrEmptyBandName, ErrBandNameTooLong)
 }

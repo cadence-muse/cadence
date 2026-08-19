@@ -75,6 +75,14 @@ func (u *User) PasswordHash() string {
 	return u.passwordHash
 }
 
+func (u *User) SetPasswordHash(passwordHash string) error {
+	if err := validatePasswordHash(passwordHash); err != nil {
+		return err
+	}
+	u.passwordHash = passwordHash
+	return nil
+}
+
 func validateUsernameLength(username string) error {
 	return checkStringLimits(username, maxUsernameLength, ErrEmptyUsername, ErrUsernameTooLong)
 }

@@ -20,9 +20,8 @@ type SetlistService interface {
 	Create(ctx context.Context, params CreateSetlistParams) (uuid.UUID, error)
 	Update(ctx context.Context, params UpdateSetlistParams) error
 	Remove(ctx context.Context, bandID, setlistID uuid.UUID) error
-	AddTrack(ctx context.Context, bandID, setlistID, trackID uuid.UUID) error
 	AddTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID) error
-	RemoveTrack(ctx context.Context, bandID, setlistID, trackID uuid.UUID) error
+	RemoveTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID) error
 	ReorderTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID) error
 }
 
@@ -114,29 +113,6 @@ func (s *setlistService) Remove(ctx context.Context, bandID, setlistID uuid.UUID
 	})
 }
 
-func (s *setlistService) AddTrack(ctx context.Context, bandID, setlistID, trackID uuid.UUID) error {
-	return s.executor.ExecuteWithLock(ctx, getSetlistLockName(setlistID), func(repoProvider app.RepoProvider) error {
-		setlist, err := getBandSetlist(repoProvider, bandID, setlistID)
-		if err != nil {
-			return err
-		}
-
-		track, err := repoProvider.TrackRepository().Get(trackID)
-		if err != nil {
-			return err
-		}
-		if track.BandID() != bandID {
-			return domain.ErrTrackNotFound
-		}
-
-		if err := setlist.AddTrack(trackID); err != nil {
-			return err
-		}
-
-		return repoProvider.SetlistRepository().Store(setlist)
-	})
-}
-
 func (s *setlistService) AddTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getSetlistLockName(setlistID), func(repoProvider app.RepoProvider) error {
 		setlist, err := getBandSetlist(repoProvider, bandID, setlistID)
@@ -158,14 +134,14 @@ func (s *setlistService) AddTracks(ctx context.Context, bandID, setlistID uuid.U
 	})
 }
 
-func (s *setlistService) RemoveTrack(ctx context.Context, bandID, setlistID, trackID uuid.UUID) error {
+func (s *setlistService) RemoveTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getSetlistLockName(setlistID), func(repoProvider app.RepoProvider) error {
 		setlist, err := getBandSetlist(repoProvider, bandID, setlistID)
 		if err != nil {
 			return err
 		}
 
-		if err := setlist.RemoveTrack(trackID); err != nil {
+		if err := setlist.RemoveTracks(trackIDs); err != nil {
 			return err
 		}
 

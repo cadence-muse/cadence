@@ -117,7 +117,7 @@ func TestSetlistService_Remove(t *testing.T) {
 	})
 }
 
-func TestSetlistService_AddTrack(t *testing.T) {
+func TestSetlistService_AddTracks_Single(t *testing.T) {
 	t.Run("adds a track from the same band", func(t *testing.T) {
 		executor := newFakeExecutor()
 		svc := NewSetlistService(executor)
@@ -125,7 +125,7 @@ func TestSetlistService_AddTrack(t *testing.T) {
 		setlistID := seedSetlist(t, executor, bandID, nil)
 		trackID := seedTrack(t, executor, bandID)
 
-		err := svc.AddTrack(context.Background(), bandID, setlistID, trackID)
+		err := svc.AddTracks(context.Background(), bandID, setlistID, []uuid.UUID{trackID})
 		require.NoError(t, err)
 
 		setlist, err := executor.repoProvider().SetlistRepository().Get(setlistID)
@@ -140,12 +140,12 @@ func TestSetlistService_AddTrack(t *testing.T) {
 		setlistID := seedSetlist(t, executor, bandID, nil)
 		otherBandTrackID := seedTrack(t, executor, uuid.Generate())
 
-		err := svc.AddTrack(context.Background(), bandID, setlistID, otherBandTrackID)
+		err := svc.AddTracks(context.Background(), bandID, setlistID, []uuid.UUID{otherBandTrackID})
 		require.ErrorIs(t, err, domain.ErrTrackNotFound)
 	})
 }
 
-func TestSetlistService_RemoveTrack(t *testing.T) {
+func TestSetlistService_RemoveTracks(t *testing.T) {
 	t.Run("removes a track already in the setlist", func(t *testing.T) {
 		executor := newFakeExecutor()
 		svc := NewSetlistService(executor)
@@ -153,7 +153,23 @@ func TestSetlistService_RemoveTrack(t *testing.T) {
 		trackID := seedTrack(t, executor, bandID)
 		setlistID := seedSetlist(t, executor, bandID, []uuid.UUID{trackID})
 
-		err := svc.RemoveTrack(context.Background(), bandID, setlistID, trackID)
+		err := svc.RemoveTracks(context.Background(), bandID, setlistID, []uuid.UUID{trackID})
+		require.NoError(t, err)
+
+		setlist, err := executor.repoProvider().SetlistRepository().Get(setlistID)
+		require.NoError(t, err)
+		assert.Empty(t, setlist.TrackIDs())
+	})
+
+	t.Run("removes multiple tracks already in the setlist", func(t *testing.T) {
+		executor := newFakeExecutor()
+		svc := NewSetlistService(executor)
+		bandID := uuid.Generate()
+		trackA := seedTrack(t, executor, bandID)
+		trackB := seedTrack(t, executor, bandID)
+		setlistID := seedSetlist(t, executor, bandID, []uuid.UUID{trackA, trackB})
+
+		err := svc.RemoveTracks(context.Background(), bandID, setlistID, []uuid.UUID{trackA, trackB})
 		require.NoError(t, err)
 
 		setlist, err := executor.repoProvider().SetlistRepository().Get(setlistID)
@@ -167,8 +183,23 @@ func TestSetlistService_RemoveTrack(t *testing.T) {
 		bandID := uuid.Generate()
 		setlistID := seedSetlist(t, executor, bandID, nil)
 
-		err := svc.RemoveTrack(context.Background(), bandID, setlistID, uuid.Generate())
+		err := svc.RemoveTracks(context.Background(), bandID, setlistID, []uuid.UUID{uuid.Generate()})
 		require.ErrorIs(t, err, domain.ErrTrackNotInSetlist)
+	})
+
+	t.Run("one bad id in the batch leaves the setlist unchanged", func(t *testing.T) {
+		executor := newFakeExecutor()
+		svc := NewSetlistService(executor)
+		bandID := uuid.Generate()
+		trackA := seedTrack(t, executor, bandID)
+		setlistID := seedSetlist(t, executor, bandID, []uuid.UUID{trackA})
+
+		err := svc.RemoveTracks(context.Background(), bandID, setlistID, []uuid.UUID{trackA, uuid.Generate()})
+		require.ErrorIs(t, err, domain.ErrTrackNotInSetlist)
+
+		setlist, err := executor.repoProvider().SetlistRepository().Get(setlistID)
+		require.NoError(t, err)
+		assert.Equal(t, []uuid.UUID{trackA}, setlist.TrackIDs())
 	})
 }
 
