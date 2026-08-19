@@ -104,7 +104,9 @@ Migrations live in `data/migrations/` as timestamped SQL file pairs:
 20240101120000_<name>.down.sql
 ```
 
-Use `bin/create-db-migration <name>` to scaffold a new pair.
+- Use `bin/create-db-migration <name>` to scaffold a new pair.
+- Write only one query per file.
+- Timestamp in the beginning should be unique, so add `sleep 1` calls when scaffolding several migrations in a row.
 
 ## Routing
 
