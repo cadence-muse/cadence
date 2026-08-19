@@ -17,7 +17,7 @@ func NewBandService(executor transactional.Executor[app.RepoProvider]) BandServi
 
 type BandService interface {
 	Create(ctx context.Context, params CreateBandParams) (uuid.UUID, error)
-	Update(ctx context.Context, params UpdateBandParams, requesterID uuid.UUID) error
+	Update(ctx context.Context, params UpdateBandParams) error
 	JoinByInviteCode(ctx context.Context, userID uuid.UUID, inviteCode string) error
 	Remove(ctx context.Context, bandID, requesterID uuid.UUID) error
 	RemoveMember(ctx context.Context, bandID, targetUserID, requesterID uuid.UUID) error
@@ -56,7 +56,7 @@ func (s *bandService) Create(ctx context.Context, params CreateBandParams) (band
 	return bandID, err
 }
 
-func (s *bandService) Update(ctx context.Context, params UpdateBandParams, _ uuid.UUID) (err error) {
+func (s *bandService) Update(ctx context.Context, params UpdateBandParams) (err error) {
 	return s.executor.ExecuteWithLock(ctx, getBandLockName(params.BandID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.BandRepository()
 

@@ -53,7 +53,7 @@ func (s *bandQueryService) CountUserBands(ctx context.Context, userID uuid.UUID)
 	return result, nil
 }
 
-func (s *bandQueryService) FindBand(ctx context.Context, id, _ uuid.UUID) (maybe.Maybe[query.BandData], error) {
+func (s *bandQueryService) FindBand(ctx context.Context, id uuid.UUID) (maybe.Maybe[query.BandData], error) {
 	const sqlQuery = `
 		SELECT b.id, b.name, bm.user_id AS owner_id, b.invite_code
 		FROM band b

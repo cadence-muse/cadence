@@ -9,9 +9,9 @@ import (
 )
 
 type SetlistQueryService interface {
-	ListBandSetlists(ctx context.Context, bandID, requesterID uuid.UUID) ([]SetlistListItem, error)
+	ListBandSetlists(ctx context.Context, bandID uuid.UUID) ([]SetlistListItem, error)
 	ListUserSetlists(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID]) ([]UserSetlistListItem, error)
-	FindSetlist(ctx context.Context, bandID, setlistID, requesterID uuid.UUID) (maybe.Maybe[SetlistData], error)
+	FindSetlist(ctx context.Context, bandID, setlistID uuid.UUID) (maybe.Maybe[SetlistData], error)
 }
 
 type SetlistListItem struct {

@@ -18,23 +18,35 @@ type authorizedTrackService struct {
 	executor transactional.Executor[app.RepoProvider]
 }
 
-func (s *authorizedTrackService) Create(ctx context.Context, params service.CreateTrackParams, requesterID uuid.UUID) (uuid.UUID, error) {
+func (s *authorizedTrackService) Create(ctx context.Context, params service.CreateTrackParams) (uuid.UUID, error) {
+	requesterID, err := requesterIDFromContext(ctx)
+	if err != nil {
+		return uuid.UUID{}, err
+	}
 	if err := requireMember(ctx, s.executor, params.BandID, requesterID); err != nil {
 		return uuid.UUID{}, err
 	}
-	return s.next.Create(ctx, params, requesterID)
+	return s.next.Create(ctx, params)
 }
 
-func (s *authorizedTrackService) Update(ctx context.Context, params service.UpdateTrackParams, requesterID uuid.UUID) error {
+func (s *authorizedTrackService) Update(ctx context.Context, params service.UpdateTrackParams) error {
+	requesterID, err := requesterIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
 	if err := requireMember(ctx, s.executor, params.BandID, requesterID); err != nil {
 		return err
 	}
-	return s.next.Update(ctx, params, requesterID)
+	return s.next.Update(ctx, params)
 }
 
-func (s *authorizedTrackService) Remove(ctx context.Context, bandID, trackID, requesterID uuid.UUID) error {
+func (s *authorizedTrackService) Remove(ctx context.Context, bandID, trackID uuid.UUID) error {
+	requesterID, err := requesterIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
 	if err := requireMember(ctx, s.executor, bandID, requesterID); err != nil {
 		return err
 	}
-	return s.next.Remove(ctx, bandID, trackID, requesterID)
+	return s.next.Remove(ctx, bandID, trackID)
 }

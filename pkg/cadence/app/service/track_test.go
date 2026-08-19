@@ -24,7 +24,7 @@ func TestTrackService_Create(t *testing.T) {
 			BandID: bandID,
 			Title:  "Song",
 			Artist: "Artist",
-		}, uuid.Generate())
+		})
 		require.NoError(t, err)
 
 		track, err := executor.repoProvider().TrackRepository().Get(trackID)
@@ -42,7 +42,7 @@ func TestTrackService_Create(t *testing.T) {
 			BandID: uuid.Generate(),
 			Title:  "",
 			Artist: "Artist",
-		}, uuid.Generate())
+		})
 		require.ErrorIs(t, err, domain.ErrEmptyTrackTitle)
 	})
 }
@@ -59,7 +59,7 @@ func TestTrackService_Update(t *testing.T) {
 			TrackID: trackID,
 			Title:   maybe.NewJust("New Title"),
 			Tempo:   maybe.NewJust(120),
-		}, uuid.Generate())
+		})
 		require.NoError(t, err)
 
 		track, err := executor.repoProvider().TrackRepository().Get(trackID)
@@ -76,7 +76,7 @@ func TestTrackService_Update(t *testing.T) {
 			BandID:  uuid.Generate(),
 			TrackID: uuid.Generate(),
 			Title:   maybe.NewJust("New Title"),
-		}, uuid.Generate())
+		})
 		require.ErrorIs(t, err, domain.ErrTrackNotFound)
 	})
 
@@ -89,7 +89,7 @@ func TestTrackService_Update(t *testing.T) {
 			BandID:  uuid.Generate(),
 			TrackID: trackID,
 			Title:   maybe.NewJust("New Title"),
-		}, uuid.Generate())
+		})
 		require.ErrorIs(t, err, domain.ErrTrackNotFound)
 	})
 }
@@ -101,7 +101,7 @@ func TestTrackService_Remove(t *testing.T) {
 		bandID := uuid.Generate()
 		trackID := seedTrack(t, executor, bandID)
 
-		err := svc.Remove(context.Background(), bandID, trackID, uuid.Generate())
+		err := svc.Remove(context.Background(), bandID, trackID)
 		require.NoError(t, err)
 
 		_, err = executor.repoProvider().TrackRepository().Get(trackID)
@@ -113,7 +113,7 @@ func TestTrackService_Remove(t *testing.T) {
 		svc := NewTrackService(executor)
 		trackID := seedTrack(t, executor, uuid.Generate())
 
-		err := svc.Remove(context.Background(), uuid.Generate(), trackID, uuid.Generate())
+		err := svc.Remove(context.Background(), uuid.Generate(), trackID)
 		require.ErrorIs(t, err, domain.ErrTrackNotFound)
 
 		_, err = executor.repoProvider().TrackRepository().Get(trackID)

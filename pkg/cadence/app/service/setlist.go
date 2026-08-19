@@ -17,13 +17,13 @@ func NewSetlistService(executor transactional.Executor[app.RepoProvider]) Setlis
 }
 
 type SetlistService interface {
-	Create(ctx context.Context, params CreateSetlistParams, requesterID uuid.UUID) (uuid.UUID, error)
-	Update(ctx context.Context, params UpdateSetlistParams, requesterID uuid.UUID) error
-	Remove(ctx context.Context, bandID, setlistID, requesterID uuid.UUID) error
-	AddTrack(ctx context.Context, bandID, setlistID, trackID, requesterID uuid.UUID) error
-	AddTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID, requesterID uuid.UUID) error
-	RemoveTrack(ctx context.Context, bandID, setlistID, trackID, requesterID uuid.UUID) error
-	ReorderTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID, requesterID uuid.UUID) error
+	Create(ctx context.Context, params CreateSetlistParams) (uuid.UUID, error)
+	Update(ctx context.Context, params UpdateSetlistParams) error
+	Remove(ctx context.Context, bandID, setlistID uuid.UUID) error
+	AddTrack(ctx context.Context, bandID, setlistID, trackID uuid.UUID) error
+	AddTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID) error
+	RemoveTrack(ctx context.Context, bandID, setlistID, trackID uuid.UUID) error
+	ReorderTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID) error
 }
 
 type setlistService struct {
@@ -46,7 +46,7 @@ type UpdateSetlistParams struct {
 	EventDate     maybe.Maybe[time.Time]
 }
 
-func (s *setlistService) Create(ctx context.Context, params CreateSetlistParams, _ uuid.UUID) (setlistID uuid.UUID, err error) {
+func (s *setlistService) Create(ctx context.Context, params CreateSetlistParams) (setlistID uuid.UUID, err error) {
 	err = s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
 		if _, bandErr := repoProvider.BandRepository().Get(params.BandID); bandErr != nil {
 			return bandErr
@@ -79,7 +79,7 @@ func (s *setlistService) Create(ctx context.Context, params CreateSetlistParams,
 	return setlistID, err
 }
 
-func (s *setlistService) Update(ctx context.Context, params UpdateSetlistParams, _ uuid.UUID) error {
+func (s *setlistService) Update(ctx context.Context, params UpdateSetlistParams) error {
 	return s.executor.ExecuteWithLock(ctx, getSetlistLockName(params.SetlistID), func(repoProvider app.RepoProvider) error {
 		setlist, err := getBandSetlist(repoProvider, params.BandID, params.SetlistID)
 		if err != nil {
@@ -104,7 +104,7 @@ func (s *setlistService) Update(ctx context.Context, params UpdateSetlistParams,
 	})
 }
 
-func (s *setlistService) Remove(ctx context.Context, bandID, setlistID, _ uuid.UUID) error {
+func (s *setlistService) Remove(ctx context.Context, bandID, setlistID uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getSetlistLockName(setlistID), func(repoProvider app.RepoProvider) error {
 		if _, err := getBandSetlist(repoProvider, bandID, setlistID); err != nil {
 			return err
@@ -114,7 +114,7 @@ func (s *setlistService) Remove(ctx context.Context, bandID, setlistID, _ uuid.U
 	})
 }
 
-func (s *setlistService) AddTrack(ctx context.Context, bandID, setlistID, trackID, _ uuid.UUID) error {
+func (s *setlistService) AddTrack(ctx context.Context, bandID, setlistID, trackID uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getSetlistLockName(setlistID), func(repoProvider app.RepoProvider) error {
 		setlist, err := getBandSetlist(repoProvider, bandID, setlistID)
 		if err != nil {
@@ -137,7 +137,7 @@ func (s *setlistService) AddTrack(ctx context.Context, bandID, setlistID, trackI
 	})
 }
 
-func (s *setlistService) AddTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID, _ uuid.UUID) error {
+func (s *setlistService) AddTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getSetlistLockName(setlistID), func(repoProvider app.RepoProvider) error {
 		setlist, err := getBandSetlist(repoProvider, bandID, setlistID)
 		if err != nil {
@@ -158,7 +158,7 @@ func (s *setlistService) AddTracks(ctx context.Context, bandID, setlistID uuid.U
 	})
 }
 
-func (s *setlistService) RemoveTrack(ctx context.Context, bandID, setlistID, trackID, _ uuid.UUID) error {
+func (s *setlistService) RemoveTrack(ctx context.Context, bandID, setlistID, trackID uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getSetlistLockName(setlistID), func(repoProvider app.RepoProvider) error {
 		setlist, err := getBandSetlist(repoProvider, bandID, setlistID)
 		if err != nil {
@@ -173,7 +173,7 @@ func (s *setlistService) RemoveTrack(ctx context.Context, bandID, setlistID, tra
 	})
 }
 
-func (s *setlistService) ReorderTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID, _ uuid.UUID) error {
+func (s *setlistService) ReorderTracks(ctx context.Context, bandID, setlistID uuid.UUID, trackIDs []uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getSetlistLockName(setlistID), func(repoProvider app.RepoProvider) error {
 		setlist, err := getBandSetlist(repoProvider, bandID, setlistID)
 		if err != nil {

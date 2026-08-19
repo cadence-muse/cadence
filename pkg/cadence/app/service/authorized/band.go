@@ -6,6 +6,8 @@ import (
 	"cadence/pkg/cadence/app"
 	"cadence/pkg/cadence/app/service"
 	"cadence/pkg/cadence/domain"
+	"cadence/pkg/common/auth"
+	commonogenerrors "cadence/pkg/common/ogenerrors"
 	"cadence/pkg/common/transactional"
 	"cadence/pkg/common/uuid"
 )
@@ -23,11 +25,15 @@ func (s *authorizedBandService) Create(ctx context.Context, params service.Creat
 	return s.next.Create(ctx, params)
 }
 
-func (s *authorizedBandService) Update(ctx context.Context, params service.UpdateBandParams, requesterID uuid.UUID) error {
+func (s *authorizedBandService) Update(ctx context.Context, params service.UpdateBandParams) error {
+	requesterID, err := requesterIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
 	if err := requireMember(ctx, s.executor, params.BandID, requesterID); err != nil {
 		return err
 	}
-	return s.next.Update(ctx, params, requesterID)
+	return s.next.Update(ctx, params)
 }
 
 func (s *authorizedBandService) JoinByInviteCode(ctx context.Context, userID uuid.UUID, inviteCode string) error {
@@ -53,4 +59,12 @@ func requireMember(ctx context.Context, executor transactional.Executor[app.Repo
 		}
 		return nil
 	})
+}
+
+func requesterIDFromContext(ctx context.Context) (uuid.UUID, error) {
+	requesterID, ok := auth.UserIDFromContext(ctx)
+	if !ok {
+		return uuid.UUID{}, commonogenerrors.NewPermissionDeniedError("user not authenticated")
+	}
+	return requesterID, nil
 }

@@ -18,9 +18,9 @@ func NewTrackService(executor transactional.Executor[app.RepoProvider]) TrackSer
 }
 
 type TrackService interface {
-	Create(ctx context.Context, params CreateTrackParams, requesterID uuid.UUID) (uuid.UUID, error)
-	Update(ctx context.Context, params UpdateTrackParams, requesterID uuid.UUID) error
-	Remove(ctx context.Context, bandID, trackID, requesterID uuid.UUID) error
+	Create(ctx context.Context, params CreateTrackParams) (uuid.UUID, error)
+	Update(ctx context.Context, params UpdateTrackParams) error
+	Remove(ctx context.Context, bandID, trackID uuid.UUID) error
 }
 
 type trackService struct {
@@ -48,7 +48,7 @@ type UpdateTrackParams struct {
 	Notes    maybe.Maybe[string]
 }
 
-func (s *trackService) Create(ctx context.Context, params CreateTrackParams, _ uuid.UUID) (trackID uuid.UUID, err error) {
+func (s *trackService) Create(ctx context.Context, params CreateTrackParams) (trackID uuid.UUID, err error) {
 	err = s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
 		trackRepo := repoProvider.TrackRepository()
 
@@ -76,7 +76,7 @@ func (s *trackService) Create(ctx context.Context, params CreateTrackParams, _ u
 	return trackID, err
 }
 
-func (s *trackService) Update(ctx context.Context, params UpdateTrackParams, _ uuid.UUID) error {
+func (s *trackService) Update(ctx context.Context, params UpdateTrackParams) error {
 	return s.executor.ExecuteWithLock(ctx, getTrackLockName(params.TrackID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.TrackRepository()
 
@@ -115,7 +115,7 @@ func (s *trackService) Update(ctx context.Context, params UpdateTrackParams, _ u
 	})
 }
 
-func (s *trackService) Remove(ctx context.Context, bandID, trackID, _ uuid.UUID) error {
+func (s *trackService) Remove(ctx context.Context, bandID, trackID uuid.UUID) error {
 	return s.executor.ExecuteWithLock(ctx, getTrackLockName(trackID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.TrackRepository()
 

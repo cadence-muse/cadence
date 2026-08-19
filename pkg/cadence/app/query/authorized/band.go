@@ -6,7 +6,9 @@ import (
 	"cadence/pkg/cadence/app"
 	"cadence/pkg/cadence/app/query"
 	"cadence/pkg/cadence/domain"
+	"cadence/pkg/common/auth"
 	"cadence/pkg/common/maybe"
+	commonogenerrors "cadence/pkg/common/ogenerrors"
 	"cadence/pkg/common/transactional"
 	"cadence/pkg/common/uuid"
 )
@@ -20,11 +22,16 @@ type authorizedBandQueryService struct {
 	executor transactional.Executor[app.RepoProvider]
 }
 
-func (s *authorizedBandQueryService) FindBand(ctx context.Context, id, requesterID uuid.UUID) (maybe.Maybe[query.BandData], error) {
-	if err := requireMember(ctx, s.executor, id, requesterID); err != nil {
+func (s *authorizedBandQueryService) FindBand(ctx context.Context, id uuid.UUID) (maybe.Maybe[query.BandData], error) {
+	requesterID, err := requesterIDFromContext(ctx)
+	if err != nil {
 		return maybe.NewNone[query.BandData](), err
 	}
-	return s.next.FindBand(ctx, id, requesterID)
+	err = requireMember(ctx, s.executor, id, requesterID)
+	if err != nil {
+		return maybe.NewNone[query.BandData](), err
+	}
+	return s.next.FindBand(ctx, id)
 }
 
 func (s *authorizedBandQueryService) ListUserBands(ctx context.Context, userID uuid.UUID) ([]query.BandListItem, error) {
@@ -46,4 +53,12 @@ func requireMember(ctx context.Context, executor transactional.Executor[app.Repo
 		}
 		return nil
 	})
+}
+
+func requesterIDFromContext(ctx context.Context) (uuid.UUID, error) {
+	requesterID, ok := auth.UserIDFromContext(ctx)
+	if !ok {
+		return uuid.UUID{}, commonogenerrors.NewPermissionDeniedError("user not authenticated")
+	}
+	return requesterID, nil
 }

@@ -19,20 +19,28 @@ type authorizedTrackQueryService struct {
 	executor transactional.Executor[app.RepoProvider]
 }
 
-func (s *authorizedTrackQueryService) ListBandTracks(ctx context.Context, bandID, requesterID uuid.UUID) ([]query.TrackListItem, error) {
+func (s *authorizedTrackQueryService) ListBandTracks(ctx context.Context, bandID uuid.UUID) ([]query.TrackListItem, error) {
+	requesterID, err := requesterIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	if err := requireMember(ctx, s.executor, bandID, requesterID); err != nil {
 		return nil, err
 	}
-	return s.next.ListBandTracks(ctx, bandID, requesterID)
+	return s.next.ListBandTracks(ctx, bandID)
 }
 
 func (s *authorizedTrackQueryService) ListUserTracks(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID]) ([]query.UserTrackListItem, error) {
 	return s.next.ListUserTracks(ctx, userID, bandID)
 }
 
-func (s *authorizedTrackQueryService) FindTrack(ctx context.Context, bandID, trackID, requesterID uuid.UUID) (maybe.Maybe[query.TrackData], error) {
+func (s *authorizedTrackQueryService) FindTrack(ctx context.Context, bandID, trackID uuid.UUID) (maybe.Maybe[query.TrackData], error) {
+	requesterID, err := requesterIDFromContext(ctx)
+	if err != nil {
+		return maybe.NewNone[query.TrackData](), err
+	}
 	if err := requireMember(ctx, s.executor, bandID, requesterID); err != nil {
 		return maybe.NewNone[query.TrackData](), err
 	}
-	return s.next.FindTrack(ctx, bandID, trackID, requesterID)
+	return s.next.FindTrack(ctx, bandID, trackID)
 }
