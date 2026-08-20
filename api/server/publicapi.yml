@@ -5,6 +5,7 @@ info:
   version: 1.0.0
 
 tags:
+  - name: Users
   - name: Bands
   - name: Songs
 
@@ -761,9 +762,12 @@ components:
           format: uuid
         name:
           type: string
+        membersCount:
+          type: integer
       required:
         - id
         - name
+        - membersCount
 
     CreateBandRequestBody:
       type: object

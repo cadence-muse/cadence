@@ -14,8 +14,9 @@ import (
 
 func convertQueryBandListItemToAPI(band query.BandListItem) publicapi.BandListItem {
 	return publicapi.BandListItem{
-		ID:   googleuuid.UUID(band.ID),
-		Name: band.Name,
+		ID:           googleuuid.UUID(band.ID),
+		Name:         band.Name,
+		MembersCount: band.MembersCount,
 	}
 }
 

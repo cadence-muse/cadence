@@ -15,8 +15,9 @@ type BandQueryService interface {
 }
 
 type BandListItem struct {
-	ID   uuid.UUID
-	Name string
+	ID           uuid.UUID
+	Name         string
+	MembersCount int
 }
 
 type BandData struct {

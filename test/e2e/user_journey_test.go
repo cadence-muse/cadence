@@ -101,6 +101,7 @@ func TestUserJourney(t *testing.T) {
 		require.Len(t, body.Items, 1)
 		require.Equal(t, bandID, body.Items[0].ID)
 		require.Equal(t, "The Wanderers", body.Items[0].Name)
+		require.Equal(t, 1, body.Items[0].MembersCount)
 	})
 
 	t.Run("homepage data reflects the new band", func(t *testing.T) {
@@ -150,6 +151,7 @@ func TestUserJourney(t *testing.T) {
 		body := requireResponse[publicapi.ListBandsResponseBody](t, listRes, listErr)
 		require.Len(t, body.Items, 1)
 		require.Equal(t, bandID, body.Items[0].ID)
+		require.Equal(t, 2, body.Items[0].MembersCount)
 
 		getRes, getErr := env.client.GetBand(ctx, publicapi.GetBandParams{BandId: bandID})
 		getBody := requireResponse[publicapi.Band](t, getRes, getErr)

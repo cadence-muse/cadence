@@ -22,7 +22,9 @@ type bandQueryService struct {
 
 func (s *bandQueryService) ListUserBands(ctx context.Context, userID uuid.UUID) ([]query.BandListItem, error) {
 	const sqlQuery = `
-		SELECT b.id, b.name
+		SELECT b.id, b.name, (
+			SELECT COUNT(*) FROM band_member bm2 WHERE bm2.band_id = b.id
+		) AS members_count
 		FROM band b
 		JOIN band_member bm ON bm.band_id = b.id
 		WHERE bm.user_id = $1 AND b.deleted_at IS NULL
@@ -34,7 +36,11 @@ func (s *bandQueryService) ListUserBands(ctx context.Context, userID uuid.UUID) 
 	}
 
 	return slices.Map(rows, func(row sqlxBandListItem) query.BandListItem {
-		return query.BandListItem(row)
+		return query.BandListItem{
+			ID:           row.ID,
+			Name:         row.Name,
+			MembersCount: row.MembersCount,
+		}
 	}), nil
 }
 
@@ -106,8 +112,9 @@ func (s *bandQueryService) listBandMembers(ctx context.Context, bandID uuid.UUID
 }
 
 type sqlxBandListItem struct {
-	ID   uuid.UUID `db:"id"`
-	Name string    `db:"name"`
+	ID           uuid.UUID `db:"id"`
+	Name         string    `db:"name"`
+	MembersCount int       `db:"members_count"`
 }
 
 type sqlxBandData struct {
