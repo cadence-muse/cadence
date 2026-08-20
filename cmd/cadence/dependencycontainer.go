@@ -16,6 +16,7 @@ import (
 	redisinfra "cadence/pkg/cadence/infrastructure/persistence/redis"
 	"cadence/pkg/cadence/infrastructure/transport"
 	"cadence/pkg/common/log"
+	"cadence/pkg/common/metrics"
 	"cadence/pkg/common/ogenmiddleware"
 	"cadence/pkg/common/postgresql"
 	"cadence/pkg/common/redis"
@@ -28,6 +29,7 @@ type dependencyContainer struct {
 	dbConnector         postgresql.Connector
 	transactionalClient postgresql.TransactionalClient
 	redisClient         redis.Client
+	metrics             *metrics.Metrics
 }
 
 func newDependencyContainer(
@@ -45,8 +47,11 @@ func newDependencyContainer(
 	transactionFactory := repo.NewTransactionFactory(connectionProvider)
 	executor := transactional.NewExecutor[app.RepoProvider](transactionFactory)
 
+	appMetrics := metrics.New()
+
 	middlewares := []middleware.Middleware{
 		ogenmiddleware.NewLoggingMiddleware(logger),
+		ogenmiddleware.NewMetricsMiddleware(appMetrics),
 	}
 
 	userService := appservice.NewUserService(executor)
@@ -89,6 +94,7 @@ func newDependencyContainer(
 		dbConnector:         migrator.connector,
 		transactionalClient: transactionalClient,
 		redisClient:         redisClient,
+		metrics:             appMetrics,
 	}, nil
 }
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-faster/errors"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"cadence/pkg/common/log"
 )
@@ -45,6 +46,8 @@ func service(ctx context.Context, config *config, logger log.Logger) error {
 		w.WriteHeader(http.StatusOK)
 		_, _ = io.WriteString(w, http.StatusText(http.StatusOK))
 	})
+
+	router.Handle("/metrics", promhttp.HandlerFor(container.metrics.Registry, promhttp.HandlerOpts{}))
 
 	httpServer := &http.Server{
 		Handler:           router,
