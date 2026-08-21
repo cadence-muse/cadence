@@ -28,8 +28,8 @@ type config struct {
 	DBUser     string `env:"DB_USER"`
 	DBPassword string `env:"DB_PASSWORD"`
 
-	DBMaxConn      int `env:"DB_MAX_CONN"`
-	DBConnLifetime int `env:"DB_CONN_LIFETIME"`
+	DBMaxConn      int `env:"DB_MAX_CONN" envDefault:"10"`
+	DBConnLifetime int `env:"DB_CONN_LIFETIME" envDefault:"60"`
 
 	RedisHost     string `env:"REDIS_HOST"`
 	RedisPort     int    `env:"REDIS_PORT"`
