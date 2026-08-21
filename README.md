@@ -7,7 +7,7 @@
 
 </div>
 
-## 💡 Overview
+## Overview
 
 Cadence is a simple repertoire manager for gigging bands. Key features include:
 
@@ -18,7 +18,7 @@ Cadence is a simple repertoire manager for gigging bands. Key features include:
 This repo contains only the core backend. Check out the cross-platform client
 in [nightnoryu/cadence-client](https://github.com/nightnoryu/cadence-client).
 
-## 💻 Tech Stack
+## Tech Stack
 
 - **Backend**: Go, PostgreSQL, Redis
 - **Client**: Dart, Flutter
@@ -26,9 +26,7 @@ in [nightnoryu/cadence-client](https://github.com/nightnoryu/cadence-client).
 - **Deployment**: k3s
 - **Landing website**: Hugo
 
-## 🛠️ Local development
-
-To get a local copy of the project up and running, follow these steps.
+## Development
 
 ### Prerequisites
 
@@ -37,37 +35,18 @@ To get a local copy of the project up and running, follow these steps.
 
 ### First launch
 
-1. Copy the override file and set the binary volume mapping according to project folder location on your machine
-
-    ```shell
-    cp compose.override.example.yml compose.override.yml
-    $EDITOR compose.override.yml
-    ```
-
-2. Build the binary with mise, lint and run unit tests (see other commands in `mise.toml`)
-
-    ```shell
-    mise run
-    ```
-
-3. Start the application with `docker compose`
-
-    ```shell
-    docker compose up -d
-    ```
-
-### Managing the runtime
-
-Use `docker compose` to manage the application:
-
 ```shell
-# Build & restart to apply changes
-mise run && docker restart cadence
+git clone https://github.com/nightnoryu/cadence-backend
+cd cadence-backend
 
-# Stop the application
-docker compose down
+# Set the binary volume mapping according to project folder location on your machine
+cp compose.override.example.yml compose.override.yml
+$EDITOR compose.override.yml
+
+mise run
+docker compose up -d
 ```
 
-## 📜 License
+## License
 
 Distributed under the MIT License. See [License](/LICENSE) for more information.
