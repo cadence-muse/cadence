@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
+	"github.com/nightnoryu/go-kita/maybe"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"cadence/pkg/cadence/domain"
-	"cadence/pkg/common/maybe"
 	"cadence/pkg/common/uuid"
 )
 

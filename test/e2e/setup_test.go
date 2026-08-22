@@ -8,6 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nightnoryu/go-kita/jsonlog"
+	"github.com/nightnoryu/go-kita/postgresql"
+	"github.com/nightnoryu/go-kita/transactional"
 	"github.com/stretchr/testify/require"
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	tcredis "github.com/testcontainers/testcontainers-go/modules/redis"
@@ -22,10 +25,7 @@ import (
 	"cadence/pkg/cadence/infrastructure/persistence/postgresql/repo"
 	redisinfra "cadence/pkg/cadence/infrastructure/persistence/redis"
 	"cadence/pkg/cadence/infrastructure/transport"
-	"cadence/pkg/common/jsonlog"
-	"cadence/pkg/common/postgresql"
 	"cadence/pkg/common/redis"
-	"cadence/pkg/common/transactional"
 )
 
 const (

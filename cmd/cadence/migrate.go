@@ -4,9 +4,10 @@ import (
 	"errors"
 	"time"
 
+	"github.com/nightnoryu/go-kita/log"
+	"github.com/nightnoryu/go-kita/postgresql"
+
 	"cadence/data/migrations"
-	"cadence/pkg/common/log"
-	"cadence/pkg/common/postgresql"
 )
 
 var errMigrationFinished = errors.New("migration finished without errors")

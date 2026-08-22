@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"cadence/pkg/common/jsonlog"
-	"cadence/pkg/common/log"
+	"github.com/nightnoryu/go-kita/jsonlog"
+	"github.com/nightnoryu/go-kita/log"
 )
 
 const appID = "cadence"

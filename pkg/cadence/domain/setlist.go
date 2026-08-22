@@ -6,7 +6,7 @@ import (
 	"slices"
 	"time"
 
-	"cadence/pkg/common/maybe"
+	"github.com/nightnoryu/go-kita/maybe"
 )
 
 const (

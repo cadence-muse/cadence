@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"cadence/pkg/common/maybe"
+	"github.com/nightnoryu/go-kita/maybe"
+
 	"cadence/pkg/common/valuetypes"
 )
 

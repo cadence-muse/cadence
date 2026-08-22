@@ -10,8 +10,7 @@ import (
 
 	"github.com/go-faster/errors"
 	"github.com/jmoiron/sqlx"
-
-	"cadence/pkg/common/log"
+	"github.com/nightnoryu/go-kita/log"
 )
 
 const createSchemaMigrationTableSQL = `

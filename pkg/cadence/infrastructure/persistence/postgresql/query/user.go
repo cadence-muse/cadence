@@ -5,9 +5,10 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/nightnoryu/go-kita/maybe"
+	"github.com/nightnoryu/go-kita/postgresql"
+
 	"cadence/pkg/cadence/app/query"
-	"cadence/pkg/common/maybe"
-	"cadence/pkg/common/postgresql"
 	"cadence/pkg/common/uuid"
 )
 

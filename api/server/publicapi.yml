@@ -293,6 +293,16 @@ paths:
         - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandId'
+        - name: searchQuery
+          in: query
+          required: false
+          schema:
+            type: string
+          description: >-
+            Search by title or artist, case-insensitive substring match.
+            The backend currently ignores this field and returns the full
+            unfiltered list — client-side spec extension (SETL-12) sent for
+            forward compatibility ahead of server-side filtering support.
       responses:
         '200':
           description: Success
@@ -727,11 +737,15 @@ components:
     ChangeUserPasswordRequestBody:
       type: object
       properties:
-        password:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
           type: string
           format: password
       required:
-        - password
+        - currentPassword
+        - newPassword
 
     HomepageData:
       type: object
@@ -764,6 +778,9 @@ components:
           type: string
         membersCount:
           type: integer
+        ownerId:
+          type: string
+          format: uuid
       required:
         - id
         - name
@@ -882,6 +899,8 @@ components:
           type: string
         durationSeconds:
           type: integer
+        key:
+          type: string
       required:
         - id
         - title
@@ -1024,6 +1043,8 @@ components:
         eventDate:
           type: string
           format: date
+        eventLocation:
+          type: string
       required:
         - id
         - name
@@ -1032,7 +1053,7 @@ components:
 
     ListUserSetlistsRequestBody:
       type: object
-      properties: 
+      properties:
         searchQuery:
           type: string
           description: Search by name match

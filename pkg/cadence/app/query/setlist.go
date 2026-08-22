@@ -4,7 +4,8 @@ import (
 	"context"
 	"time"
 
-	"cadence/pkg/common/maybe"
+	"github.com/nightnoryu/go-kita/maybe"
+
 	"cadence/pkg/common/uuid"
 )
 
@@ -15,11 +16,12 @@ type SetlistQueryService interface {
 }
 
 type SetlistListItem struct {
-	ID          uuid.UUID
-	Name        string
-	TracksCount int
-	Duration    time.Duration
-	EventDate   maybe.Maybe[time.Time]
+	ID            uuid.UUID
+	Name          string
+	TracksCount   int
+	Duration      time.Duration
+	EventDate     maybe.Maybe[time.Time]
+	EventLocation maybe.Maybe[string]
 }
 
 type UserSetlistListItem struct {

@@ -3,8 +3,9 @@ package inmemory
 import (
 	"context"
 
+	"github.com/nightnoryu/go-kita/transactional"
+
 	"cadence/pkg/cadence/app"
-	"cadence/pkg/common/transactional"
 )
 
 func NewTransactionFactory(store *Store) transactional.TransactionFactory[app.RepoProvider] {

@@ -6,10 +6,11 @@ import (
 	"errors"
 	"time"
 
+	"github.com/nightnoryu/go-kita/maybe"
+	"github.com/nightnoryu/go-kita/postgresql"
+	"github.com/nightnoryu/go-kita/slices"
+
 	"cadence/pkg/cadence/app/query"
-	"cadence/pkg/common/maybe"
-	"cadence/pkg/common/postgresql"
-	"cadence/pkg/common/slices"
 	"cadence/pkg/common/uuid"
 )
 
@@ -21,15 +22,16 @@ type trackQueryService struct {
 	client postgresql.ClientContext
 }
 
-func (s *trackQueryService) ListBandTracks(ctx context.Context, bandID uuid.UUID) ([]query.TrackListItem, error) {
+func (s *trackQueryService) ListBandTracks(ctx context.Context, bandID uuid.UUID, searchQuery maybe.Maybe[string]) ([]query.TrackListItem, error) {
 	const sqlQuery = `
-		SELECT id, title, artist, duration_seconds
+		SELECT id, title, artist, duration_seconds, key
 		FROM track
 		WHERE band_id = $1 AND deleted_at IS NULL
+		  AND ($2::text IS NULL OR search_vector @@ websearch_to_tsquery('simple', $2))
 		ORDER BY title
 	`
 	var rows []sqlxTrackListItem
-	if err := s.client.SelectContext(ctx, &rows, sqlQuery, bandID); err != nil {
+	if err := s.client.SelectContext(ctx, &rows, sqlQuery, bandID, searchQuery); err != nil {
 		return nil, err
 	}
 
@@ -39,6 +41,7 @@ func (s *trackQueryService) ListBandTracks(ctx context.Context, bandID uuid.UUID
 			Title:    row.Title,
 			Artist:   row.Artist,
 			Duration: durationFromSeconds(row.DurationSeconds),
+			Key:      row.Key,
 		}
 	}), nil
 }
@@ -107,10 +110,11 @@ func durationFromSeconds(seconds maybe.Maybe[int]) maybe.Maybe[time.Duration] {
 }
 
 type sqlxTrackListItem struct {
-	ID              uuid.UUID        `db:"id"`
-	Title           string           `db:"title"`
-	Artist          string           `db:"artist"`
-	DurationSeconds maybe.Maybe[int] `db:"duration_seconds"`
+	ID              uuid.UUID           `db:"id"`
+	Title           string              `db:"title"`
+	Artist          string              `db:"artist"`
+	DurationSeconds maybe.Maybe[int]    `db:"duration_seconds"`
+	Key             maybe.Maybe[string] `db:"key"`
 }
 
 type sqlxUserTrackListItem struct {

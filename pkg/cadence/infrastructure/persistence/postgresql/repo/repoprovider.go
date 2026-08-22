@@ -3,9 +3,10 @@ package repo
 import (
 	"context"
 
+	"github.com/nightnoryu/go-kita/postgresql"
+
 	"cadence/pkg/cadence/app"
 	"cadence/pkg/cadence/domain"
-	"cadence/pkg/common/postgresql"
 	"cadence/pkg/common/uuid"
 )
 

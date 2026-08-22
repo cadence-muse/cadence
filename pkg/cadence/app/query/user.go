@@ -3,7 +3,8 @@ package query
 import (
 	"context"
 
-	"cadence/pkg/common/maybe"
+	"github.com/nightnoryu/go-kita/maybe"
+
 	"cadence/pkg/common/uuid"
 )
 

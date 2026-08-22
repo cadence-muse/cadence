@@ -6,8 +6,8 @@ import (
 
 	"github.com/caarlos0/env/v11"
 	"github.com/go-faster/errors"
+	"github.com/nightnoryu/go-kita/postgresql"
 
-	"cadence/pkg/common/postgresql"
 	"cadence/pkg/common/redis"
 )
 

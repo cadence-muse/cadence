@@ -3,10 +3,11 @@ package authorized // nolint:dupl
 import (
 	"context"
 
+	"github.com/nightnoryu/go-kita/maybe"
+	"github.com/nightnoryu/go-kita/transactional"
+
 	"cadence/pkg/cadence/app"
 	"cadence/pkg/cadence/app/query"
-	"cadence/pkg/common/maybe"
-	"cadence/pkg/common/transactional"
 	"cadence/pkg/common/uuid"
 )
 
@@ -19,7 +20,7 @@ type authorizedTrackQueryService struct {
 	executor transactional.Executor[app.RepoProvider]
 }
 
-func (s *authorizedTrackQueryService) ListBandTracks(ctx context.Context, bandID uuid.UUID) ([]query.TrackListItem, error) {
+func (s *authorizedTrackQueryService) ListBandTracks(ctx context.Context, bandID uuid.UUID, searchQuery maybe.Maybe[string]) ([]query.TrackListItem, error) {
 	requesterID, err := requesterIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -27,7 +28,7 @@ func (s *authorizedTrackQueryService) ListBandTracks(ctx context.Context, bandID
 	if err := requireMember(ctx, s.executor, bandID, requesterID); err != nil {
 		return nil, err
 	}
-	return s.next.ListBandTracks(ctx, bandID)
+	return s.next.ListBandTracks(ctx, bandID, searchQuery)
 }
 
 func (s *authorizedTrackQueryService) ListUserTracks(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID], searchQuery maybe.Maybe[string]) ([]query.UserTrackListItem, error) {

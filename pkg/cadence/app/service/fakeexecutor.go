@@ -1,9 +1,10 @@
 package service
 
 import (
+	"github.com/nightnoryu/go-kita/transactional"
+
 	"cadence/pkg/cadence/app"
 	"cadence/pkg/cadence/infrastructure/persistence/inmemory"
-	"cadence/pkg/common/transactional"
 )
 
 func newFakeExecutor() *fakeExecutor {

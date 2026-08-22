@@ -4,11 +4,11 @@ import (
 	"time"
 
 	googleuuid "github.com/google/uuid"
+	"github.com/nightnoryu/go-kita/maybe"
+	"github.com/nightnoryu/go-kita/slices"
 
 	"cadence/api/server/publicapi"
 	"cadence/pkg/cadence/app/query"
-	"cadence/pkg/common/maybe"
-	"cadence/pkg/common/slices"
 	"cadence/pkg/common/valuetypes"
 )
 
@@ -17,6 +17,7 @@ func convertQueryBandListItemToAPI(band query.BandListItem) publicapi.BandListIt
 		ID:           googleuuid.UUID(band.ID),
 		Name:         band.Name,
 		MembersCount: band.MembersCount,
+		OwnerId:      publicapi.NewOptUUID(googleuuid.UUID(band.OwnerID)),
 	}
 }
 
@@ -44,6 +45,7 @@ func convertQueryTrackListItemToAPI(track query.TrackListItem) publicapi.TrackLi
 		Title:           track.Title,
 		Artist:          track.Artist,
 		DurationSeconds: optIntFromDuration(track.Duration),
+		Key:             optStringFromMaybe(track.Key),
 	}
 }
 
@@ -77,6 +79,7 @@ func convertQuerySetlistListItemToAPI(setlist query.SetlistListItem) publicapi.S
 		TracksCount:     setlist.TracksCount,
 		DurationSeconds: durationToIntSeconds(setlist.Duration),
 		EventDate:       optDateFromMaybe(setlist.EventDate),
+		EventLocation:   optStringFromMaybe(setlist.EventLocation),
 	}
 }
 

@@ -7,6 +7,8 @@ import (
 	"time"
 
 	googleuuid "github.com/google/uuid"
+	"github.com/nightnoryu/go-kita/maybe"
+	"github.com/nightnoryu/go-kita/slices"
 	"github.com/ogen-go/ogen/middleware"
 	"github.com/ogen-go/ogen/ogenerrors"
 
@@ -16,9 +18,7 @@ import (
 	"cadence/pkg/cadence/app/service"
 	"cadence/pkg/cadence/domain"
 	"cadence/pkg/common/auth"
-	"cadence/pkg/common/maybe"
 	commonogenerrors "cadence/pkg/common/ogenerrors"
-	"cadence/pkg/common/slices"
 	"cadence/pkg/common/uuid"
 )
 
@@ -142,11 +142,13 @@ func (h *restHandler) ChangeUserPassword(ctx context.Context, req *publicapi.Cha
 	if !ok {
 		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
 	}
-	err := h.userService.ChangePassword(ctx, userID, req.GetPassword())
+	err := h.userService.ChangePassword(ctx, userID, req.GetCurrentPassword(), req.GetNewPassword())
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrUserNotFound):
 			return nil, commonogenerrors.NewNotFoundError(err.Error())
+		case errors.Is(err, domain.ErrInvalidCredentials):
+			return nil, commonogenerrors.NewPermissionDeniedError(err.Error())
 		case errors.Is(err, domain.ErrEmptyPasswordHash):
 			return nil, commonogenerrors.NewInvalidInputError(err.Error())
 		default:
@@ -409,7 +411,7 @@ func (h *restHandler) GetBandTrack(ctx context.Context, params publicapi.GetBand
 }
 
 func (h *restHandler) ListBandTracks(ctx context.Context, params publicapi.ListBandTracksParams) (publicapi.ListBandTracksRes, error) {
-	tracks, err := h.trackQueryService.ListBandTracks(ctx, uuid.UUID(params.BandId))
+	tracks, err := h.trackQueryService.ListBandTracks(ctx, uuid.UUID(params.BandId), maybeValueFromOpt[string](params.SearchQuery))
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrBandNotFound):

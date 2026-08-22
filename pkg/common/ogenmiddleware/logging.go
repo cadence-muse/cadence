@@ -3,9 +3,8 @@ package ogenmiddleware
 import (
 	"time"
 
+	"github.com/nightnoryu/go-kita/log"
 	"github.com/ogen-go/ogen/middleware"
-
-	"cadence/pkg/common/log"
 )
 
 func NewLoggingMiddleware(logger log.Logger) middleware.Middleware {
@@ -39,7 +38,7 @@ func getParamsForLog(request middleware.Request) any {
 			params[param.Name] = value
 		}
 	}
-	options := getTrimForLogOptions()
+	options := getTrimForLogsOptions()
 	result := make(map[string]any)
 	if len(params) > 0 {
 		result["params"] = log.TrimForLogs(params, options)
@@ -50,7 +49,7 @@ func getParamsForLog(request middleware.Request) any {
 	return result
 }
 
-func getTrimForLogOptions() log.TrimForLogOptions {
+func getTrimForLogsOptions() log.TrimForLogsOptions {
 	trimForLogsOptions := log.DefaultTrimForLogsOpts
 	trimForLogsOptions.SensitiveFields = []string{
 		"Password",

@@ -102,6 +102,9 @@ func TestUserJourney(t *testing.T) {
 		require.Equal(t, bandID, body.Items[0].ID)
 		require.Equal(t, "The Wanderers", body.Items[0].Name)
 		require.Equal(t, 1, body.Items[0].MembersCount)
+		listOwnerID, ok := body.Items[0].OwnerId.Get()
+		require.True(t, ok)
+		require.Equal(t, ownerID, listOwnerID)
 	})
 
 	t.Run("homepage data reflects the new band", func(t *testing.T) {
@@ -190,6 +193,21 @@ func TestUserJourney(t *testing.T) {
 		listRes, listErr := env.client.ListBandTracks(ctx, publicapi.ListBandTracksParams{BandId: bandID})
 		listBody := requireResponse[publicapi.ListBandTracksResponseBody](t, listRes, listErr)
 		require.Len(t, listBody.Items, 2)
+
+		searchRes, searchErr := env.client.ListBandTracks(ctx, publicapi.ListBandTracksParams{
+			BandId:      bandID,
+			SearchQuery: publicapi.NewOptString("Track One"),
+		})
+		searchBody := requireResponse[publicapi.ListBandTracksResponseBody](t, searchRes, searchErr)
+		require.Len(t, searchBody.Items, 1)
+		require.Equal(t, track1, searchBody.Items[0].ID)
+
+		noMatchRes, noMatchErr := env.client.ListBandTracks(ctx, publicapi.ListBandTracksParams{
+			BandId:      bandID,
+			SearchQuery: publicapi.NewOptString("nonexistentsong"),
+		})
+		noMatchBody := requireResponse[publicapi.ListBandTracksResponseBody](t, noMatchRes, noMatchErr)
+		require.Empty(t, noMatchBody.Items)
 
 		getRes, getErr := env.client.GetBandTrack(ctx, publicapi.GetBandTrackParams{BandId: bandID, TrackId: track1})
 		getBody := requireResponse[publicapi.BandTrack](t, getRes, getErr)
@@ -297,6 +315,13 @@ func TestUserJourney(t *testing.T) {
 		location, ok := body.EventLocation.Get()
 		require.True(t, ok)
 		require.Equal(t, "The Venue", location)
+
+		listRes, listErr := env.client.ListBandSetlists(ctx, publicapi.ListBandSetlistsParams{BandId: bandID})
+		listBody := requireResponse[publicapi.ListBandSetlistsResponseBody](t, listRes, listErr)
+		require.Len(t, listBody.Items, 1)
+		listLocation, listOk := listBody.Items[0].EventLocation.Get()
+		require.True(t, listOk)
+		require.Equal(t, "The Venue", listLocation)
 	})
 
 	t.Run("bulk add tracks to setlist", func(t *testing.T) {
@@ -550,7 +575,8 @@ func TestUserJourney(t *testing.T) {
 		const newOwnerPassword = "yet-another-correct-horse-battery"
 
 		changeRes, changeErr := env.client.ChangeUserPassword(ctx, &publicapi.ChangeUserPasswordRequestBody{
-			Password: newOwnerPassword,
+			CurrentPassword: ownerPassword,
+			NewPassword:     newOwnerPassword,
 		})
 		requireResponse[publicapi.ChangeUserPasswordOK](t, changeRes, changeErr)
 

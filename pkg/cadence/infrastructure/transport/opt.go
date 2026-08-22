@@ -3,8 +3,9 @@ package transport
 import (
 	"time"
 
+	"github.com/nightnoryu/go-kita/maybe"
+
 	"cadence/api/server/publicapi"
-	"cadence/pkg/common/maybe"
 	"cadence/pkg/common/uuid"
 	"cadence/pkg/common/valuetypes"
 )

@@ -8,8 +8,7 @@ import (
 	"github.com/go-faster/errors"
 	_ "github.com/jackc/pgx/v5/stdlib" // registers the "postgres" database/sql driver
 	"github.com/jmoiron/sqlx"
-
-	"cadence/pkg/common/log"
+	"github.com/nightnoryu/go-kita/log"
 )
 
 const dbDriverName = "pgx"

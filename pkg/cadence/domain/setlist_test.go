@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nightnoryu/go-kita/maybe"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cadence/pkg/common/maybe"
 	"cadence/pkg/common/uuid"
 )
 

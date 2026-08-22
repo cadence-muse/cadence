@@ -6,9 +6,10 @@ import (
 	"errors"
 	"time"
 
+	"github.com/nightnoryu/go-kita/maybe"
+	"github.com/nightnoryu/go-kita/postgresql"
+
 	"cadence/pkg/cadence/domain"
-	"cadence/pkg/common/maybe"
-	"cadence/pkg/common/postgresql"
 	"cadence/pkg/common/uuid"
 )
 

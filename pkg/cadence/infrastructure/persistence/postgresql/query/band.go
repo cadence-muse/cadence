@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/nightnoryu/go-kita/maybe"
+	"github.com/nightnoryu/go-kita/postgresql"
+	"github.com/nightnoryu/go-kita/slices"
+
 	"cadence/pkg/cadence/app/query"
-	"cadence/pkg/common/maybe"
-	"cadence/pkg/common/postgresql"
-	"cadence/pkg/common/slices"
 	"cadence/pkg/common/uuid"
 )
 
@@ -22,11 +23,12 @@ type bandQueryService struct {
 
 func (s *bandQueryService) ListUserBands(ctx context.Context, userID uuid.UUID) ([]query.BandListItem, error) {
 	const sqlQuery = `
-		SELECT b.id, b.name, (
+		SELECT b.id, b.name, owner.user_id AS owner_id, (
 			SELECT COUNT(*) FROM band_member bm2 WHERE bm2.band_id = b.id
 		) AS members_count
 		FROM band b
 		JOIN band_member bm ON bm.band_id = b.id
+		JOIN band_member owner ON owner.band_id = b.id AND owner.role = 'owner'
 		WHERE bm.user_id = $1 AND b.deleted_at IS NULL
 		ORDER BY b.name
 	`
@@ -40,6 +42,7 @@ func (s *bandQueryService) ListUserBands(ctx context.Context, userID uuid.UUID) 
 			ID:           row.ID,
 			Name:         row.Name,
 			MembersCount: row.MembersCount,
+			OwnerID:      row.OwnerID,
 		}
 	}), nil
 }
@@ -115,6 +118,7 @@ type sqlxBandListItem struct {
 	ID           uuid.UUID `db:"id"`
 	Name         string    `db:"name"`
 	MembersCount int       `db:"members_count"`
+	OwnerID      uuid.UUID `db:"owner_id"`
 }
 
 type sqlxBandData struct {

@@ -6,10 +6,11 @@ import (
 	"errors"
 	"time"
 
+	"github.com/nightnoryu/go-kita/maybe"
+	"github.com/nightnoryu/go-kita/postgresql"
+	"github.com/nightnoryu/go-kita/slices"
+
 	"cadence/pkg/cadence/app/query"
-	"cadence/pkg/common/maybe"
-	"cadence/pkg/common/postgresql"
-	"cadence/pkg/common/slices"
 	"cadence/pkg/common/uuid"
 )
 
@@ -23,14 +24,14 @@ type setlistQueryService struct {
 
 func (s *setlistQueryService) ListBandSetlists(ctx context.Context, bandID uuid.UUID) ([]query.SetlistListItem, error) {
 	const sqlQuery = `
-		SELECT s.id, s.name, s.event_date,
+		SELECT s.id, s.name, s.event_date, s.event_location,
 		       COUNT(t.id) AS tracks_count,
 		       COALESCE(SUM(t.duration_seconds), 0) AS duration_seconds
 		FROM setlist s
 		LEFT JOIN setlist_track st ON st.setlist_id = s.id
 		LEFT JOIN track t ON t.id = st.track_id AND t.deleted_at IS NULL
 		WHERE s.band_id = $1 AND s.deleted_at IS NULL
-		GROUP BY s.id, s.name, s.event_date
+		GROUP BY s.id, s.name, s.event_date, s.event_location
 		ORDER BY s.event_date ASC NULLS LAST
 	`
 	var rows []sqlxSetlistListItem
@@ -40,11 +41,12 @@ func (s *setlistQueryService) ListBandSetlists(ctx context.Context, bandID uuid.
 
 	return slices.Map(rows, func(row sqlxSetlistListItem) query.SetlistListItem {
 		return query.SetlistListItem{
-			ID:          row.ID,
-			Name:        row.Name,
-			TracksCount: row.TracksCount,
-			Duration:    time.Duration(row.DurationSeconds) * time.Second,
-			EventDate:   row.EventDate,
+			ID:            row.ID,
+			Name:          row.Name,
+			TracksCount:   row.TracksCount,
+			Duration:      time.Duration(row.DurationSeconds) * time.Second,
+			EventDate:     row.EventDate,
+			EventLocation: row.EventLocation,
 		}
 	}), nil
 }
@@ -152,6 +154,7 @@ type sqlxSetlistListItem struct {
 	TracksCount     int                    `db:"tracks_count"`
 	DurationSeconds int                    `db:"duration_seconds"`
 	EventDate       maybe.Maybe[time.Time] `db:"event_date"`
+	EventLocation   maybe.Maybe[string]    `db:"event_location"`
 }
 
 type sqlxUserSetlistListItem struct {

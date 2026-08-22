@@ -76,7 +76,7 @@ func TestUserService_ChangePassword(t *testing.T) {
 		userID, err := svc.Register(context.Background(), "alice", "old-password")
 		require.NoError(t, err)
 
-		err = svc.ChangePassword(context.Background(), userID, "new-password")
+		err = svc.ChangePassword(context.Background(), userID, "old-password", "new-password")
 		require.NoError(t, err)
 
 		_, err = svc.Authenticate(context.Background(), "alice", "new-password")
@@ -86,11 +86,24 @@ func TestUserService_ChangePassword(t *testing.T) {
 		require.ErrorIs(t, err, domain.ErrInvalidCredentials)
 	})
 
+	t.Run("wrong current password is rejected", func(t *testing.T) {
+		executor := newFakeExecutor()
+		svc := NewUserService(executor)
+		userID, err := svc.Register(context.Background(), "alice", "old-password")
+		require.NoError(t, err)
+
+		err = svc.ChangePassword(context.Background(), userID, "wrong-password", "new-password")
+		require.ErrorIs(t, err, domain.ErrInvalidCredentials)
+
+		_, err = svc.Authenticate(context.Background(), "alice", "old-password")
+		require.NoError(t, err)
+	})
+
 	t.Run("user not found", func(t *testing.T) {
 		executor := newFakeExecutor()
 		svc := NewUserService(executor)
 
-		err := svc.ChangePassword(context.Background(), uuid.Generate(), "new-password")
+		err := svc.ChangePassword(context.Background(), uuid.Generate(), "old-password", "new-password")
 		require.ErrorIs(t, err, domain.ErrUserNotFound)
 	})
 }

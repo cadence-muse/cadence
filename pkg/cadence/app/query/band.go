@@ -3,7 +3,8 @@ package query
 import (
 	"context"
 
-	"cadence/pkg/common/maybe"
+	"github.com/nightnoryu/go-kita/maybe"
+
 	"cadence/pkg/common/uuid"
 )
 
@@ -18,6 +19,7 @@ type BandListItem struct {
 	ID           uuid.UUID
 	Name         string
 	MembersCount int
+	OwnerID      uuid.UUID
 }
 
 type BandData struct {

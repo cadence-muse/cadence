@@ -9,9 +9,8 @@ import (
 
 	"github.com/go-faster/errors"
 	"github.com/gorilla/mux"
+	"github.com/nightnoryu/go-kita/log"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-
-	"cadence/pkg/common/log"
 )
 
 var errServiceStopped = stderrors.New("service stopped without errors")

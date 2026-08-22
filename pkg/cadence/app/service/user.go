@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/nightnoryu/go-kita/transactional"
 	"golang.org/x/crypto/bcrypt"
 
 	"cadence/pkg/cadence/app"
 	"cadence/pkg/cadence/domain"
-	"cadence/pkg/common/transactional"
 	"cadence/pkg/common/uuid"
 )
 
@@ -52,13 +52,17 @@ func (s *UserService) Register(ctx context.Context, username, password string) (
 	return userID, err
 }
 
-func (s *UserService) ChangePassword(ctx context.Context, userID uuid.UUID, newPassword string) error {
+func (s *UserService) ChangePassword(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) error {
 	return s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.UserRepository()
 
 		user, err := repo.Get(userID)
 		if err != nil {
 			return err
+		}
+
+		if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash()), []byte(currentPassword)) != nil {
+			return domain.ErrInvalidCredentials
 		}
 
 		passwordHash, hashErr := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)

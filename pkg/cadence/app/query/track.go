@@ -4,12 +4,13 @@ import (
 	"context"
 	"time"
 
-	"cadence/pkg/common/maybe"
+	"github.com/nightnoryu/go-kita/maybe"
+
 	"cadence/pkg/common/uuid"
 )
 
 type TrackQueryService interface {
-	ListBandTracks(ctx context.Context, bandID uuid.UUID) ([]TrackListItem, error)
+	ListBandTracks(ctx context.Context, bandID uuid.UUID, searchQuery maybe.Maybe[string]) ([]TrackListItem, error)
 	ListUserTracks(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID], searchQuery maybe.Maybe[string]) ([]UserTrackListItem, error)
 	FindTrack(ctx context.Context, bandID, trackID uuid.UUID) (maybe.Maybe[TrackData], error)
 }
@@ -19,6 +20,7 @@ type TrackListItem struct {
 	Title    string
 	Artist   string
 	Duration maybe.Maybe[time.Duration]
+	Key      maybe.Maybe[string]
 }
 
 type UserTrackListItem struct {

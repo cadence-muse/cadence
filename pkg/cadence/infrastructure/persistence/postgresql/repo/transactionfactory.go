@@ -3,10 +3,11 @@ package repo
 import (
 	"context"
 
+	"github.com/nightnoryu/go-kita/postgresql"
+	"github.com/nightnoryu/go-kita/transactional"
+
 	"cadence/pkg/cadence/app"
 	"cadence/pkg/common/auth"
-	"cadence/pkg/common/postgresql"
-	"cadence/pkg/common/transactional"
 )
 
 const advisoryLockSQL = `SELECT pg_advisory_xact_lock(hashtext($1))`
