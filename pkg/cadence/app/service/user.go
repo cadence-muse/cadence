@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/nightnoryu/go-kita/transactional"
-	"golang.org/x/crypto/bcrypt"
 
 	"cadence/pkg/cadence/app"
 	"cadence/pkg/cadence/domain"
@@ -32,12 +31,7 @@ func (s *UserService) Register(ctx context.Context, username, password string) (
 			return findErr
 		}
 
-		passwordHash, hashErr := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-		if hashErr != nil {
-			return hashErr
-		}
-
-		user, userErr := domain.NewUser(repo.NextID(), username, string(passwordHash))
+		user, userErr := domain.NewUser(repo.NextID(), username, password)
 		if userErr != nil {
 			return userErr
 		}
@@ -61,16 +55,13 @@ func (s *UserService) ChangePassword(ctx context.Context, userID uuid.UUID, curr
 			return err
 		}
 
-		if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash()), []byte(currentPassword)) != nil {
-			return domain.ErrInvalidCredentials
+		err = user.ComparePassword(currentPassword)
+		if err != nil {
+			return err
 		}
 
-		passwordHash, hashErr := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-		if hashErr != nil {
-			return hashErr
-		}
-
-		if err := user.SetPasswordHash(string(passwordHash)); err != nil {
+		err = user.SetPassword(newPassword)
+		if err != nil {
 			return err
 		}
 
@@ -90,7 +81,8 @@ func (s *UserService) Authenticate(ctx context.Context, username, password strin
 			return findErr
 		}
 
-		if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash()), []byte(password)) != nil {
+		err = user.ComparePassword(password)
+		if err != nil {
 			return domain.ErrInvalidCredentials
 		}
 

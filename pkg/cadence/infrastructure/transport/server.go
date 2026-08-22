@@ -98,7 +98,7 @@ func (h *restHandler) Register(ctx context.Context, req *publicapi.RegisterReque
 			return nil, commonogenerrors.NewAlreadyExistsError(err.Error())
 		case errors.Is(err, domain.ErrEmptyUsername),
 			errors.Is(err, domain.ErrUsernameTooLong),
-			errors.Is(err, domain.ErrEmptyPasswordHash):
+			errors.Is(err, domain.ErrInvalidPassword):
 			return nil, commonogenerrors.NewInvalidInputError(err.Error())
 		default:
 			return nil, err
@@ -149,7 +149,7 @@ func (h *restHandler) ChangeUserPassword(ctx context.Context, req *publicapi.Cha
 			return nil, commonogenerrors.NewNotFoundError(err.Error())
 		case errors.Is(err, domain.ErrInvalidCredentials):
 			return nil, commonogenerrors.NewPermissionDeniedError(err.Error())
-		case errors.Is(err, domain.ErrEmptyPasswordHash):
+		case errors.Is(err, domain.ErrInvalidPassword):
 			return nil, commonogenerrors.NewInvalidInputError(err.Error())
 		default:
 			return nil, err
