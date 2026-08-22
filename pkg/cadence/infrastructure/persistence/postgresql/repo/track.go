@@ -109,7 +109,7 @@ func (repo *trackRepository) Get(id domain.TrackID) (*domain.Track, error) {
 	if value, ok := maybe.JustValid(row.Key); ok {
 		keyValue, keyErr := valuetypes.MakeKey(value)
 		if keyErr != nil {
-			return nil, err
+			return nil, keyErr
 		}
 		key = maybe.NewJust(keyValue)
 	}
