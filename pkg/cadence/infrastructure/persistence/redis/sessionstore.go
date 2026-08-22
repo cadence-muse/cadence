@@ -8,9 +8,9 @@ import (
 	"time"
 
 	googleuuid "github.com/google/uuid"
+	"github.com/nightnoryu/go-kita/redis"
 
 	"cadence/pkg/cadence/app"
-	"cadence/pkg/common/redis"
 	"cadence/pkg/common/uuid"
 )
 

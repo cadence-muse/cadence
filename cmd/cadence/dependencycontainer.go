@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/nightnoryu/go-kita/log"
 	"github.com/nightnoryu/go-kita/postgresql"
+	"github.com/nightnoryu/go-kita/redis"
 	"github.com/nightnoryu/go-kita/transactional"
 	"github.com/ogen-go/ogen/middleware"
 
@@ -20,7 +21,6 @@ import (
 	"cadence/pkg/cadence/infrastructure/transport"
 	"cadence/pkg/common/metrics"
 	"cadence/pkg/common/ogenmiddleware"
-	"cadence/pkg/common/redis"
 )
 
 const healthCheckKey = "resilience:health-check"
