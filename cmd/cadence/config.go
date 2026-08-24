@@ -35,8 +35,8 @@ type config struct {
 	RedisPassword string `env:"REDIS_PASSWORD"`
 	RedisDB       int    `env:"REDIS_DB"`
 
-	SessionMaxPerUser int           `env:"SESSION_MAX_PER_USER"`
-	SessionTTL        time.Duration `env:"SESSION_TTL"`
+	SessionMaxPerUser int           `env:"SESSION_MAX_PER_USER" envDefault:"5"`
+	SessionTTL        time.Duration `env:"SESSION_TTL" envDefault:"24h"`
 
 	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS"`
 }

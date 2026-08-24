@@ -19,7 +19,7 @@ services:
       CADENCE_REDIS_DB: 0
 
       CADENCE_SESSION_MAX_PER_USER: 5
-      CADENCE_SESSION_TTL: 24h
+      CADENCE_SESSION_TTL: 168h
 
       CADENCE_CORS_ALLOWED_ORIGINS: http://localhost:33721
     ports:
