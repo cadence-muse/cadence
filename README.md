@@ -1,11 +1,4 @@
-<div align="center">
-<a href="https://github.com/nightnoryu/cadence-backend" target="blank">
-<img src="./assets/logo.png" alt="Logo" width="90" />
-</a>
-
-<h2>Cadence</h2>
-
-</div>
+# Cadence
 
 ## Overview
 
