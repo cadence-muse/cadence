@@ -1,4 +1,4 @@
 services:
   cadence:
     volumes:
-      - "$HOME/projects/cadence-backend/bin/cadence:/app/bin/cadence:ro"
+      - "$HOME/projects/cadence/bin/cadence:/app/bin/cadence:ro"

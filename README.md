@@ -1,25 +1,8 @@
 # Cadence
 
-## Overview
+Core service of the Cadence app.
 
-Cadence is a simple repertoire manager for gigging bands. Key features include:
-
-- **Bands Participation:** Be a member of several bands and keep them all at a glance.
-- **Per-band Repertoire:** Maintain a repertoire of your bands with keys, tempos and other useful information.
-- **Per-band Setlists:** Plan and collaborate on setlists for your gigs.
-
-This repo contains only the core backend. Check out the cross-platform client
-in [nightnoryu/cadence-client](https://github.com/nightnoryu/cadence-client).
-
-## Tech Stack
-
-- **Backend**: Go, PostgreSQL, Redis
-- **Client**: Dart, Flutter
-- **CI/CD**: mise, GitHub Actions, GitHub Container Registry
-- **Deployment**: k3s
-- **Landing website**: Hugo
-
-## Development
+## Local Development
 
 ### Prerequisites
 
@@ -29,8 +12,8 @@ in [nightnoryu/cadence-client](https://github.com/nightnoryu/cadence-client).
 ### First launch
 
 ```shell
-git clone https://github.com/nightnoryu/cadence-backend
-cd cadence-backend
+git clone https://github.com/cadence-muse/cadence
+cd cadence
 
 # Set the binary volume mapping according to project folder location on your machine
 cp compose.override.example.yml compose.override.yml
