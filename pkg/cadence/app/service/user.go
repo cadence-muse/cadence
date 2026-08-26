@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/nightnoryu/go-kita/transactional"
 
@@ -54,7 +55,7 @@ func (s *UserService) Register(ctx context.Context, username, password string) (
 }
 
 func (s *UserService) ChangePassword(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) error {
-	err := s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
+	err := s.executor.ExecuteWithLock(ctx, getUserLockName(userID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.UserRepository()
 
 		user, err := repo.Get(userID)
@@ -102,4 +103,8 @@ func (s *UserService) Authenticate(ctx context.Context, username, password strin
 		return nil
 	})
 	return userID, err
+}
+
+func getUserLockName(id uuid.UUID) string {
+	return fmt.Sprintf("user_%s", id.String())
 }
