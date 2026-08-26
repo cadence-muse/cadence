@@ -103,26 +103,33 @@ func (s *sessionStore) DeleteSession(ctx context.Context, token string) error {
 	return s.client.ZRem(ctx, userSessionsKey(uuid.UUID(userID)), token)
 }
 
-func (s *sessionStore) DeleteAllSessions(ctx context.Context, userID uuid.UUID) error {
+func (s *sessionStore) DeleteOtherSessions(ctx context.Context, userID uuid.UUID, keepToken string) error {
 	sessionsKey := userSessionsKey(userID)
 
 	members, err := s.client.ZRangeWithScores(ctx, sessionsKey)
 	if err != nil {
 		return err
 	}
-	if len(members) == 0 {
+
+	tokensToRemove := make([]string, 0, len(members))
+	for _, m := range members {
+		if m.Member != keepToken {
+			tokensToRemove = append(tokensToRemove, m.Member)
+		}
+	}
+	if len(tokensToRemove) == 0 {
 		return nil
 	}
 
-	sessionKeys := make([]string, len(members))
-	for i, m := range members {
-		sessionKeys[i] = sessionKey(m.Member)
+	sessionKeys := make([]string, len(tokensToRemove))
+	for i, token := range tokensToRemove {
+		sessionKeys[i] = sessionKey(token)
 	}
 	if err := s.client.Delete(ctx, sessionKeys...); err != nil {
 		return err
 	}
 
-	return s.client.Delete(ctx, sessionsKey)
+	return s.client.ZRem(ctx, sessionsKey, tokensToRemove...)
 }
 
 // enforceSessionLimit drops stale entries left behind by expired sessions, then evicts the

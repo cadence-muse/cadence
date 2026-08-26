@@ -142,7 +142,11 @@ func (h *restHandler) ChangeUserPassword(ctx context.Context, req *publicapi.Cha
 	if !ok {
 		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
 	}
-	err := h.userService.ChangePassword(ctx, userID, req.GetCurrentPassword(), req.GetNewPassword())
+	token, ok := auth.SessionTokenFromContext(ctx)
+	if !ok {
+		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
+	}
+	err := h.userService.ChangePassword(ctx, userID, token, req.GetCurrentPassword(), req.GetNewPassword())
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrUserNotFound):

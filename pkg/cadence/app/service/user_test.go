@@ -77,7 +77,7 @@ func TestUserService_ChangePassword(t *testing.T) {
 		userID, err := svc.Register(context.Background(), "alice", "old-password")
 		require.NoError(t, err)
 
-		err = svc.ChangePassword(context.Background(), userID, "old-password", "new-password")
+		err = svc.ChangePassword(context.Background(), userID, "", "old-password", "new-password")
 		require.NoError(t, err)
 
 		_, err = svc.Authenticate(context.Background(), "alice", "new-password")
@@ -93,7 +93,7 @@ func TestUserService_ChangePassword(t *testing.T) {
 		userID, err := svc.Register(context.Background(), "alice", "old-password")
 		require.NoError(t, err)
 
-		err = svc.ChangePassword(context.Background(), userID, "wrong-password", "new-password")
+		err = svc.ChangePassword(context.Background(), userID, "", "wrong-password", "new-password")
 		require.ErrorIs(t, err, domain.ErrInvalidCredentials)
 
 		_, err = svc.Authenticate(context.Background(), "alice", "old-password")
@@ -104,24 +104,29 @@ func TestUserService_ChangePassword(t *testing.T) {
 		executor := newFakeExecutor()
 		svc := NewUserService(executor, newFakeSessionStore())
 
-		err := svc.ChangePassword(context.Background(), uuid.Generate(), "old-password", "new-password")
+		err := svc.ChangePassword(context.Background(), uuid.Generate(), "", "old-password", "new-password")
 		require.ErrorIs(t, err, domain.ErrUserNotFound)
 	})
 
-	t.Run("invalidates existing sessions", func(t *testing.T) {
+	t.Run("invalidates other sessions but keeps the current one", func(t *testing.T) {
 		executor := newFakeExecutor()
 		sessionStore := newFakeSessionStore()
 		svc := NewUserService(executor, sessionStore)
 		userID, err := svc.Register(context.Background(), "alice", "old-password")
 		require.NoError(t, err)
 
-		token, err := sessionStore.CreateSession(context.Background(), userID)
+		currentToken, err := sessionStore.CreateSession(context.Background(), userID)
+		require.NoError(t, err)
+		otherToken, err := sessionStore.CreateSession(context.Background(), userID)
 		require.NoError(t, err)
 
-		err = svc.ChangePassword(context.Background(), userID, "old-password", "new-password")
+		err = svc.ChangePassword(context.Background(), userID, currentToken, "old-password", "new-password")
 		require.NoError(t, err)
 
-		_, err = sessionStore.ValidateSession(context.Background(), token)
+		_, err = sessionStore.ValidateSession(context.Background(), currentToken)
+		require.NoError(t, err)
+
+		_, err = sessionStore.ValidateSession(context.Background(), otherToken)
 		require.ErrorIs(t, err, app.ErrSessionNotFound)
 	})
 
@@ -135,7 +140,7 @@ func TestUserService_ChangePassword(t *testing.T) {
 		token, err := sessionStore.CreateSession(context.Background(), userID)
 		require.NoError(t, err)
 
-		err = svc.ChangePassword(context.Background(), userID, "wrong-password", "new-password")
+		err = svc.ChangePassword(context.Background(), userID, "", "wrong-password", "new-password")
 		require.ErrorIs(t, err, domain.ErrInvalidCredentials)
 
 		_, err = sessionStore.ValidateSession(context.Background(), token)

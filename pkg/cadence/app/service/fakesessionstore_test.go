@@ -34,9 +34,9 @@ func (f *fakeSessionStore) DeleteSession(_ context.Context, token string) error 
 	return nil
 }
 
-func (f *fakeSessionStore) DeleteAllSessions(_ context.Context, userID uuid.UUID) error {
+func (f *fakeSessionStore) DeleteOtherSessions(_ context.Context, userID uuid.UUID, keepToken string) error {
 	for token, id := range f.sessions {
-		if id == userID {
+		if id == userID && token != keepToken {
 			delete(f.sessions, token)
 		}
 	}

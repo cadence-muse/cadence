@@ -54,7 +54,7 @@ func (s *UserService) Register(ctx context.Context, username, password string) (
 	return userID, err
 }
 
-func (s *UserService) ChangePassword(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) error {
+func (s *UserService) ChangePassword(ctx context.Context, userID uuid.UUID, currentSessionToken, currentPassword, newPassword string) error {
 	err := s.executor.ExecuteWithLock(ctx, getUserLockName(userID), func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.UserRepository()
 
@@ -79,7 +79,7 @@ func (s *UserService) ChangePassword(ctx context.Context, userID uuid.UUID, curr
 		return err
 	}
 
-	return s.sessionStore.DeleteAllSessions(ctx, userID)
+	return s.sessionStore.DeleteOtherSessions(ctx, userID, currentSessionToken)
 }
 
 func (s *UserService) Authenticate(ctx context.Context, username, password string) (userID uuid.UUID, err error) {
