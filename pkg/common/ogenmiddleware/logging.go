@@ -54,6 +54,8 @@ func getTrimForLogsOptions() log.TrimForLogsOptions {
 	trimForLogsOptions.SensitiveFields = []string{
 		"Password",
 		"password",
+		"currentPassword",
+		"CurrentPassword",
 		"newPassword",
 		"NewPassword",
 		"secret",
