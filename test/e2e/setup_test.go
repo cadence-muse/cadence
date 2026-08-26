@@ -91,15 +91,6 @@ func setupTestEnv(t *testing.T) *testEnv {
 	transactionFactory := repo.NewTransactionFactory(connectionProvider)
 	executor := transactional.NewExecutor[app.RepoProvider](transactionFactory)
 
-	userService := appservice.NewUserService(executor)
-	userQueryService := pgquery.NewUserQueryService(transactionalClient)
-	bandService := authorizedservice.NewBandService(appservice.NewBandService(executor), executor)
-	bandQueryService := authorizedquery.NewBandQueryService(pgquery.NewBandQueryService(transactionalClient), executor)
-	trackService := authorizedservice.NewTrackService(appservice.NewTrackService(executor), executor)
-	trackQueryService := authorizedquery.NewTrackQueryService(pgquery.NewTrackQueryService(transactionalClient), executor)
-	setlistService := authorizedservice.NewSetlistService(appservice.NewSetlistService(executor), executor)
-	setlistQueryService := authorizedquery.NewSetlistQueryService(pgquery.NewSetlistQueryService(transactionalClient), executor)
-
 	redisClient := redis.NewClient(redis.Config{Host: redisHost, Port: int(redisPort.Num())})
 	t.Cleanup(func() { require.NoError(t, redisClient.Close()) })
 
@@ -107,6 +98,15 @@ func setupTestEnv(t *testing.T) *testEnv {
 		TTL:                sessionTTL,
 		MaxSessionsPerUser: maxSessionsPerUser,
 	})
+
+	userService := appservice.NewUserService(executor, sessionStore)
+	userQueryService := pgquery.NewUserQueryService(transactionalClient)
+	bandService := authorizedservice.NewBandService(appservice.NewBandService(executor), executor)
+	bandQueryService := authorizedquery.NewBandQueryService(pgquery.NewBandQueryService(transactionalClient), executor)
+	trackService := authorizedservice.NewTrackService(appservice.NewTrackService(executor), executor)
+	trackQueryService := authorizedquery.NewTrackQueryService(pgquery.NewTrackQueryService(transactionalClient), executor)
+	setlistService := authorizedservice.NewSetlistService(appservice.NewSetlistService(executor), executor)
+	setlistQueryService := authorizedquery.NewSetlistQueryService(pgquery.NewSetlistQueryService(transactionalClient), executor)
 
 	apiHandler, err := transport.NewAPIServer(
 		transport.ErrorHandler,

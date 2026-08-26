@@ -54,7 +54,13 @@ func newDependencyContainer(
 		ogenmiddleware.NewMetricsMiddleware(appMetrics),
 	}
 
-	userService := appservice.NewUserService(executor)
+	redisClient := redis.NewClient(config.redisConfig())
+	sessionStore := redisinfra.NewSessionStore(redisClient, redisinfra.Config{
+		TTL:                config.SessionTTL,
+		MaxSessionsPerUser: config.SessionMaxPerUser,
+	})
+
+	userService := appservice.NewUserService(executor, sessionStore)
 	userQueryService := query.NewUserQueryService(transactionalClient)
 
 	bandService := authorizedservice.NewBandService(appservice.NewBandService(executor), executor)
@@ -65,12 +71,6 @@ func newDependencyContainer(
 
 	setlistService := authorizedservice.NewSetlistService(appservice.NewSetlistService(executor), executor)
 	setlistQueryService := authorizedquery.NewSetlistQueryService(query.NewSetlistQueryService(transactionalClient), executor)
-
-	redisClient := redis.NewClient(config.redisConfig())
-	sessionStore := redisinfra.NewSessionStore(redisClient, redisinfra.Config{
-		TTL:                config.SessionTTL,
-		MaxSessionsPerUser: config.SessionMaxPerUser,
-	})
 
 	apiServer, err := transport.NewAPIServer(
 		transport.ErrorHandler,

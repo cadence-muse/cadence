@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"cadence/pkg/cadence/app"
 	"cadence/pkg/cadence/domain"
 	"cadence/pkg/common/uuid"
 )
@@ -14,7 +15,7 @@ import (
 func TestUserService_Register(t *testing.T) {
 	t.Run("registers a new user", func(t *testing.T) {
 		executor := newFakeExecutor()
-		svc := NewUserService(executor)
+		svc := NewUserService(executor, newFakeSessionStore())
 
 		userID, err := svc.Register(context.Background(), "alice", "s3cret-password")
 		require.NoError(t, err)
@@ -27,7 +28,7 @@ func TestUserService_Register(t *testing.T) {
 
 	t.Run("username already taken is rejected", func(t *testing.T) {
 		executor := newFakeExecutor()
-		svc := NewUserService(executor)
+		svc := NewUserService(executor, newFakeSessionStore())
 
 		_, err := svc.Register(context.Background(), "alice", "s3cret-password")
 		require.NoError(t, err)
@@ -40,7 +41,7 @@ func TestUserService_Register(t *testing.T) {
 func TestUserService_Authenticate(t *testing.T) {
 	t.Run("authenticates with correct credentials", func(t *testing.T) {
 		executor := newFakeExecutor()
-		svc := NewUserService(executor)
+		svc := NewUserService(executor, newFakeSessionStore())
 		registeredID, err := svc.Register(context.Background(), "alice", "s3cret-password")
 		require.NoError(t, err)
 
@@ -51,7 +52,7 @@ func TestUserService_Authenticate(t *testing.T) {
 
 	t.Run("wrong password is rejected", func(t *testing.T) {
 		executor := newFakeExecutor()
-		svc := NewUserService(executor)
+		svc := NewUserService(executor, newFakeSessionStore())
 		_, err := svc.Register(context.Background(), "alice", "s3cret-password")
 		require.NoError(t, err)
 
@@ -61,7 +62,7 @@ func TestUserService_Authenticate(t *testing.T) {
 
 	t.Run("unknown username is rejected with the same error as a wrong password", func(t *testing.T) {
 		executor := newFakeExecutor()
-		svc := NewUserService(executor)
+		svc := NewUserService(executor, newFakeSessionStore())
 
 		_, err := svc.Authenticate(context.Background(), "unknown", "any-password")
 		require.ErrorIs(t, err, domain.ErrInvalidCredentials)
@@ -72,7 +73,7 @@ func TestUserService_Authenticate(t *testing.T) {
 func TestUserService_ChangePassword(t *testing.T) {
 	t.Run("new password can be used to authenticate, old one can not", func(t *testing.T) {
 		executor := newFakeExecutor()
-		svc := NewUserService(executor)
+		svc := NewUserService(executor, newFakeSessionStore())
 		userID, err := svc.Register(context.Background(), "alice", "old-password")
 		require.NoError(t, err)
 
@@ -88,7 +89,7 @@ func TestUserService_ChangePassword(t *testing.T) {
 
 	t.Run("wrong current password is rejected", func(t *testing.T) {
 		executor := newFakeExecutor()
-		svc := NewUserService(executor)
+		svc := NewUserService(executor, newFakeSessionStore())
 		userID, err := svc.Register(context.Background(), "alice", "old-password")
 		require.NoError(t, err)
 
@@ -101,9 +102,43 @@ func TestUserService_ChangePassword(t *testing.T) {
 
 	t.Run("user not found", func(t *testing.T) {
 		executor := newFakeExecutor()
-		svc := NewUserService(executor)
+		svc := NewUserService(executor, newFakeSessionStore())
 
 		err := svc.ChangePassword(context.Background(), uuid.Generate(), "old-password", "new-password")
 		require.ErrorIs(t, err, domain.ErrUserNotFound)
+	})
+
+	t.Run("invalidates existing sessions", func(t *testing.T) {
+		executor := newFakeExecutor()
+		sessionStore := newFakeSessionStore()
+		svc := NewUserService(executor, sessionStore)
+		userID, err := svc.Register(context.Background(), "alice", "old-password")
+		require.NoError(t, err)
+
+		token, err := sessionStore.CreateSession(context.Background(), userID)
+		require.NoError(t, err)
+
+		err = svc.ChangePassword(context.Background(), userID, "old-password", "new-password")
+		require.NoError(t, err)
+
+		_, err = sessionStore.ValidateSession(context.Background(), token)
+		require.ErrorIs(t, err, app.ErrSessionNotFound)
+	})
+
+	t.Run("wrong current password does not invalidate existing sessions", func(t *testing.T) {
+		executor := newFakeExecutor()
+		sessionStore := newFakeSessionStore()
+		svc := NewUserService(executor, sessionStore)
+		userID, err := svc.Register(context.Background(), "alice", "old-password")
+		require.NoError(t, err)
+
+		token, err := sessionStore.CreateSession(context.Background(), userID)
+		require.NoError(t, err)
+
+		err = svc.ChangePassword(context.Background(), userID, "wrong-password", "new-password")
+		require.ErrorIs(t, err, domain.ErrInvalidCredentials)
+
+		_, err = sessionStore.ValidateSession(context.Background(), token)
+		require.NoError(t, err)
 	})
 }

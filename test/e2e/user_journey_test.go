@@ -574,11 +574,17 @@ func TestUserJourney(t *testing.T) {
 	t.Run("change password and log in with the new one", func(t *testing.T) {
 		const newOwnerPassword = "yet-another-correct-horse-battery"
 
+		preChangeToken := ownerToken
+
 		changeRes, changeErr := env.client.ChangeUserPassword(ctx, &publicapi.ChangeUserPasswordRequestBody{
 			CurrentPassword: ownerPassword,
 			NewPassword:     newOwnerPassword,
 		})
 		requireResponse[publicapi.ChangeUserPasswordOK](t, changeRes, changeErr)
+
+		env.sec.token = preChangeToken
+		_, staleProfileErr := env.client.GetUserProfile(ctx)
+		require.Error(t, staleProfileErr)
 
 		oldLoginRes, oldLoginErr := env.client.Login(ctx, &publicapi.LoginRequestBody{
 			Username: ownerUsername,

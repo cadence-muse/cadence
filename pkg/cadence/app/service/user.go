@@ -11,12 +11,19 @@ import (
 	"cadence/pkg/common/uuid"
 )
 
-func NewUserService(executor transactional.Executor[app.RepoProvider]) *UserService {
-	return &UserService{executor: executor}
+func NewUserService(
+	executor transactional.Executor[app.RepoProvider],
+	sessionStore app.SessionStore,
+) *UserService {
+	return &UserService{
+		executor:     executor,
+		sessionStore: sessionStore,
+	}
 }
 
 type UserService struct {
-	executor transactional.Executor[app.RepoProvider]
+	executor     transactional.Executor[app.RepoProvider]
+	sessionStore app.SessionStore
 }
 
 func (s *UserService) Register(ctx context.Context, username, password string) (userID uuid.UUID, err error) {
@@ -47,7 +54,7 @@ func (s *UserService) Register(ctx context.Context, username, password string) (
 }
 
 func (s *UserService) ChangePassword(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) error {
-	return s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
+	err := s.executor.Execute(ctx, func(repoProvider app.RepoProvider) error {
 		repo := repoProvider.UserRepository()
 
 		user, err := repo.Get(userID)
@@ -67,6 +74,11 @@ func (s *UserService) ChangePassword(ctx context.Context, userID uuid.UUID, curr
 
 		return repo.Store(user)
 	})
+	if err != nil {
+		return err
+	}
+
+	return s.sessionStore.DeleteAllSessions(ctx, userID)
 }
 
 func (s *UserService) Authenticate(ctx context.Context, username, password string) (userID uuid.UUID, err error) {
