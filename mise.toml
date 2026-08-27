@@ -23,6 +23,7 @@ run = "ogen --target ./api/server/publicapi --package publicapi --config ./api/s
 run = "go mod tidy"
 
 [tasks.build]
+depends = [ "generate", "modules" ]
 run = "go build -trimpath -v --gcflags 'all=-N -l' -o ./bin/cadence ./cmd/cadence"
 
 [tasks.check]
