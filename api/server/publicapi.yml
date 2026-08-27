@@ -7,7 +7,8 @@ info:
 tags:
   - name: Users
   - name: Bands
-  - name: Songs
+  - name: Tracks
+  - name: Setlists
 
 security:
   - sessionAuth: [ ]
@@ -185,6 +186,7 @@ paths:
     put:
       operationId: UpdateBand
       summary: Update band info, allowed for any member
+      tags: [ Bands ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -204,6 +206,7 @@ paths:
     delete:
       operationId: Remove band
       summary: Remove the band, only allowed to the band owner
+      tags: [ Bands ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -218,6 +221,7 @@ paths:
     post:
       operationId: JoinBand
       summary: Join a band by invite code
+      tags: [ Bands ]
       security:
         - sessionAuth: [ ]
       requestBody:
@@ -236,6 +240,7 @@ paths:
     delete:
       operationId: RemoveBandMember
       summary: Remove band member by user ID, you can remove yourself and owner can remove anybody from the band
+      tags: [ Bands ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -251,6 +256,7 @@ paths:
     post:
       operationId: RotateBandInviteCode
       summary: Regenerate band invite code, available only to owner
+      tags: [ Bands ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -269,6 +275,7 @@ paths:
     post:
       operationId: TransferBandOwnership
       summary: Transfer band ownership to one if its members, only available to owner
+      tags: [ Bands ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -289,6 +296,7 @@ paths:
     get:
       operationId: ListBandTracks
       summary: List all band tracks
+      tags: [ Tracks ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -308,6 +316,7 @@ paths:
     post:
       operationId: CreateBandTrack
       summary: Create band track, available to any member
+      tags: [ Tracks ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -332,6 +341,7 @@ paths:
     get:
       operationId: GetBandTrack
       summary: Get detailed band track info
+      tags: [ Tracks ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -350,6 +360,7 @@ paths:
     put:
       operationId: UpdateBandTrack
       summary: Update band track info, available to any member
+      tags: [ Tracks ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -370,6 +381,7 @@ paths:
     delete:
       operationId: RemoveBandTrack
       summary: Remove band track, available to any member
+      tags: [ Tracks ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -385,6 +397,7 @@ paths:
     get:
       operationId: ListUserTracks
       summary: List all tracks across bands the current user belongs to, optionally filtered by band
+      tags: [ Tracks ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -404,6 +417,7 @@ paths:
     get:
       operationId: ListUserSetlists
       summary: List all setlists across bands the current user belongs to, optionally filtered by band
+      tags: [ Setlists ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -423,6 +437,7 @@ paths:
     get:
       operationId: ListBandSetlists
       summary: List band setlists
+      tags: [ Setlists ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -442,6 +457,7 @@ paths:
     post:
       operationId: CreateBandSetlist
       summary: Create a setlist, available to any band member
+      tags: [ Setlists ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -466,6 +482,7 @@ paths:
     get:
       operationId: GetBandSetlist
       summary: Get band setlist detailed info
+      tags: [ Setlists ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -484,6 +501,7 @@ paths:
     put:
       operationId: UpdateBandSetlist
       summary: Update band setlist, available to any band member
+      tags: [ Setlists ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -504,6 +522,7 @@ paths:
     delete:
       operationId: RemoveBandSetlist
       summary: Remove band setlist, available to any band member
+      tags: [ Setlists ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -519,6 +538,7 @@ paths:
     post:
       operationId: AddSetlistTracks
       summary: Add tracks to a setlist, available to any band member
+      tags: [ Setlists ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -539,6 +559,7 @@ paths:
     delete:
       operationId: RemoveSetlistTracks
       summary: Remove a track from a setlist
+      tags: [ Setlists ]
       security:
         - sessionAuth: [ ]
       parameters:
@@ -560,6 +581,7 @@ paths:
     put:
       operationId: ReorderSetlistTracks
       summary: Reorder the tracks of a setlist
+      tags: [ Setlists ]
       security:
         - sessionAuth: [ ]
       parameters:
