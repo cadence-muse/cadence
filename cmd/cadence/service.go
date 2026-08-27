@@ -13,9 +13,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var errServiceStopped = stderrors.New("service stopped without errors")
-
 const shutdownTimeout = 10 * time.Second
+
+var errServiceStopped = stderrors.New("service stopped without errors")
 
 func service(ctx context.Context, config *config, logger log.Logger) error {
 	router := mux.NewRouter()
@@ -56,11 +56,12 @@ func service(ctx context.Context, config *config, logger log.Logger) error {
 		WriteTimeout:      time.Hour,
 	}
 
-	go func() { //nolint:gosec // shutdown must use a fresh context; ctx is cancelled by this point
+	// Shutdown must use a fresh context; ctx is canceled by this point - hence the nolints
+	go func() { //nolint:gosec
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
-		if shutdownErr := httpServer.Shutdown(shutdownCtx); shutdownErr != nil { //nolint:contextcheck // shutdown must use a fresh context; ctx is cancelled by this point
+		if shutdownErr := httpServer.Shutdown(shutdownCtx); shutdownErr != nil { //nolint:contextcheck
 			logger.Error(shutdownErr, "failed to gracefully shut down HTTP server")
 		}
 	}()
