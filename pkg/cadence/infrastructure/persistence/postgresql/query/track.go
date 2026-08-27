@@ -27,11 +27,21 @@ func (s *trackQueryService) ListBandTracks(ctx context.Context, bandID uuid.UUID
 		SELECT id, title, artist, duration_seconds, key
 		FROM track
 		WHERE band_id = $1 AND deleted_at IS NULL
-		  AND ($2::text IS NULL OR search_vector @@ websearch_to_tsquery('simple', $2))
-		ORDER BY title
+		  AND ($2::text IS NULL OR (title || ' ' || artist) ILIKE $2)
+		ORDER BY
+		  CASE WHEN $3::text IS NULL THEN 0 ELSE similarity(title || ' ' || artist, $3) END DESC,
+		  title
 	`
 	var rows []sqlxTrackListItem
-	if err := s.client.SelectContext(ctx, &rows, sqlQuery, bandID, searchQuery); err != nil {
+	err := s.client.SelectContext(
+		ctx,
+		&rows,
+		sqlQuery,
+		bandID,
+		likePattern(searchQuery),
+		searchQuery,
+	)
+	if err != nil {
 		return nil, err
 	}
 
@@ -54,11 +64,22 @@ func (s *trackQueryService) ListUserTracks(ctx context.Context, userID uuid.UUID
 		JOIN band b ON b.id = t.band_id
 		WHERE bm.user_id = $1 AND t.deleted_at IS NULL AND b.deleted_at IS NULL
 		  AND ($2::uuid IS NULL OR t.band_id = $2)
-		  AND ($3::text IS NULL OR t.search_vector @@ websearch_to_tsquery('simple', $3))
-		ORDER BY t.title
+		  AND ($3::text IS NULL OR (t.title || ' ' || t.artist) ILIKE $3)
+		ORDER BY
+		  CASE WHEN $4::text IS NULL THEN 0 ELSE similarity(t.title || ' ' || t.artist, $4) END DESC,
+		  t.title
 	`
 	var rows []sqlxUserTrackListItem
-	if err := s.client.SelectContext(ctx, &rows, sqlQuery, userID, bandID, searchQuery); err != nil {
+	err := s.client.SelectContext(
+		ctx,
+		&rows,
+		sqlQuery,
+		userID,
+		bandID,
+		likePattern(searchQuery),
+		searchQuery,
+	)
+	if err != nil {
 		return nil, err
 	}
 

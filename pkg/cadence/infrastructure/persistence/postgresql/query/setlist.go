@@ -31,12 +31,22 @@ func (s *setlistQueryService) ListBandSetlists(ctx context.Context, bandID uuid.
 		LEFT JOIN setlist_track st ON st.setlist_id = s.id
 		LEFT JOIN track t ON t.id = st.track_id AND t.deleted_at IS NULL
 		WHERE s.band_id = $1 AND s.deleted_at IS NULL
-		  AND ($2::text IS NULL OR s.search_vector @@ websearch_to_tsquery('simple', $2))
+		  AND ($2::text IS NULL OR s.name ILIKE $2)
 		GROUP BY s.id, s.name, s.event_date, s.event_location
-		ORDER BY s.event_date ASC NULLS LAST
+		ORDER BY
+		  CASE WHEN $3::text IS NULL THEN 0 ELSE similarity(s.name, $3) END DESC,
+		  s.event_date ASC NULLS LAST
 	`
 	var rows []sqlxSetlistListItem
-	if err := s.client.SelectContext(ctx, &rows, sqlQuery, bandID, searchQuery); err != nil {
+	err := s.client.SelectContext(
+		ctx,
+		&rows,
+		sqlQuery,
+		bandID,
+		likePattern(searchQuery),
+		searchQuery,
+	)
+	if err != nil {
 		return nil, err
 	}
 
@@ -64,12 +74,23 @@ func (s *setlistQueryService) ListUserSetlists(ctx context.Context, userID uuid.
 		LEFT JOIN track t ON t.id = st.track_id AND t.deleted_at IS NULL
 		WHERE bm.user_id = $1 AND s.deleted_at IS NULL AND b.deleted_at IS NULL
 		  AND ($2::uuid IS NULL OR s.band_id = $2)
-		  AND ($3::text IS NULL OR s.search_vector @@ websearch_to_tsquery('simple', $3))
+		  AND ($3::text IS NULL OR s.name ILIKE $3)
 		GROUP BY s.id, s.name, s.event_date, s.band_id, b.name
-		ORDER BY s.event_date ASC NULLS LAST
+		ORDER BY
+		  CASE WHEN $4::text IS NULL THEN 0 ELSE similarity(s.name, $4) END DESC,
+		  s.event_date ASC NULLS LAST
 	`
 	var rows []sqlxUserSetlistListItem
-	if err := s.client.SelectContext(ctx, &rows, sqlQuery, userID, bandID, searchQuery); err != nil {
+	err := s.client.SelectContext(
+		ctx,
+		&rows,
+		sqlQuery,
+		userID,
+		bandID,
+		likePattern(searchQuery),
+		searchQuery,
+	)
+	if err != nil {
 		return nil, err
 	}
 

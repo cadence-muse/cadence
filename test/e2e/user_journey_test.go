@@ -202,6 +202,14 @@ func TestUserJourney(t *testing.T) {
 		require.Len(t, searchBody.Items, 1)
 		require.Equal(t, track1, searchBody.Items[0].ID)
 
+		fuzzyRes, fuzzyErr := env.client.ListBandTracks(ctx, publicapi.ListBandTracksParams{
+			BandId:      bandID,
+			SearchQuery: publicapi.NewOptString("on"),
+		})
+		fuzzyBody := requireResponse[publicapi.ListBandTracksResponseBody](t, fuzzyRes, fuzzyErr)
+		require.Len(t, fuzzyBody.Items, 1)
+		require.Equal(t, track1, fuzzyBody.Items[0].ID)
+
 		noMatchRes, noMatchErr := env.client.ListBandTracks(ctx, publicapi.ListBandTracksParams{
 			BandId:      bandID,
 			SearchQuery: publicapi.NewOptString("nonexistentsong"),
@@ -368,10 +376,35 @@ func TestUserJourney(t *testing.T) {
 		require.Equal(t, track5, body.Tracks[3].TrackId)
 	})
 
+	t.Run("search results ordered by relevance", func(t *testing.T) {
+		closeMatchRes, closeMatchErr := env.client.CreateBandTrack(ctx, &publicapi.CreateBandTrackRequestBody{
+			Title:  "Exact Match",
+			Artist: "Band",
+		}, publicapi.CreateBandTrackParams{BandId: bandID})
+		closeMatchBody := requireResponse[publicapi.CreateBandTrackResponseBody](t, closeMatchRes, closeMatchErr)
+		closeMatch := closeMatchBody.ID
+
+		farMatchRes, farMatchErr := env.client.CreateBandTrack(ctx, &publicapi.CreateBandTrackRequestBody{
+			Title:  "Exact Match In A Much Longer Title With Extra Words",
+			Artist: "A Completely Different Band Name",
+		}, publicapi.CreateBandTrackParams{BandId: bandID})
+		farMatchBody := requireResponse[publicapi.CreateBandTrackResponseBody](t, farMatchRes, farMatchErr)
+		farMatch := farMatchBody.ID
+
+		searchRes, searchErr := env.client.ListBandTracks(ctx, publicapi.ListBandTracksParams{
+			BandId:      bandID,
+			SearchQuery: publicapi.NewOptString("Exact Match"),
+		})
+		searchBody := requireResponse[publicapi.ListBandTracksResponseBody](t, searchRes, searchErr)
+		require.Len(t, searchBody.Items, 2)
+		require.Equal(t, closeMatch, searchBody.Items[0].ID)
+		require.Equal(t, farMatch, searchBody.Items[1].ID)
+	})
+
 	t.Run("list user tracks across bands", func(t *testing.T) {
 		res, err := env.client.ListUserTracks(ctx, publicapi.ListUserTracksParams{})
 		body := requireResponse[publicapi.ListUserTracksResponseBody](t, res, err)
-		require.Len(t, body.Items, 5)
+		require.Len(t, body.Items, 7)
 		for _, item := range body.Items {
 			require.Equal(t, bandID, item.BandId)
 			require.Equal(t, "The Wanderers Reborn", item.BandName)
@@ -379,7 +412,7 @@ func TestUserJourney(t *testing.T) {
 
 		filteredRes, filteredErr := env.client.ListUserTracks(ctx, publicapi.ListUserTracksParams{BandId: publicapi.NewOptUUID(bandID)})
 		filteredBody := requireResponse[publicapi.ListUserTracksResponseBody](t, filteredRes, filteredErr)
-		require.Len(t, filteredBody.Items, 5)
+		require.Len(t, filteredBody.Items, 7)
 
 		otherBandRes, otherBandErr := env.client.ListUserTracks(ctx, publicapi.ListUserTracksParams{BandId: publicapi.NewOptUUID(uuid.New())})
 		otherBandBody := requireResponse[publicapi.ListUserTracksResponseBody](t, otherBandRes, otherBandErr)
@@ -429,7 +462,7 @@ func TestUserJourney(t *testing.T) {
 
 		tracksRes, tracksErr := env.client.ListUserTracks(ctx, publicapi.ListUserTracksParams{})
 		tracksBody := requireResponse[publicapi.ListUserTracksResponseBody](t, tracksRes, tracksErr)
-		require.Len(t, tracksBody.Items, 5)
+		require.Len(t, tracksBody.Items, 7)
 
 		setlistsRes, setlistsErr := env.client.ListUserSetlists(ctx, publicapi.ListUserSetlistsParams{})
 		setlistsBody := requireResponse[publicapi.ListUserSetlistsResponseBody](t, setlistsRes, setlistsErr)

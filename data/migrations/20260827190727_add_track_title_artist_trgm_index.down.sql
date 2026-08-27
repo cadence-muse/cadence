@@ -1,0 +1,1 @@
+DROP INDEX track_title_artist_trgm_idx;
