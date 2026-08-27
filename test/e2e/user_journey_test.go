@@ -251,6 +251,21 @@ func TestUserJourney(t *testing.T) {
 		listBody := requireResponse[publicapi.ListBandSetlistsResponseBody](t, listRes, listErr)
 		require.Len(t, listBody.Items, 1)
 		require.Equal(t, setlistID, listBody.Items[0].ID)
+
+		searchRes, searchErr := env.client.ListBandSetlists(ctx, publicapi.ListBandSetlistsParams{
+			BandId:      bandID,
+			SearchQuery: publicapi.NewOptString("Show One"),
+		})
+		searchBody := requireResponse[publicapi.ListBandSetlistsResponseBody](t, searchRes, searchErr)
+		require.Len(t, searchBody.Items, 1)
+		require.Equal(t, setlistID, searchBody.Items[0].ID)
+
+		noMatchRes, noMatchErr := env.client.ListBandSetlists(ctx, publicapi.ListBandSetlistsParams{
+			BandId:      bandID,
+			SearchQuery: publicapi.NewOptString("nonexistentshow"),
+		})
+		noMatchBody := requireResponse[publicapi.ListBandSetlistsResponseBody](t, noMatchRes, noMatchErr)
+		require.Empty(t, noMatchBody.Items)
 	})
 
 	t.Run("add a third track to the setlist", func(t *testing.T) {
@@ -354,7 +369,7 @@ func TestUserJourney(t *testing.T) {
 	})
 
 	t.Run("list user tracks across bands", func(t *testing.T) {
-		res, err := env.client.ListUserTracks(ctx, publicapi.OptListUserTracksRequestBody{}, publicapi.ListUserTracksParams{})
+		res, err := env.client.ListUserTracks(ctx, publicapi.ListUserTracksParams{})
 		body := requireResponse[publicapi.ListUserTracksResponseBody](t, res, err)
 		require.Len(t, body.Items, 5)
 		for _, item := range body.Items {
@@ -362,30 +377,30 @@ func TestUserJourney(t *testing.T) {
 			require.Equal(t, "The Wanderers Reborn", item.BandName)
 		}
 
-		filteredRes, filteredErr := env.client.ListUserTracks(ctx, publicapi.OptListUserTracksRequestBody{}, publicapi.ListUserTracksParams{BandId: publicapi.NewOptUUID(bandID)})
+		filteredRes, filteredErr := env.client.ListUserTracks(ctx, publicapi.ListUserTracksParams{BandId: publicapi.NewOptUUID(bandID)})
 		filteredBody := requireResponse[publicapi.ListUserTracksResponseBody](t, filteredRes, filteredErr)
 		require.Len(t, filteredBody.Items, 5)
 
-		otherBandRes, otherBandErr := env.client.ListUserTracks(ctx, publicapi.OptListUserTracksRequestBody{}, publicapi.ListUserTracksParams{BandId: publicapi.NewOptUUID(uuid.New())})
+		otherBandRes, otherBandErr := env.client.ListUserTracks(ctx, publicapi.ListUserTracksParams{BandId: publicapi.NewOptUUID(uuid.New())})
 		otherBandBody := requireResponse[publicapi.ListUserTracksResponseBody](t, otherBandRes, otherBandErr)
 		require.Empty(t, otherBandBody.Items)
 
-		searchRes, searchErr := env.client.ListUserTracks(ctx, publicapi.NewOptListUserTracksRequestBody(publicapi.ListUserTracksRequestBody{
+		searchRes, searchErr := env.client.ListUserTracks(ctx, publicapi.ListUserTracksParams{
 			SearchQuery: publicapi.NewOptString("Remastered"),
-		}), publicapi.ListUserTracksParams{})
+		})
 		searchBody := requireResponse[publicapi.ListUserTracksResponseBody](t, searchRes, searchErr)
 		require.Len(t, searchBody.Items, 1)
 		require.Equal(t, track1, searchBody.Items[0].ID)
 
-		noMatchRes, noMatchErr := env.client.ListUserTracks(ctx, publicapi.NewOptListUserTracksRequestBody(publicapi.ListUserTracksRequestBody{
+		noMatchRes, noMatchErr := env.client.ListUserTracks(ctx, publicapi.ListUserTracksParams{
 			SearchQuery: publicapi.NewOptString("nonexistentsong"),
-		}), publicapi.ListUserTracksParams{})
+		})
 		noMatchBody := requireResponse[publicapi.ListUserTracksResponseBody](t, noMatchRes, noMatchErr)
 		require.Empty(t, noMatchBody.Items)
 	})
 
 	t.Run("list user setlists across bands", func(t *testing.T) {
-		res, err := env.client.ListUserSetlists(ctx, publicapi.OptListUserSetlistsRequestBody{}, publicapi.ListUserSetlistsParams{BandId: publicapi.NewOptUUID(bandID)})
+		res, err := env.client.ListUserSetlists(ctx, publicapi.ListUserSetlistsParams{BandId: publicapi.NewOptUUID(bandID)})
 		body := requireResponse[publicapi.ListUserSetlistsResponseBody](t, res, err)
 		require.Len(t, body.Items, 1)
 		require.Equal(t, setlistID, body.Items[0].ID)
@@ -394,16 +409,16 @@ func TestUserJourney(t *testing.T) {
 		require.Equal(t, bandID, body.Items[0].BandId)
 		require.Equal(t, "The Wanderers Reborn", body.Items[0].BandName)
 
-		searchRes, searchErr := env.client.ListUserSetlists(ctx, publicapi.NewOptListUserSetlistsRequestBody(publicapi.ListUserSetlistsRequestBody{
+		searchRes, searchErr := env.client.ListUserSetlists(ctx, publicapi.ListUserSetlistsParams{
 			SearchQuery: publicapi.NewOptString("Final"),
-		}), publicapi.ListUserSetlistsParams{})
+		})
 		searchBody := requireResponse[publicapi.ListUserSetlistsResponseBody](t, searchRes, searchErr)
 		require.Len(t, searchBody.Items, 1)
 		require.Equal(t, setlistID, searchBody.Items[0].ID)
 
-		noMatchRes, noMatchErr := env.client.ListUserSetlists(ctx, publicapi.NewOptListUserSetlistsRequestBody(publicapi.ListUserSetlistsRequestBody{
+		noMatchRes, noMatchErr := env.client.ListUserSetlists(ctx, publicapi.ListUserSetlistsParams{
 			SearchQuery: publicapi.NewOptString("nonexistentname"),
-		}), publicapi.ListUserSetlistsParams{})
+		})
 		noMatchBody := requireResponse[publicapi.ListUserSetlistsResponseBody](t, noMatchRes, noMatchErr)
 		require.Empty(t, noMatchBody.Items)
 	})
@@ -412,11 +427,11 @@ func TestUserJourney(t *testing.T) {
 		env.sec.token = memberToken
 		defer func() { env.sec.token = ownerToken }()
 
-		tracksRes, tracksErr := env.client.ListUserTracks(ctx, publicapi.OptListUserTracksRequestBody{}, publicapi.ListUserTracksParams{})
+		tracksRes, tracksErr := env.client.ListUserTracks(ctx, publicapi.ListUserTracksParams{})
 		tracksBody := requireResponse[publicapi.ListUserTracksResponseBody](t, tracksRes, tracksErr)
 		require.Len(t, tracksBody.Items, 5)
 
-		setlistsRes, setlistsErr := env.client.ListUserSetlists(ctx, publicapi.OptListUserSetlistsRequestBody{}, publicapi.ListUserSetlistsParams{})
+		setlistsRes, setlistsErr := env.client.ListUserSetlists(ctx, publicapi.ListUserSetlistsParams{})
 		setlistsBody := requireResponse[publicapi.ListUserSetlistsResponseBody](t, setlistsRes, setlistsErr)
 		require.Len(t, setlistsBody.Items, 1)
 		require.Equal(t, setlistID, setlistsBody.Items[0].ID)

@@ -415,7 +415,11 @@ func (h *restHandler) GetBandTrack(ctx context.Context, params publicapi.GetBand
 }
 
 func (h *restHandler) ListBandTracks(ctx context.Context, params publicapi.ListBandTracksParams) (publicapi.ListBandTracksRes, error) {
-	tracks, err := h.trackQueryService.ListBandTracks(ctx, uuid.UUID(params.BandId), maybeValueFromOpt[string](params.SearchQuery))
+	tracks, err := h.trackQueryService.ListBandTracks(
+		ctx,
+		uuid.UUID(params.BandId),
+		maybeValueFromOpt[string](params.SearchQuery),
+	)
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrBandNotFound):
@@ -478,26 +482,34 @@ func (h *restHandler) RemoveBandTrack(ctx context.Context, params publicapi.Remo
 	return &publicapi.RemoveBandTrackNoContent{}, nil
 }
 
-func (h *restHandler) ListUserTracks(ctx context.Context, req publicapi.OptListUserTracksRequestBody, params publicapi.ListUserTracksParams) (publicapi.ListUserTracksRes, error) {
+func (h *restHandler) ListUserTracks(ctx context.Context, params publicapi.ListUserTracksParams) (publicapi.ListUserTracksRes, error) {
 	userID, ok := auth.UserIDFromContext(ctx)
 	if !ok {
 		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
 	}
-	body, _ := req.Get()
-	tracks, err := h.trackQueryService.ListUserTracks(ctx, userID, maybeUUIDFromOpt(params.BandId), maybeValueFromOpt[string](body.SearchQuery))
+	tracks, err := h.trackQueryService.ListUserTracks(
+		ctx,
+		userID,
+		maybeUUIDFromOpt(params.BandId),
+		maybeValueFromOpt[string](params.SearchQuery),
+	)
 	if err != nil {
 		return nil, err
 	}
 	return &publicapi.ListUserTracksResponseBody{Items: slices.Map(tracks, convertQueryUserTrackListItemToAPI)}, nil
 }
 
-func (h *restHandler) ListUserSetlists(ctx context.Context, req publicapi.OptListUserSetlistsRequestBody, params publicapi.ListUserSetlistsParams) (publicapi.ListUserSetlistsRes, error) {
+func (h *restHandler) ListUserSetlists(ctx context.Context, params publicapi.ListUserSetlistsParams) (publicapi.ListUserSetlistsRes, error) {
 	userID, ok := auth.UserIDFromContext(ctx)
 	if !ok {
 		return nil, commonogenerrors.NewPermissionDeniedError("user not authenticated")
 	}
-	body, _ := req.Get()
-	setlists, err := h.setlistQueryService.ListUserSetlists(ctx, userID, maybeUUIDFromOpt(params.BandId), maybeValueFromOpt[string](body.SearchQuery))
+	setlists, err := h.setlistQueryService.ListUserSetlists(
+		ctx,
+		userID,
+		maybeUUIDFromOpt(params.BandId),
+		maybeValueFromOpt[string](params.SearchQuery),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -505,7 +517,11 @@ func (h *restHandler) ListUserSetlists(ctx context.Context, req publicapi.OptLis
 }
 
 func (h *restHandler) ListBandSetlists(ctx context.Context, params publicapi.ListBandSetlistsParams) (publicapi.ListBandSetlistsRes, error) {
-	setlists, err := h.setlistQueryService.ListBandSetlists(ctx, uuid.UUID(params.BandId))
+	setlists, err := h.setlistQueryService.ListBandSetlists(
+		ctx,
+		uuid.UUID(params.BandId),
+		maybeValueFromOpt[string](params.SearchQuery),
+	)
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrBandNotFound):

@@ -20,7 +20,7 @@ type authorizedSetlistQueryService struct {
 	executor transactional.Executor[app.RepoProvider]
 }
 
-func (s *authorizedSetlistQueryService) ListBandSetlists(ctx context.Context, bandID uuid.UUID) ([]query.SetlistListItem, error) {
+func (s *authorizedSetlistQueryService) ListBandSetlists(ctx context.Context, bandID uuid.UUID, searchQuery maybe.Maybe[string]) ([]query.SetlistListItem, error) {
 	requesterID, err := requesterIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -28,7 +28,7 @@ func (s *authorizedSetlistQueryService) ListBandSetlists(ctx context.Context, ba
 	if err := requireMember(ctx, s.executor, bandID, requesterID); err != nil {
 		return nil, err
 	}
-	return s.next.ListBandSetlists(ctx, bandID)
+	return s.next.ListBandSetlists(ctx, bandID, searchQuery)
 }
 
 func (s *authorizedSetlistQueryService) ListUserSetlists(ctx context.Context, userID uuid.UUID, bandID maybe.Maybe[uuid.UUID], searchQuery maybe.Maybe[string]) ([]query.UserSetlistListItem, error) {

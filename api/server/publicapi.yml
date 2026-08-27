@@ -293,16 +293,7 @@ paths:
         - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandId'
-        - name: searchQuery
-          in: query
-          required: false
-          schema:
-            type: string
-          description: >-
-            Search by title or artist, case-insensitive substring match.
-            The backend currently ignores this field and returns the full
-            unfiltered list — client-side spec extension (SETL-12) sent for
-            forward compatibility ahead of server-side filtering support.
+        - $ref: '#/components/parameters/SearchQuery'
       responses:
         '200':
           description: Success
@@ -391,19 +382,14 @@ paths:
           $ref: '#/components/responses/BadRequest'
 
   /api/track/list:
-    post:
+    get:
       operationId: ListUserTracks
       summary: List all tracks across bands the current user belongs to, optionally filtered by band
       security:
         - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandIdFilter'
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ListUserTracksRequestBody'
+        - $ref: '#/components/parameters/SearchQuery'
       responses:
         '200':
           description: Success
@@ -415,19 +401,14 @@ paths:
           $ref: '#/components/responses/BadRequest'
 
   /api/setlist/list:
-    post:
+    get:
       operationId: ListUserSetlists
       summary: List all setlists across bands the current user belongs to, optionally filtered by band
       security:
         - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandIdFilter'
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ListUserSetlistsRequestBody'
+        - $ref: '#/components/parameters/SearchQuery'
       responses:
         '200':
           description: Success
@@ -446,6 +427,7 @@ paths:
         - sessionAuth: [ ]
       parameters:
         - $ref: '#/components/parameters/BandId'
+        - $ref: '#/components/parameters/SearchQuery'
       responses:
         '200':
           description: Success
@@ -636,6 +618,14 @@ components:
         type: string
         format: uuid
 
+    SetlistId:
+      name: setlistId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
     BandIdFilter:
       name: bandId
       in: query
@@ -644,13 +634,13 @@ components:
         type: string
         format: uuid
 
-    SetlistId:
-      name: setlistId
-      in: path
-      required: true
+    SearchQuery:
+      name: searchQuery
+      in: query
+      required: false
       schema:
         type: string
-        format: uuid
+      description: Case-insensitive substring match query
 
   schemas:
     BadRequestResponseBody:
@@ -979,13 +969,6 @@ components:
           type: string
           nullable: true
 
-    ListUserTracksRequestBody:
-      type: object
-      properties:
-        searchQuery:
-          type: string
-          description: Search by artist or title match
-
     ListUserTracksResponseBody:
       type: object
       properties:
@@ -1052,13 +1035,6 @@ components:
         - name
         - tracksCount
         - durationSeconds
-
-    ListUserSetlistsRequestBody:
-      type: object
-      properties:
-        searchQuery:
-          type: string
-          description: Search by name match
 
     ListUserSetlistsResponseBody:
       type: object

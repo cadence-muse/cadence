@@ -22,7 +22,7 @@ type setlistQueryService struct {
 	client postgresql.ClientContext
 }
 
-func (s *setlistQueryService) ListBandSetlists(ctx context.Context, bandID uuid.UUID) ([]query.SetlistListItem, error) {
+func (s *setlistQueryService) ListBandSetlists(ctx context.Context, bandID uuid.UUID, searchQuery maybe.Maybe[string]) ([]query.SetlistListItem, error) {
 	const sqlQuery = `
 		SELECT s.id, s.name, s.event_date, s.event_location,
 		       COUNT(t.id) AS tracks_count,
@@ -31,11 +31,12 @@ func (s *setlistQueryService) ListBandSetlists(ctx context.Context, bandID uuid.
 		LEFT JOIN setlist_track st ON st.setlist_id = s.id
 		LEFT JOIN track t ON t.id = st.track_id AND t.deleted_at IS NULL
 		WHERE s.band_id = $1 AND s.deleted_at IS NULL
+		  AND ($2::text IS NULL OR s.search_vector @@ websearch_to_tsquery('simple', $2))
 		GROUP BY s.id, s.name, s.event_date, s.event_location
 		ORDER BY s.event_date ASC NULLS LAST
 	`
 	var rows []sqlxSetlistListItem
-	if err := s.client.SelectContext(ctx, &rows, sqlQuery, bandID); err != nil {
+	if err := s.client.SelectContext(ctx, &rows, sqlQuery, bandID, searchQuery); err != nil {
 		return nil, err
 	}
 
