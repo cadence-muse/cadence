@@ -1,9 +1,12 @@
 package ogenmiddleware
 
 import (
+	"encoding/json"
 	"time"
 
+	"github.com/go-faster/jx"
 	"github.com/nightnoryu/go-kita/log"
+	ogenjson "github.com/ogen-go/ogen/json"
 	"github.com/ogen-go/ogen/middleware"
 )
 
@@ -35,7 +38,7 @@ func getParamsForLog(request middleware.Request) any {
 	if len(request.Params) > 0 {
 		params = make(map[string]any)
 		for param, value := range request.Params {
-			params[param.Name] = value
+			params[param.Name] = unwrapParamValue(value)
 		}
 	}
 	options := getTrimForLogsOptions()
@@ -47,6 +50,29 @@ func getParamsForLog(request middleware.Request) any {
 		result["body"] = log.TrimForLogs(request.Body, options)
 	}
 	return result
+}
+
+// unwrapParamValue converts ogen-generated optional param types (e.g. OptUUID) into plain
+// JSON-safe values. Their MarshalJSON writes through jx and returns empty bytes when unset,
+// which stdlib encoding/json (used by zap and log.TrimForLogs) rejects as invalid JSON.
+func unwrapParamValue(value any) any {
+	marshaler, ok := value.(ogenjson.Marshaler)
+	if !ok {
+		return value
+	}
+
+	e := jx.Encoder{}
+	marshaler.Encode(&e)
+	raw := e.Bytes()
+	if len(raw) == 0 {
+		return nil
+	}
+
+	var decoded any
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		return value
+	}
+	return decoded
 }
 
 func getTrimForLogsOptions() log.TrimForLogsOptions {
