@@ -1,12 +1,9 @@
-FROM debian:bookworm-slim
+FROM alpine:3.20
 
-RUN apt-get update && \
-    apt-get install -y --no-install-suggests --no-install-recommends ca-certificates curl && \
-    apt-get clean && \
-    groupadd -g 1001 cadenceuser && \
-    useradd -u 1001 -r -g 1001 -s /sbin/nologin -c "go service user" cadenceuser
-
-RUN update-ca-certificates --fresh
+RUN apk add --no-cache ca-certificates curl && \
+    update-ca-certificates && \
+    addgroup -g 1001 cadenceuser && \
+    adduser -u 1001 -D -G cadenceuser -s /sbin/nologin -g "go service user" cadenceuser
 
 ADD ./bin/cadence /app/bin/
 WORKDIR /app
