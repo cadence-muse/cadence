@@ -29,7 +29,7 @@ func newDatabaseMigrator(
 	logger log.Logger,
 ) (*databaseMigrator, error) {
 	connector := postgresql.NewConnector()
-	err := openWithRetries(connector, config.dsn(), config.DBMaxConn, config.DBConnLifetime, logger)
+	err := openWithRetries(connector, config.postgresDSN(), config.DBMaxConn, config.DBConnLifetime, logger)
 	if err != nil {
 		return nil, err
 	}

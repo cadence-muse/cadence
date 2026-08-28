@@ -41,7 +41,7 @@ type config struct {
 	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS"`
 }
 
-func (c *config) dsn() postgresql.DSN {
+func (c *config) postgresDSN() postgresql.DSN {
 	return postgresql.DSN{
 		Host:     c.DBHost,
 		Port:     c.DBPort,
@@ -51,8 +51,8 @@ func (c *config) dsn() postgresql.DSN {
 	}
 }
 
-func (c *config) redisConfig() redis.Config {
-	return redis.Config{
+func (c *config) redisDSN() redis.DSN {
+	return redis.DSN{
 		Host:     c.RedisHost,
 		Port:     c.RedisPort,
 		Password: c.RedisPassword,

@@ -91,7 +91,7 @@ func setupTestEnv(t *testing.T) *testEnv {
 	transactionFactory := repo.NewTransactionFactory(connectionProvider)
 	executor := transactional.NewExecutor[app.RepoProvider](transactionFactory)
 
-	redisClient := redis.NewClient(redis.Config{Host: redisHost, Port: int(redisPort.Num())})
+	redisClient := redis.NewClient(redis.DSN{Host: redisHost, Port: int(redisPort.Num())}, redis.Config{})
 	t.Cleanup(func() { require.NoError(t, redisClient.Close()) })
 
 	sessionStore := redisinfra.NewSessionStore(redisClient, redisinfra.Config{

@@ -54,7 +54,7 @@ func newDependencyContainer(
 		ogenmiddleware.NewMetricsMiddleware(appMetrics),
 	}
 
-	redisClient := redis.NewClient(config.redisConfig())
+	redisClient := redis.NewClient(config.redisDSN(), redis.Config{})
 	sessionStore := redisinfra.NewSessionStore(redisClient, redisinfra.Config{
 		TTL:                config.SessionTTL,
 		MaxSessionsPerUser: config.SessionMaxPerUser,
