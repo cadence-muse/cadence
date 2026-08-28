@@ -931,6 +931,8 @@ components:
           type: integer
         tempo:
           type: integer
+          minimum: 40
+          maximum: 300
         key:
           type: string
         notes:
@@ -983,6 +985,8 @@ components:
           nullable: true
         tempo:
           type: integer
+          minimum: 40
+          maximum: 300
           nullable: true
         key:
           type: string

@@ -58,7 +58,7 @@ func (repo *trackRepository) Store(track *domain.Track) error {
 
 	tempo := maybe.NewNone[int]()
 	if tempoValue, ok := maybe.JustValid(track.Tempo()); ok {
-		tempo = maybe.NewJust(tempoValue)
+		tempo = maybe.NewJust(tempoValue.Value())
 	}
 
 	key := maybe.NewNone[string]()
@@ -114,6 +114,15 @@ func (repo *trackRepository) Get(id domain.TrackID) (*domain.Track, error) {
 		key = maybe.NewJust(keyValue)
 	}
 
+	var tempo maybe.Maybe[valuetypes.Tempo]
+	if value, ok := maybe.JustValid(row.Tempo); ok {
+		tempoValue, tempoErr := valuetypes.MakeTempo(value)
+		if tempoErr != nil {
+			return nil, tempoErr
+		}
+		tempo = maybe.NewJust(tempoValue)
+	}
+
 	var duration maybe.Maybe[time.Duration]
 	if value, ok := maybe.JustValid(row.DurationSeconds); ok {
 		duration = maybe.NewJust(time.Duration(value) * time.Second)
@@ -125,7 +134,7 @@ func (repo *trackRepository) Get(id domain.TrackID) (*domain.Track, error) {
 		row.Title,
 		row.Artist,
 		duration,
-		row.Tempo,
+		tempo,
 		key,
 		row.Notes,
 	), nil

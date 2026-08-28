@@ -53,19 +53,21 @@ func TestTrackService_Update(t *testing.T) {
 		svc := NewTrackService(executor)
 		bandID := uuid.Generate()
 		trackID := seedTrack(t, executor, bandID)
+		tempo, err := valuetypes.MakeTempo(120)
+		require.NoError(t, err)
 
-		err := svc.Update(context.Background(), UpdateTrackParams{
+		err = svc.Update(context.Background(), UpdateTrackParams{
 			BandID:  bandID,
 			TrackID: trackID,
 			Title:   maybe.NewJust("New Title"),
-			Tempo:   maybe.NewJust(120),
+			Tempo:   maybe.NewJust(tempo),
 		})
 		require.NoError(t, err)
 
 		track, err := executor.repoProvider().TrackRepository().Get(trackID)
 		require.NoError(t, err)
 		assert.Equal(t, "New Title", track.Title())
-		assert.Equal(t, maybe.NewJust(120), track.Tempo())
+		assert.Equal(t, maybe.NewJust(tempo), track.Tempo())
 	})
 
 	t.Run("track not found", func(t *testing.T) {
@@ -131,7 +133,7 @@ func seedTrack(t *testing.T, executor *fakeExecutor, bandID uuid.UUID) uuid.UUID
 		"Track",
 		"Artist",
 		maybe.NewAbsent[time.Duration](),
-		maybe.NewAbsent[int](),
+		maybe.NewAbsent[valuetypes.Tempo](),
 		maybe.NewAbsent[valuetypes.MusicalKey](),
 		maybe.NewAbsent[string](),
 	)

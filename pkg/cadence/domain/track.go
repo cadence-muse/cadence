@@ -31,7 +31,7 @@ type Track struct {
 	title    string
 	artist   string
 	duration maybe.Maybe[time.Duration]
-	tempo    maybe.Maybe[int]
+	tempo    maybe.Maybe[valuetypes.Tempo]
 	key      maybe.Maybe[valuetypes.MusicalKey]
 	notes    maybe.Maybe[string]
 }
@@ -49,7 +49,7 @@ func NewTrack(
 	title string,
 	artist string,
 	duration maybe.Maybe[time.Duration],
-	tempo maybe.Maybe[int],
+	tempo maybe.Maybe[valuetypes.Tempo],
 	key maybe.Maybe[valuetypes.MusicalKey],
 	notes maybe.Maybe[string],
 ) (*Track, error) {
@@ -79,7 +79,7 @@ func LoadTrack(
 	title string,
 	artist string,
 	duration maybe.Maybe[time.Duration],
-	tempo maybe.Maybe[int],
+	tempo maybe.Maybe[valuetypes.Tempo],
 	key maybe.Maybe[valuetypes.MusicalKey],
 	notes maybe.Maybe[string],
 ) *Track {
@@ -115,7 +115,7 @@ func (t *Track) Duration() maybe.Maybe[time.Duration] {
 	return t.duration
 }
 
-func (t *Track) Tempo() maybe.Maybe[int] {
+func (t *Track) Tempo() maybe.Maybe[valuetypes.Tempo] {
 	return t.tempo
 }
 
@@ -147,7 +147,7 @@ func (t *Track) SetDuration(duration maybe.Maybe[time.Duration]) {
 	t.duration = duration
 }
 
-func (t *Track) SetTempo(tempo maybe.Maybe[int]) {
+func (t *Track) SetTempo(tempo maybe.Maybe[valuetypes.Tempo]) {
 	t.tempo = tempo
 }
 

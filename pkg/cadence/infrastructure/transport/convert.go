@@ -124,6 +124,14 @@ func parseMusicalKey(value string) (maybe.Maybe[valuetypes.MusicalKey], error) {
 	return maybe.NewJust(key), nil
 }
 
+func parseTempo(value int) (maybe.Maybe[valuetypes.Tempo], error) {
+	tempo, err := valuetypes.MakeTempo(value)
+	if err != nil {
+		return maybe.NewNone[valuetypes.Tempo](), err
+	}
+	return maybe.NewJust(tempo), nil
+}
+
 func intSecondsToDuration(seconds int) time.Duration {
 	return time.Duration(seconds) * time.Second
 }

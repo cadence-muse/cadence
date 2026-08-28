@@ -69,6 +69,13 @@ func maybeKeyFromOpt(opt publicapi.OptString) (maybe.Maybe[valuetypes.MusicalKey
 	return parseMusicalKey(opt.Value)
 }
 
+func maybeTempoFromOpt(opt publicapi.OptInt) (maybe.Maybe[valuetypes.Tempo], error) {
+	if !opt.Set {
+		return maybe.NewAbsent[valuetypes.Tempo](), nil
+	}
+	return parseTempo(opt.Value)
+}
+
 func maybeUUIDFromOpt(opt publicapi.OptUUID) maybe.Maybe[uuid.UUID] {
 	value, ok := opt.Get()
 	if !ok {

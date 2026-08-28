@@ -44,3 +44,13 @@ func maybeKeyFromOptNil(opt publicapi.OptNilString) (maybe.Maybe[valuetypes.Musi
 	}
 	return parseMusicalKey(opt.Value)
 }
+
+func maybeTempoFromOptNil(opt publicapi.OptNilInt) (maybe.Maybe[valuetypes.Tempo], error) {
+	if !opt.Set {
+		return maybe.NewAbsent[valuetypes.Tempo](), nil
+	}
+	if opt.Null {
+		return maybe.NewNone[valuetypes.Tempo](), nil
+	}
+	return parseTempo(opt.Value)
+}

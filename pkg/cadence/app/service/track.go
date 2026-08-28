@@ -33,7 +33,7 @@ type CreateTrackParams struct {
 	Title    string
 	Artist   string
 	Duration maybe.Maybe[time.Duration]
-	Tempo    maybe.Maybe[int]
+	Tempo    maybe.Maybe[valuetypes.Tempo]
 	Key      maybe.Maybe[valuetypes.MusicalKey]
 	Notes    maybe.Maybe[string]
 }
@@ -44,7 +44,7 @@ type UpdateTrackParams struct {
 	Title    maybe.Maybe[string]
 	Artist   maybe.Maybe[string]
 	Duration maybe.Maybe[time.Duration]
-	Tempo    maybe.Maybe[int]
+	Tempo    maybe.Maybe[valuetypes.Tempo]
 	Key      maybe.Maybe[valuetypes.MusicalKey]
 	Notes    maybe.Maybe[string]
 }

@@ -19,11 +19,13 @@ func TestNewTrack(t *testing.T) {
 		bandID := uuid.Generate()
 		key, err := valuetypes.MakeKey("C")
 		require.NoError(t, err)
+		tempo, err := valuetypes.MakeTempo(120)
+		require.NoError(t, err)
 
 		track, err := NewTrack(
 			id, bandID, "Song", "Artist",
 			maybe.NewJust(3*time.Minute),
-			maybe.NewJust(120),
+			maybe.NewJust(tempo),
 			maybe.NewJust(key),
 			maybe.NewJust("notes"),
 		)
@@ -37,9 +39,9 @@ func TestNewTrack(t *testing.T) {
 		require.True(t, ok)
 		assert.Equal(t, 3*time.Minute, duration)
 
-		tempo, ok := maybe.JustValid(track.Tempo())
+		gotTempo, ok := maybe.JustValid(track.Tempo())
 		require.True(t, ok)
-		assert.Equal(t, 120, tempo)
+		assert.Equal(t, 120, gotTempo.Value())
 
 		notes, ok := maybe.JustValid(track.Notes())
 		require.True(t, ok)
@@ -50,7 +52,7 @@ func TestNewTrack(t *testing.T) {
 		track, err := NewTrack(
 			uuid.Generate(), uuid.Generate(), "Song", "Artist",
 			maybe.NewAbsent[time.Duration](),
-			maybe.NewAbsent[int](),
+			maybe.NewAbsent[valuetypes.Tempo](),
 			maybe.NewAbsent[valuetypes.MusicalKey](),
 			maybe.NewAbsent[string](),
 		)
@@ -62,7 +64,7 @@ func TestNewTrack(t *testing.T) {
 	t.Run("empty title is rejected", func(t *testing.T) {
 		_, err := NewTrack(
 			uuid.Generate(), uuid.Generate(), "", "Artist",
-			maybe.NewAbsent[time.Duration](), maybe.NewAbsent[int](),
+			maybe.NewAbsent[time.Duration](), maybe.NewAbsent[valuetypes.Tempo](),
 			maybe.NewAbsent[valuetypes.MusicalKey](), maybe.NewAbsent[string](),
 		)
 		assert.ErrorIs(t, err, ErrEmptyTrackTitle)
@@ -71,7 +73,7 @@ func TestNewTrack(t *testing.T) {
 	t.Run("title over the length limit is rejected", func(t *testing.T) {
 		_, err := NewTrack(
 			uuid.Generate(), uuid.Generate(), strings.Repeat("a", maxTrackTitleLength+1), "Artist",
-			maybe.NewAbsent[time.Duration](), maybe.NewAbsent[int](),
+			maybe.NewAbsent[time.Duration](), maybe.NewAbsent[valuetypes.Tempo](),
 			maybe.NewAbsent[valuetypes.MusicalKey](), maybe.NewAbsent[string](),
 		)
 		assert.ErrorIs(t, err, ErrTrackTitleTooLong)
@@ -80,7 +82,7 @@ func TestNewTrack(t *testing.T) {
 	t.Run("title at the length limit is accepted", func(t *testing.T) {
 		_, err := NewTrack(
 			uuid.Generate(), uuid.Generate(), strings.Repeat("a", maxTrackTitleLength), "Artist",
-			maybe.NewAbsent[time.Duration](), maybe.NewAbsent[int](),
+			maybe.NewAbsent[time.Duration](), maybe.NewAbsent[valuetypes.Tempo](),
 			maybe.NewAbsent[valuetypes.MusicalKey](), maybe.NewAbsent[string](),
 		)
 		assert.NoError(t, err)
@@ -89,7 +91,7 @@ func TestNewTrack(t *testing.T) {
 	t.Run("empty artist is rejected", func(t *testing.T) {
 		_, err := NewTrack(
 			uuid.Generate(), uuid.Generate(), "Song", "",
-			maybe.NewAbsent[time.Duration](), maybe.NewAbsent[int](),
+			maybe.NewAbsent[time.Duration](), maybe.NewAbsent[valuetypes.Tempo](),
 			maybe.NewAbsent[valuetypes.MusicalKey](), maybe.NewAbsent[string](),
 		)
 		assert.ErrorIs(t, err, ErrEmptyTrackArtist)
@@ -98,7 +100,7 @@ func TestNewTrack(t *testing.T) {
 	t.Run("artist over the length limit is rejected", func(t *testing.T) {
 		_, err := NewTrack(
 			uuid.Generate(), uuid.Generate(), "Song", strings.Repeat("a", maxTrackArtistLength+1),
-			maybe.NewAbsent[time.Duration](), maybe.NewAbsent[int](),
+			maybe.NewAbsent[time.Duration](), maybe.NewAbsent[valuetypes.Tempo](),
 			maybe.NewAbsent[valuetypes.MusicalKey](), maybe.NewAbsent[string](),
 		)
 		assert.ErrorIs(t, err, ErrTrackArtistTooLong)
@@ -109,7 +111,7 @@ func newTestTrack(t *testing.T) *Track {
 	t.Helper()
 	track, err := NewTrack(
 		uuid.Generate(), uuid.Generate(), "Song", "Artist",
-		maybe.NewAbsent[time.Duration](), maybe.NewAbsent[int](),
+		maybe.NewAbsent[time.Duration](), maybe.NewAbsent[valuetypes.Tempo](),
 		maybe.NewAbsent[valuetypes.MusicalKey](), maybe.NewAbsent[string](),
 	)
 	require.NoError(t, err)
@@ -119,11 +121,13 @@ func newTestTrack(t *testing.T) *Track {
 func TestLoadTrack(t *testing.T) {
 	id := uuid.Generate()
 	bandID := uuid.Generate()
+	tempo, err := valuetypes.MakeTempo(90)
+	require.NoError(t, err)
 
 	track := LoadTrack(
 		id, bandID, "Loaded", "Artist",
 		maybe.NewJust(2*time.Minute),
-		maybe.NewJust(90),
+		maybe.NewJust(tempo),
 		maybe.NewAbsent[valuetypes.MusicalKey](),
 		maybe.NewAbsent[string](),
 	)
@@ -183,12 +187,14 @@ func TestTrack_SetDuration(t *testing.T) {
 
 func TestTrack_SetTempo(t *testing.T) {
 	track := newTestTrack(t)
+	tempo, err := valuetypes.MakeTempo(140)
+	require.NoError(t, err)
 
-	track.SetTempo(maybe.NewJust(140))
+	track.SetTempo(maybe.NewJust(tempo))
 
-	tempo, ok := maybe.JustValid(track.Tempo())
+	gotTempo, ok := maybe.JustValid(track.Tempo())
 	require.True(t, ok)
-	assert.Equal(t, 140, tempo)
+	assert.Equal(t, 140, gotTempo.Value())
 }
 
 func TestTrack_SetKey(t *testing.T) {

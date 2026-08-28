@@ -367,13 +367,17 @@ func (h *restHandler) CreateBandTrack(ctx context.Context, req *publicapi.Create
 	if err != nil {
 		return nil, commonogenerrors.NewInvalidInputError(err.Error())
 	}
+	tempo, err := maybeTempoFromOpt(req.GetTempo())
+	if err != nil {
+		return nil, commonogenerrors.NewInvalidInputError(err.Error())
+	}
 
 	trackID, err := h.trackService.Create(ctx, service.CreateTrackParams{
 		BandID:   uuid.UUID(params.BandId),
 		Title:    req.GetTitle(),
 		Artist:   req.GetArtist(),
 		Duration: maybeDurationFromOpt(req.GetDurationSeconds()),
-		Tempo:    maybeValueFromOpt[int](req.GetTempo()),
+		Tempo:    tempo,
 		Key:      key,
 		Notes:    maybeValueFromOpt[string](req.GetNotes()),
 	})
@@ -438,6 +442,10 @@ func (h *restHandler) UpdateBandTrack(ctx context.Context, req *publicapi.Update
 	if err != nil {
 		return nil, commonogenerrors.NewInvalidInputError(err.Error())
 	}
+	tempo, err := maybeTempoFromOptNil(req.GetTempo())
+	if err != nil {
+		return nil, commonogenerrors.NewInvalidInputError(err.Error())
+	}
 
 	err = h.trackService.Update(ctx, service.UpdateTrackParams{
 		BandID:   uuid.UUID(params.BandId),
@@ -445,7 +453,7 @@ func (h *restHandler) UpdateBandTrack(ctx context.Context, req *publicapi.Update
 		Title:    maybeValueFromOpt[string](req.GetTitle()),
 		Artist:   maybeValueFromOpt[string](req.GetArtist()),
 		Duration: maybeDurationFromOptNil(req.GetDurationSeconds()),
-		Tempo:    maybeValueFromOptNil[int](req.GetTempo()),
+		Tempo:    tempo,
 		Key:      key,
 		Notes:    maybeValueFromOptNil[string](req.GetNotes()),
 	})
