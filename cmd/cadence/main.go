@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/nightnoryu/go-kita/env"
 	"github.com/nightnoryu/go-kita/jsonlog"
 	"github.com/nightnoryu/go-kita/log"
 )
@@ -17,8 +18,9 @@ const appID = "cadence"
 func main() {
 	ctx := context.Background()
 	logger := initLogger()
+	defer func() { _ = logger.Sync() }()
 
-	cnf, err := parseEnv()
+	cnf, err := env.ParseEnv[config](appID)
 	if err != nil {
 		logger.FatalError(err)
 	}

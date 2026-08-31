@@ -1,22 +1,11 @@
 package main
 
 import (
-	"strings"
 	"time"
 
-	"github.com/caarlos0/env/v11"
-	"github.com/go-faster/errors"
 	"github.com/nightnoryu/go-kita/postgresql"
 	"github.com/nightnoryu/go-kita/redis"
 )
-
-func parseEnv() (*config, error) {
-	c := new(config)
-	if err := env.ParseWithOptions(c, env.Options{Prefix: strings.ToUpper(appID) + "_"}); err != nil {
-		return nil, errors.Wrap(err, "failed to parse env")
-	}
-	return c, nil
-}
 
 type config struct {
 	ServeRESTAddress string `env:"SERVE_REST_ADDRESS" envDefault:":8080"`
