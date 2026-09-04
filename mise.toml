@@ -24,7 +24,7 @@ run = "go mod tidy"
 
 [tasks.build]
 depends = [ "generate", "modules" ]
-run = "go build -trimpath -v --gcflags 'all=-N -l' -o ./bin/cadence ./cmd/cadence"
+run = "go build -trimpath -v -o ./bin/cadence ./cmd/cadence"
 
 [tasks.check]
 depends = [ "lint", "test:unit" ]
