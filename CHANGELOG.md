@@ -1,8 +1,12 @@
 # Changelog
 
+## v0.2.1
+
+- minor dependencies upgrades
+
 ## v0.2.0
 
-- improved track and setlist search with fuzzy matching and relevance-ranked results.
+- improved track and setlist search with fuzzy matching and relevance-ranked results
 
 ## v0.1.1
 
