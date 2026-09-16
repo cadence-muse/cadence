@@ -10,21 +10,26 @@ CGO_ENABLED = "0"
 
 [tasks.default]
 run = [
-    { task = "generate" },
-    { task = "modules" },
     { task = "build" },
     { task = "check" },
 ]
 
+# Build
+
 [tasks.generate]
 run = "ogen --target ./api/server/publicapi --package publicapi --config ./api/server/.ogen.yml --clean ./api/server/publicapi.yml"
 
-[tasks.modules]
+[tasks.tidy]
 run = "go mod tidy"
+
+[tasks.modules]
+run = "go mod download"
 
 [tasks.build]
 depends = [ "generate", "modules" ]
 run = "go build -trimpath -v -o ./bin/cadence ./cmd/cadence"
+
+# Checks
 
 [tasks.check]
 depends = [ "lint", "test:unit" ]
