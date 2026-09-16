@@ -1,11 +1,14 @@
 # Repository Guidelines
 
+## Overview
+
+Cadence is a Go service for managing band repertoires.
+
 ## Project Structure
 
-Cadence is a Go service for managing band repertoires. The executable and dependency wiring live in `cmd/cadence/`. Core
-code is under `pkg/cadence/`: `domain/` contains entities and invariants, `app/service/` handles writes, `app/query/`
-handles read models, and `infrastructure/` provides HTTP transport and persistence adapters. Shared packages live in
-`pkg/common/`.
+The executable and dependency wiring live in `cmd/cadence/`. Core code is under `pkg/cadence/`: `domain/` contains
+entities and invariants, `app/service/` handles writes, `app/query/`handles read models, and `infrastructure/` provides
+HTTP transport and persistence adapters. Shared packages live in `pkg/common/`.
 
 The public OpenAPI contract is `api/server/publicapi.yml`; generated code in `api/server/publicapi/` must not be edited
 manually. SQL migrations are embedded from `data/migrations/`. Unit tests are colocated with source; end-to-end tests
