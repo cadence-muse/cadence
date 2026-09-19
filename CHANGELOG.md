@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.2
+
+- minor dependencies upgrades, improved migrations stability
+
 ## v0.2.1
 
 - minor dependencies upgrades
