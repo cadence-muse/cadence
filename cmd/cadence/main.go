@@ -16,7 +16,9 @@ import (
 const appID = "cadence"
 
 func main() {
-	ctx := context.Background()
+	ctx, cancelFunc := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancelFunc()
+
 	logger := initLogger()
 	defer func() { _ = logger.Sync() }()
 
@@ -34,11 +36,6 @@ func main() {
 }
 
 func runApp(ctx context.Context, config *config, logger log.Logger) error {
-	ctx, cancelFunc := context.WithCancel(ctx)
-	defer cancelFunc()
-
-	ctx = listenOSKillSignals(ctx)
-
 	if len(os.Args) != 2 {
 		return errors.New("mode (migrate/service) argument not provided")
 	}
@@ -58,21 +55,4 @@ func initLogger() log.MainLogger {
 		Level:   jsonlog.InfoLevel,
 		AppName: appID,
 	})
-}
-
-func listenOSKillSignals(ctx context.Context) context.Context {
-	var cancelFunc context.CancelFunc
-	ctx, cancelFunc = context.WithCancel(ctx)
-	go func() {
-		ch := make(chan os.Signal, 1)
-		signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
-		select {
-		case <-ch:
-			cancelFunc()
-		case <-ctx.Done():
-			signal.Reset()
-			return
-		}
-	}()
-	return ctx
 }
