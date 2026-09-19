@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -12,8 +13,8 @@ import (
 
 var errMigrationFinished = errors.New("migration finished without errors")
 
-func migrate(config *config, logger log.Logger) error {
-	_, err := newDatabaseMigrator(config, logger)
+func migrate(ctx context.Context, config *config, logger log.Logger) error {
+	_, err := newDatabaseMigrator(ctx, config, logger)
 	if err != nil {
 		return err
 	}
@@ -25,21 +26,22 @@ type databaseMigrator struct {
 }
 
 func newDatabaseMigrator(
+	ctx context.Context,
 	config *config,
 	logger log.Logger,
 ) (*databaseMigrator, error) {
 	connector := postgresql.NewConnector()
-	err := openWithRetries(connector, config.postgresDSN(), config.DBMaxConn, config.DBConnLifetime, logger)
+	err := openWithRetries(ctx, connector, config.postgresDSN(), config.DBMaxConn, config.DBConnLifetime, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := connector.Migrator(logger, migrations.FS)
+	m, err := connector.Migrator(logger, migrations.UpFS())
 	if err != nil {
 		return nil, err
 	}
 
-	err = m.MigrateUp()
+	err = m.MigrateUp(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +50,7 @@ func newDatabaseMigrator(
 }
 
 func openWithRetries(
+	ctx context.Context,
 	connector postgresql.Connector,
 	dsn postgresql.DSN,
 	dbMaxConn int,
@@ -57,7 +60,7 @@ func openWithRetries(
 	const retryCount = 6
 	const interval = time.Second * 5
 	for i := 0; i < retryCount; i++ {
-		err = connector.Open(dsn, postgresql.Config{
+		err = connector.Open(ctx, dsn, postgresql.Config{
 			MaxConnections:     dbMaxConn,
 			ConnectionLifetime: time.Duration(dbConnectionLifetime) * time.Second,
 		})
@@ -66,7 +69,11 @@ func openWithRetries(
 		}
 
 		logger.Info("Retrying connection to DB...")
-		time.Sleep(interval)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(interval):
+		}
 	}
 	return err
 }

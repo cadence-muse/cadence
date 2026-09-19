@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	stderrors "errors"
-	"io"
 	"net/http"
 	"time"
 
 	"github.com/go-faster/errors"
 	"github.com/gorilla/mux"
+	"github.com/nightnoryu/go-kita/health"
 	"github.com/nightnoryu/go-kita/log"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -20,7 +20,7 @@ var errServiceStopped = stderrors.New("service stopped without errors")
 func service(ctx context.Context, config *config, logger log.Logger) error {
 	router := mux.NewRouter()
 
-	container, err := newDependencyContainer(config, logger, router)
+	container, err := newDependencyContainer(ctx, config, logger, router)
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize the dependency container")
 	}
@@ -30,21 +30,24 @@ func service(ctx context.Context, config *config, logger log.Logger) error {
 		}
 	}()
 
-	router.HandleFunc("/resilience/live", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = io.WriteString(w, http.StatusText(http.StatusOK))
+	livenessHandler, err := health.NewLivenessHandler(health.LivenessConfig{})
+	if err != nil {
+		return errors.Wrap(err, "failed to create liveness handler")
+	}
+	readinessHandler, err := health.NewReadinessHandler(health.ReadinessConfig{
+		Checks: []health.NamedCheck{
+			{Name: "postgres", Check: container.checkDatabase},
+			{Name: "redis", Check: container.checkRedis},
+		},
+		OnFailure: func(name string, err error) {
+			logger.WithFields(log.Fields{"dependency": name}).Error(err, "readiness check failed")
+		},
 	})
-
-	router.HandleFunc("/resilience/ready", func(w http.ResponseWriter, r *http.Request) {
-		if readyErr := container.Ready(r.Context()); readyErr != nil {
-			logger.Error(readyErr, "readiness check failed")
-			w.WriteHeader(http.StatusServiceUnavailable)
-			_, _ = io.WriteString(w, http.StatusText(http.StatusServiceUnavailable))
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		_, _ = io.WriteString(w, http.StatusText(http.StatusOK))
-	})
+	if err != nil {
+		return errors.Wrap(err, "failed to create readiness handler")
+	}
+	router.Handle("/healthz", livenessHandler).Methods(http.MethodGet)
+	router.Handle("/readyz", readinessHandler).Methods(http.MethodGet)
 
 	router.Handle("/metrics", promhttp.HandlerFor(container.metrics.Registry, promhttp.HandlerOpts{}))
 

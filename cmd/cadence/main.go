@@ -46,7 +46,7 @@ func runApp(ctx context.Context, config *config, logger log.Logger) error {
 	mode := os.Args[1]
 	switch mode {
 	case "migrate":
-		return migrate(config, logger)
+		return migrate(ctx, config, logger)
 	case "service":
 		return service(ctx, config, logger)
 	}

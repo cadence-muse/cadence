@@ -30,7 +30,7 @@ services:
       cadence-redis:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/resilience/ready" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/readyz" ]
       interval: 5s
       timeout: 5s
       retries: 5

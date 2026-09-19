@@ -33,11 +33,12 @@ type dependencyContainer struct {
 }
 
 func newDependencyContainer(
+	ctx context.Context,
 	config *config,
 	logger log.Logger,
 	router *mux.Router,
 ) (*dependencyContainer, error) {
-	migrator, err := newDatabaseMigrator(config, logger)
+	migrator, err := newDatabaseMigrator(ctx, config, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to migrate")
 	}
@@ -98,12 +99,14 @@ func newDependencyContainer(
 	}, nil
 }
 
-// Ready reports whether dependencies are reachable and the service can serve traffic.
-func (c *dependencyContainer) Ready(ctx context.Context) error {
-	var dbAlive int
-	if err := c.transactionalClient.GetContext(ctx, &dbAlive, "SELECT 1"); err != nil {
+func (c *dependencyContainer) checkDatabase(ctx context.Context) error {
+	if err := c.dbConnector.Ping(ctx); err != nil {
 		return errors.Wrap(err, "database is not reachable")
 	}
+	return nil
+}
+
+func (c *dependencyContainer) checkRedis(ctx context.Context) error {
 	if _, err := c.redisClient.Exists(ctx, healthCheckKey); err != nil {
 		return errors.Wrap(err, "redis is not reachable")
 	}

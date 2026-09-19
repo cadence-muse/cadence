@@ -79,12 +79,12 @@ func setupTestEnv(t *testing.T) *testEnv {
 		User:     testDBUser,
 		Password: testDBPassword,
 	}
-	require.NoError(t, connector.Open(dsn, postgresql.Config{MaxConnections: 10, ConnectionLifetime: time.Minute}))
+	require.NoError(t, connector.Open(ctx, dsn, postgresql.Config{MaxConnections: 10, ConnectionLifetime: time.Minute}))
 	t.Cleanup(func() { _ = connector.Close() })
 
-	migrator, err := connector.Migrator(logger, migrations.FS)
+	migrator, err := connector.Migrator(logger, migrations.UpFS())
 	require.NoError(t, err)
-	require.NoError(t, migrator.MigrateUp())
+	require.NoError(t, migrator.MigrateUp(ctx))
 
 	transactionalClient := connector.TransactionalClient()
 	connectionProvider := postgresql.NewConnectionProvider(transactionalClient)

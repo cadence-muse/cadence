@@ -131,6 +131,8 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/nightnoryu/go-kita v1.5.0 h1:4DV7V/7L25721+LKuEqw9ECF5SWWuokprENzwP2tRe0=
 github.com/nightnoryu/go-kita v1.5.0/go.mod h1:GDVTaufQ/rRYqgQC8FH3gI8GAy4/SEqtfeQBYmmNJdA=
+github.com/nightnoryu/go-kita v1.7.0 h1:FZNV02ImWr5hYgMLrPsu1bMsC84MClLB02Qy9LcSrAo=
+github.com/nightnoryu/go-kita v1.7.0/go.mod h1:GDVTaufQ/rRYqgQC8FH3gI8GAy4/SEqtfeQBYmmNJdA=
 github.com/ogen-go/ogen v1.24.0 h1:NehBG/8s0JeM6jYHPJeFJntBG3cE/xQgZd1q8BchPNM=
 github.com/ogen-go/ogen v1.24.0/go.mod h1:hcg4aTzLcu/MS1SGGahUriPBEOZB3c82RGIC6dYcdFU=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
